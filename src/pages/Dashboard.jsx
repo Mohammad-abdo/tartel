@@ -13,7 +13,11 @@ import {
   FiCreditCard,
   FiArrowUpRight,
   FiArrowDownRight,
+  FiSettings,
 } from 'react-icons/fi';
+import IslamicNotifications from '../components/IslamicNotifications';
+import IslamicNotificationsSettings from '../components/IslamicNotificationsSettings';
+import { useIslamicNotifications } from '../hooks/useIslamicNotifications';
 import {
   BarChart,
   Bar,
@@ -78,6 +82,8 @@ const Dashboard = () => {
   const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showNotificationsSettings, setShowNotificationsSettings] = useState(false);
+  const { settings, updateSettings } = useIslamicNotifications();
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -318,6 +324,21 @@ const Dashboard = () => {
           </div>
         </div>
       </section>
+
+      {/* الإشعارات الإسلامية */}
+      <IslamicNotifications 
+        enabled={settings.enabled}
+        interval={settings.interval}
+      />
+
+      {/* إعدادات الإشعارات الإسلامية */}
+      {showNotificationsSettings && (
+        <IslamicNotificationsSettings
+          settings={settings}
+          updateSettings={updateSettings}
+          onClose={() => setShowNotificationsSettings(false)}
+        />
+      )}
     </div>
   );
 };
