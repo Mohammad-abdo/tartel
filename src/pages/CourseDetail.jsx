@@ -89,132 +89,165 @@ const CourseDetail = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/courses')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <FiArrowLeft className="text-xl" />
-          </button>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{course.title}</h1>
-              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadge(course.status)}`}>
-                {t(`courses.${course.status.toLowerCase()}`)}
-              </span>
+      {/* Header - Islamic Design */}
+      <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 rounded-xl p-6 text-white shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/courses')}
+              className="p-3 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-sm"
+            >
+              <FiArrowLeft className="text-xl" />
+            </button>
+            <div className="islamic-pattern">
+              <div className="flex items-center gap-4 mb-2">
+                <FiBook className="text-3xl text-white/90" />
+                <div>
+                  <h1 className="text-3xl font-bold arabic-text tracking-tight">{course.title}</h1>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full bg-white/20 text-white border border-white/30`}>
+                      {t(`courses.${course.status.toLowerCase()}`)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {course.titleAr && (
+                <p className="text-lg text-emerald-100 arabic-text" dir="rtl">
+                  {course.titleAr}
+                </p>
+              )}
+              <div className="mt-3 text-emerald-100 text-sm arabic-text">
+                "وَقُلْ رَبِّ زِدْنِي عِلْمًا" - سورة طه
+              </div>
             </div>
-            {course.titleAr && (
-              <p className="text-lg text-gray-600" dir="rtl">
-                {course.titleAr}
-              </p>
-            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => navigate(`/courses/${id}/edit`)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 font-medium border border-white/20 shadow-lg"
+            >
+              <FiEdit />
+              {t('courses.editCourse')}
+            </button>
+            
+            <button
+              onClick={() => navigate(`/courses/${id}/lessons/add`)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all duration-300 font-medium shadow-lg"
+            >
+              <FiVideo />
+              إضافة درس
+            </button>
+            
+            <button
+              onClick={() => navigate('/courses')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 font-medium border border-white/20"
+            >
+              <FiArrowLeft />
+              العودة للدورات
+            </button>
           </div>
         </div>
-        <button
-          onClick={() => navigate(`/courses/${id}/edit`)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-        >
-          <FiEdit />
-          {t('courses.editCourse')}
-        </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Islamic Theme */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-5 border border-blue-200/50 shadow-lg hover:shadow-xl transition-all duration-300 islamic-border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 mb-1">{t('courses.enrolledStudents')}</p>
-              <p className="text-2xl font-bold text-gray-900">{enrolledStudentsCount}</p>
+              <p className="text-xs text-blue-700/80 mb-1 arabic-text font-semibold">{t('courses.enrolledStudents')}</p>
+              <p className="text-2xl font-bold text-blue-900 arabic-text">{enrolledStudentsCount}</p>
+              <div className="text-xs text-blue-600 mt-1">الطلاب المسجلين</div>
             </div>
-            <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center">
-              <FiUsers className="text-blue-600 text-xl" />
+            <div className="h-12 w-12 rounded-lg bg-blue-200 flex items-center justify-center shadow-md">
+              <FiUsers className="text-blue-700 text-xl" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-xl p-5 border border-emerald-200/50 shadow-lg hover:shadow-xl transition-all duration-300 islamic-border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 mb-1">{t('courses.price')}</p>
-              <p className="text-2xl font-bold text-emerald-700">${(course.price || 0).toFixed(2)}</p>
+              <p className="text-xs text-emerald-700/80 mb-1 arabic-text font-semibold">{t('courses.price')}</p>
+              <p className="text-2xl font-bold text-emerald-900 arabic-text">${(course.price || 0).toFixed(2)}</p>
+              <div className="text-xs text-emerald-600 mt-1">سعر الدورة</div>
             </div>
-            <div className="h-12 w-12 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <FiDollarSign className="text-emerald-600 text-xl" />
+            <div className="h-12 w-12 rounded-lg bg-emerald-200 flex items-center justify-center shadow-md">
+              <FiDollarSign className="text-emerald-700 text-xl" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-xl p-5 border border-amber-200/50 shadow-lg hover:shadow-xl transition-all duration-300 islamic-border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 mb-1">{t('courses.revenue')}</p>
-              <p className="text-2xl font-bold text-gray-900">${generatedRevenue.toFixed(2)}</p>
+              <p className="text-xs text-amber-700/80 mb-1 arabic-text font-semibold">{t('courses.revenue')}</p>
+              <p className="text-2xl font-bold text-amber-900 arabic-text">${generatedRevenue.toFixed(2)}</p>
+              <div className="text-xs text-amber-600 mt-1">الإيرادات المحققة</div>
             </div>
-            <div className="h-12 w-12 rounded-lg bg-purple-50 flex items-center justify-center">
-              <FiTrendingUp className="text-purple-600 text-xl" />
+            <div className="h-12 w-12 rounded-lg bg-amber-200 flex items-center justify-center shadow-md">
+              <FiTrendingUp className="text-amber-700 text-xl" />
             </div>
           </div>
         </div>
 
         {course.duration && (
-          <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-5 border border-purple-200/50 shadow-lg hover:shadow-xl transition-all duration-300 islamic-border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 mb-1">{t('courses.duration')}</p>
-                <p className="text-2xl font-bold text-gray-900">{course.duration} {t('courses.hours')}</p>
+                <p className="text-xs text-purple-700/80 mb-1 arabic-text font-semibold">{t('courses.duration')}</p>
+                <p className="text-2xl font-bold text-purple-900 arabic-text">{course.duration} {t('courses.hours')}</p>
+                <div className="text-xs text-purple-600 mt-1">مدة الدورة</div>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-orange-50 flex items-center justify-center">
-                <FiClock className="text-orange-600 text-xl" />
+              <div className="h-12 w-12 rounded-lg bg-purple-200 flex items-center justify-center shadow-md">
+                <FiClock className="text-purple-700 text-xl" />
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="border-b border-gray-200">
+      {/* Tabs - Islamic Theme */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-emerald-100 shadow-lg overflow-hidden islamic-border">
+        <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-b border-emerald-200">
           <div className="flex overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all duration-300 border-b-2 arabic-text ${
                 activeTab === 'overview'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-emerald-600 text-emerald-700 bg-white/50 shadow-sm'
+                  : 'border-transparent text-emerald-600 hover:text-emerald-700 hover:bg-white/30'
               }`}
             >
               <span className="flex items-center gap-2">
                 <FiBook />
-                {t('courses.overview')}
+                نظرة عامة
               </span>
             </button>
             <button
               onClick={() => setActiveTab('teacher')}
-              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all duration-300 border-b-2 arabic-text ${
                 activeTab === 'teacher'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-emerald-600 text-emerald-700 bg-white/50 shadow-sm'
+                  : 'border-transparent text-emerald-600 hover:text-emerald-700 hover:bg-white/30'
               }`}
             >
               <span className="flex items-center gap-2">
                 <FiUser />
-                {t('courses.teachers')}
+                المعلمين
               </span>
             </button>
             <button
               onClick={() => setActiveTab('students')}
-              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all duration-300 border-b-2 arabic-text ${
                 activeTab === 'students'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-emerald-600 text-emerald-700 bg-white/50 shadow-sm'
+                  : 'border-transparent text-emerald-600 hover:text-emerald-700 hover:bg-white/30'
               }`}
             >
               <span className="flex items-center gap-2">
                 <FiUsers />
-                {t('courses.subscribers')} ({enrolledStudentsCount})
+                الطلاب ({enrolledStudentsCount})
               </span>
             </button>
           </div>
@@ -225,6 +258,45 @@ const CourseDetail = () => {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              
+              {/* Action Buttons Section */}
+              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-emerald-200/50 islamic-border">
+                <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-3 arabic-text">إجراءات الدورة</h3>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => navigate(`/courses/${id}/edit`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiEdit />
+                    تعديل الدورة
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate(`/courses/${id}/lessons/add`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiVideo />
+                    إضافة درس جديد
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate(`/courses/${id}/students`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUsers />
+                    إدارة الطلاب
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('students')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiStar />
+                    عرض المشتركين
+                  </button>
+                </div>
+              </div>
+              
               {/* صورة الدورة + الفيديو التعريفي (جنباً إلى جنب) */}
               {(course.image || course.introVideoUrl) && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -466,7 +538,37 @@ const CourseDetail = () => {
 
           {/* Teacher Tab */}
           {activeTab === 'teacher' && (
-            <div>
+            <div className="space-y-6">
+              
+              {/* Teacher Management Actions */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 islamic-border">
+                <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-3 arabic-text">إدارة المعلمين</h3>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => navigate(`/courses/${id}/teachers/add`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUser />
+                    إضافة معلم للدورة
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate('/teachers')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUsers />
+                    عرض جميع المعلمين
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate('/teachers/add')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUser />
+                    إضافة معلم جديد
+                  </button>
+                </div>
+              </div>
               {course.courseTeachers && course.courseTeachers.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4">
                   {course.courseTeachers.map((ct) => (
@@ -587,7 +689,45 @@ const CourseDetail = () => {
 
           {/* Students Tab */}
           {activeTab === 'students' && (
-            <div>
+            <div className="space-y-6">
+              
+              {/* Student Management Actions */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-amber-200/50 islamic-border">
+                <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-3 arabic-text">إدارة الطلاب</h3>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => navigate(`/courses/${id}/students/add`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUsers />
+                    إضافة طلاب للدورة
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate(`/courses/${id}/students/export`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUsers />
+                    تصدير قائمة الطلاب
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate('/users')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUsers />
+                    عرض جميع المستخدمين
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate('/users/add')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                  >
+                    <FiUser />
+                    إضافة مستخدم جديد
+                  </button>
+                </div>
+              </div>
               {course.enrollments && course.enrollments.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {course.enrollments.map((enrollment) => (
