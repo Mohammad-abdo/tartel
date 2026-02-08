@@ -272,19 +272,19 @@ const CourseDetail = () => {
                   </button>
                   
                   <button
-                    onClick={() => navigate(`/courses/${id}/lessons/add`)}
+                    onClick={() => navigate(`/courses/add`)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
                   >
                     <FiVideo />
-                    إضافة درس جديد
+                    إضافة دورة جديدة
                   </button>
                   
                   <button
-                    onClick={() => navigate(`/courses/${id}/students`)}
+                    onClick={() => navigate('/users')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
                   >
                     <FiUsers />
-                    إدارة الطلاب
+                    إدارة المستخدمين
                   </button>
                   
                   <button
@@ -545,11 +545,11 @@ const CourseDetail = () => {
                 <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-3 arabic-text">إدارة المعلمين</h3>
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => navigate(`/courses/${id}/teachers/add`)}
+                    onClick={() => navigate('/teachers/add')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
                   >
                     <FiUser />
-                    إضافة معلم للدورة
+                    إضافة معلم جديد
                   </button>
                   
                   <button
@@ -696,19 +696,19 @@ const CourseDetail = () => {
                 <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-3 arabic-text">إدارة الطلاب</h3>
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => navigate(`/courses/${id}/students/add`)}
+                    onClick={() => navigate('/users/add')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
                   >
                     <FiUsers />
-                    إضافة طلاب للدورة
+                    إضافة مستخدم جديد
                   </button>
                   
                   <button
-                    onClick={() => navigate(`/courses/${id}/students/export`)}
+                    onClick={() => setActiveTab('students')}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
                   >
                     <FiUsers />
-                    تصدير قائمة الطلاب
+                    عرض طلاب الدورة
                   </button>
                   
                   <button

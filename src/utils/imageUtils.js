@@ -51,7 +51,7 @@ export const fixImageUrl = (imageUrl) => {
  * @param {string[]} imageFields - Array of field names that contain image URLs
  * @returns {Object} - Object with fixed image URLs
  */
-export const fixImageUrls = (obj, imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl']) => {
+export const fixImageUrls = (obj, imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl', 'videoUrl', 'thumbnailUrl']) => {
   if (!obj || typeof obj !== 'object') {
     return obj;
   }
@@ -63,6 +63,16 @@ export const fixImageUrls = (obj, imageFields = ['image', 'avatar', 'photo', 'th
       fixed[field] = fixImageUrl(fixed[field]);
     }
   });
+
+  // Handle nested objects like videos array in lessons
+  if (fixed.videos && Array.isArray(fixed.videos)) {
+    fixed.videos = fixImageUrlsInArray(fixed.videos, imageFields);
+  }
+
+  // Handle nested lessons array
+  if (fixed.lessons && Array.isArray(fixed.lessons)) {
+    fixed.lessons = fixImageUrlsInArray(fixed.lessons, imageFields);
+  }
   
   return fixed;
 };
