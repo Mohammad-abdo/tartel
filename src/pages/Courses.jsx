@@ -126,10 +126,10 @@ const Courses = () => {
 
   const getStatusBadgeClasses = (status) => {
     if (status === 'PUBLISHED')
-      return 'rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800';
+      return 'rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800';
     if (status === 'DRAFT')
       return 'rounded-full bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
-    return 'rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800';
+    return 'rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800';
   };
 
   const teacherName = (course) =>
@@ -169,7 +169,7 @@ const Courses = () => {
           </Button>
           <Button
             onClick={() => navigate('/courses/add')}
-            className="rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-orange-700 hover:to-orange-800"
+            className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800"
           >
             <FiPlus className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
             {t('courses.createCourse')}
@@ -185,20 +185,20 @@ const Courses = () => {
               {t('courses.totalCourses')}
             </p>
             <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400">
               <FiBook className="size-5" />
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-gray-800 shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-800/50 bg-white dark:bg-gray-800 shadow-sm">
           <div className="p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {t('courses.publishedCourses')}
             </p>
-            <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
               {stats.published}
             </p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
               <FiTrendingUp className="size-5" />
             </div>
           </div>
@@ -251,7 +251,7 @@ const Courses = () => {
                   setFilters({ ...filters, search: e.target.value });
                 }}
                 className={cn(
-                  'h-10 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500',
+                  'h-10 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500',
                   isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'
                 )}
               />
@@ -263,7 +263,7 @@ const Courses = () => {
                   setPage(1);
                   setFilters({ ...filters, status: e.target.value });
                 }}
-                className="h-10 min-w-[170px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                className="h-10 min-w-[170px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
               >
                 <option value="">{t('users.allStatus')}</option>
                 <option value="PUBLISHED">{t('courses.published')}</option>
@@ -278,7 +278,7 @@ const Courses = () => {
                   setPage(1);
                   setFilters({ ...filters, teacherId: e.target.value });
                 }}
-                className="min-w-[140px] rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500"
+                className="min-w-[140px] rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -289,7 +289,7 @@ const Courses = () => {
               className={cn(
                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
                 viewMode === 'cards'
-                  ? 'bg-white dark:bg-gray-600 text-orange-600 dark:text-orange-400 shadow'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-600/50'
               )}
             >
@@ -302,7 +302,7 @@ const Courses = () => {
               className={cn(
                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
                 viewMode === 'table'
-                  ? 'bg-white dark:bg-gray-600 text-orange-600 dark:text-orange-400 shadow'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-600/50'
               )}
             >
@@ -317,13 +317,13 @@ const Courses = () => {
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="size-12 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+            <div className="size-12 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
           </div>
         ) : courses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-              <FiBook className="size-12 text-orange-600 dark:text-orange-400" />
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700/50">
+              <FiBook className="size-12 text-gray-600 dark:text-gray-400" />
             </div>
             <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
               {t('courses.emptyTitle')}
@@ -333,7 +333,7 @@ const Courses = () => {
             </p>
             <Button
               onClick={() => navigate('/courses/add')}
-              className="mt-6 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800"
+              className="mt-6 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-blue-800"
             >
               <FiPlus className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
               {t('courses.createCourse')}
@@ -450,7 +450,7 @@ function CourseCard({
   const students = studentsCount(course);
   return (
     <div
-      className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-200 hover:border-orange-200 dark:hover:border-orange-800 hover:shadow-md cursor-pointer"
+      className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-200 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md cursor-pointer"
       onClick={onView}
     >
       {/* صورة الانترو / صورة الدورة */}
@@ -494,13 +494,13 @@ function CourseCard({
       </div>
       <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 text-xs font-semibold text-orange-600 dark:text-orange-400">
+          <div className="flex size-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700/50 text-xs font-semibold text-gray-600 dark:text-gray-400">
             {teacherName(course)?.[0] || 'T'}
           </div>
           <span className="font-medium text-gray-900 dark:text-white">{teacherName(course)}</span>
         </div>
         <div className={cn('text-end', isRTL && 'text-start')}>
-          <p className="font-semibold text-orange-600 dark:text-orange-400">
+          <p className="font-semibold text-green-600 dark:text-green-400">
             $ {(course.price ?? 0).toFixed(2)}
           </p>
           {course.duration && (
@@ -513,7 +513,7 @@ function CourseCard({
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-4">
         <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-          <FiUsers className="size-4 text-orange-600 dark:text-orange-400" />
+          <FiUsers className="size-4 text-blue-600 dark:text-blue-400" />
           <span className="font-medium text-gray-900 dark:text-white">{students}</span>
           <span>{t('courses.students')}</span>
         </div>
@@ -521,7 +521,7 @@ function CourseCard({
           <button
             type="button"
             onClick={onView}
-            className="rounded-lg p-2 text-orange-600 dark:text-orange-400 transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            className="rounded-lg p-2 text-blue-600 dark:text-blue-400 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
             title={t('courses.viewDetails')}
           >
             <FiEye className="size-4" />
@@ -529,7 +529,7 @@ function CourseCard({
           <button
             type="button"
             onClick={onEdit}
-            className="rounded-lg p-2 text-orange-600 dark:text-orange-400 transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            className="rounded-lg p-2 text-blue-600 dark:text-blue-400 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
             title={t('courses.editCourse')}
           >
             <FiEdit className="size-4" />
@@ -646,7 +646,7 @@ function CoursesTable({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                  className="h-8 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   onClick={() => onView(course)}
                 >
                   <FiEye className="size-4" />
@@ -654,7 +654,7 @@ function CoursesTable({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                  className="h-8 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   onClick={() => onEdit(course)}
                 >
                   <FiEdit className="size-4" />
