@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
@@ -70,15 +71,16 @@ const EditCourse = () => {
     }
   }, [id]);
 
+  // Close dropdown when pressing Escape
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (teacherDropdownRef.current && !teacherDropdownRef.current.contains(event.target)) {
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape' && showTeacherDropdown) {
         setShowTeacherDropdown(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [showTeacherDropdown]);
 
   const fetchCourse = async () => {
     try {
@@ -370,7 +372,7 @@ const EditCourse = () => {
         </div>
       </div>
 
-      <form id="edit-course-form" onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+      <form id="edit-course-form" onSubmit={handleSubmit} className="flex flex-1 flex-col">
         <div className="flex-1 overflow-auto p-4">
           <div className="mx-auto grid max-w-[1600px] gap-6 xl:grid-cols-2">
             {/* العمود الأيسر: معلومات الدورة، المعلمون، السعر، الوسائط */}
@@ -439,49 +441,79 @@ const EditCourse = () => {
                       <span>{formData.teacherIds.length === 0 ? t('courses.selectTeachersPlaceholder') : `${formData.teacherIds.length} ${t('courses.teachers')}`}</span>
                       <FiChevronDown className={cn('size-4 transition-transform', showTeacherDropdown && 'rotate-180')} aria-hidden />
                     </button>
-                    {showTeacherDropdown && (
-                      <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-64 overflow-hidden rounded-xl border border-border bg-popover shadow-tarteel-md">
-                        <div className="border-b border-border p-2">
-                          <div className="relative">
-                            <FiSearch className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                            <Input placeholder={t('common.search')} value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)} className="h-9 pl-8" onClick={(e) => e.stopPropagation()} />
+                    {showTeacherDropdown && createPortal(
+                      <div 
+                        className="fixed inset-0 z-[9999]" 
+                        onClick={() => setShowTeacherDropdown(false)}
+                      >
+                        <div 
+                          className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl backdrop-blur-sm max-h-64 overflow-hidden"
+                          style={{
+                            top: (teacherDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                            left: teacherDropdownRef.current?.getBoundingClientRect().left || 0,
+                            width: teacherDropdownRef.current?.getBoundingClientRect().width || 300,
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="border-b border-gray-200 dark:border-gray-700 p-2">
+                            <div className="relative">
+                              <FiSearch className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400" aria-hidden />
+                              <Input 
+                                placeholder={t('common.search')} 
+                                value={teacherSearch} 
+                                onChange={(e) => setTeacherSearch(e.target.value)} 
+                                className="h-9 pl-8" 
+                                onClick={(e) => e.stopPropagation()} 
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto">
+                            {loadingTeachers ? (
+                              <div className="flex justify-center py-6">
+                                <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              </div>
+                            ) : filteredTeachers.length === 0 ? (
+                              <p className="py-6 text-center text-sm text-gray-500">{t('teachers.noTeachers')}</p>
+                            ) : (
+                              filteredTeachers.map((teacher) => {
+                                const isSelected = formData.teacherIds.includes(teacher.id);
+                                return (
+                                  <button
+                                    key={teacher.id}
+                                    type="button"
+                                    onClick={() => {
+                                      handleTeacherSelect(teacher);
+                                    }}
+                                    className={cn(
+                                      'flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors', 
+                                      isSelected && 'bg-blue-50 dark:bg-blue-900/20'
+                                    )}
+                                  >
+                                    <div className="flex size-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                                      {teacher.user?.firstName?.[0] || 'T'}
+                                    </div>
+                                    <div className="min-w-0 flex-1 truncate">
+                                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                                        {teacher.user?.firstName} {teacher.user?.lastName}
+                                      </div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {teacher.user?.email}
+                                      </div>
+                                      {teacher.teacherType === 'COURSE_SHEIKH' && (
+                                        <span className="ml-1.5 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                                          شيخ دورات
+                                        </span>
+                                      )}
+                                    </div>
+                                    {isSelected && <div className="size-4 rounded-full bg-blue-500" />}
+                                  </button>
+                                );
+                              })
+                            )}
                           </div>
                         </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          {loadingTeachers ? (
-                            <div className="flex justify-center py-6">
-                              <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            </div>
-                          ) : filteredTeachers.length === 0 ? (
-                            <p className="py-6 text-center text-sm text-muted-foreground">{t('teachers.noTeachers')}</p>
-                          ) : (
-                            filteredTeachers.map((teacher) => {
-                              const isSelected = formData.teacherIds.includes(teacher.id);
-                              return (
-                                <button
-                                  key={teacher.id}
-                                  type="button"
-                                  onClick={() => handleTeacherSelect(teacher)}
-                                  className={cn('flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted/50', isSelected && 'bg-primary/10')}
-                                >
-                                  <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                                    {teacher.user?.firstName?.[0] || 'T'}
-                                  </div>
-                                  <div className="min-w-0 flex-1 truncate">
-                                    {teacher.user?.firstName} {teacher.user?.lastName}
-                                    {teacher.teacherType === 'COURSE_SHEIKH' && (
-                                      <span className="ml-1.5 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                                        {t('teachers.courseSheikh')}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {isSelected && <div className="size-4 rounded-full bg-primary" />}
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
+                      </div>,
+                      document.body
                     )}
                   </div>
                 </CardContent>
