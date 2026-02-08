@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -29,13 +30,36 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor: unwrap unified format { success, message, data }
+// Response interceptor: unwrap unified format { success, message, data } and fix image URLs
 api.interceptors.response.use(
   (response) => {
     const body = response.data;
     if (body && typeof body === 'object' && body.success === true && 'data' in body) {
       response.data = body.data;
     }
+    
+    // Fix image URLs in response data
+    if (response.data) {
+      const imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl'];
+      
+      if (Array.isArray(response.data)) {
+        // Fix image URLs in array of objects
+        response.data = fixImageUrlsInArray(response.data, imageFields);
+      } else if (typeof response.data === 'object') {
+        // Fix image URLs in single object
+        response.data = fixImageUrls(response.data, imageFields);
+        
+        // Handle nested arrays (like courses, teachers, etc.)
+        Object.keys(response.data).forEach(key => {
+          if (Array.isArray(response.data[key])) {
+            response.data[key] = fixImageUrlsInArray(response.data[key], imageFields);
+          } else if (response.data[key] && typeof response.data[key] === 'object') {
+            response.data[key] = fixImageUrls(response.data[key], imageFields);
+          }
+        });
+      }
+    }
+    
     return response;
   },
   (error) => {
