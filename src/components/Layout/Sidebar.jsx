@@ -1,0 +1,156 @@
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import {
+  FiHome,
+  FiUser,
+  FiUsers,
+  FiUserCheck,
+  FiCalendar,
+  FiDollarSign,
+  FiBarChart2,
+  FiSettings,
+  FiLogOut,
+  FiCreditCard,
+  FiBox,
+  FiBell,
+  FiBook,
+  FiFile,
+  FiShield,
+  FiAward,
+  FiStar,
+  FiVideo,
+  FiTrendingUp,
+  FiActivity,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { cn } from '../../lib/utils';
+
+const SIDEBAR_WIDTH_EXPANDED = 256; /* w-64 */
+const SIDEBAR_WIDTH_COLLAPSED = 80; /* w-20 */
+
+const Sidebar = ({ collapsed, onToggleCollapse }) => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+  const location = useLocation();
+  const { logout, user } = useAuth();
+
+  const menuItems = [
+    { path: '/dashboard', icon: FiHome, label: t('sidebar.dashboard') },
+    { path: '/profile', icon: FiUser, label: t('sidebar.profile') },
+    { path: '/users', icon: FiUsers, label: t('sidebar.users') },
+    { path: '/teachers', icon: FiUserCheck, label: t('sidebar.teachers') },
+    { path: '/bookings', icon: FiCalendar, label: t('sidebar.bookings') },
+    { path: '/sessions', icon: FiVideo, label: t('sidebar.sessions') },
+    { path: '/payments', icon: FiDollarSign, label: t('sidebar.payments') },
+    { path: '/finance', icon: FiTrendingUp, label: t('sidebar.finance') },
+    { path: '/wallets', icon: FiCreditCard, label: t('sidebar.wallets') },
+    { path: '/subscriptions', icon: FiBox, label: t('sidebar.subscriptions') },
+    { path: '/student-subscriptions', icon: FiBox, label: t('sidebar.packages') },
+    { path: '/courses', icon: FiBook, label: t('sidebar.courses') },
+    { path: '/content', icon: FiFile, label: t('sidebar.content') },
+    { path: '/reviews', icon: FiStar, label: t('sidebar.reviews') },
+    { path: '/certificates', icon: FiAward, label: t('sidebar.certificates') },
+    { path: '/notifications', icon: FiBell, label: t('sidebar.notifications') },
+    { path: '/rbac', icon: FiShield, label: t('sidebar.rbac') },
+    { path: '/reports', icon: FiBarChart2, label: t('sidebar.reports') },
+    { path: '/activity', icon: FiActivity, label: t('sidebar.activity') },
+    { path: '/settings', icon: FiSettings, label: t('sidebar.settings') },
+  ];
+
+  const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
+
+  return (
+    <aside
+      className={cn(
+        'fixed top-0 z-40 flex h-screen flex-col overflow-hidden border border-gray-200 bg-white shadow-2xl transition-[width] duration-200 ease-out dark:border-gray-700 dark:bg-gray-800',
+        isRTL ? 'right-0 border-r-0 border-l' : 'left-0 border-l-0 border-r'
+      )}
+      style={{ width: `${width}px` }}
+      aria-label={t('sidebar.navigation') || 'Main navigation'}
+    >
+      {/* Logo bar — orange gradient */}
+      <div
+        className={cn(
+          'flex h-14 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-orange-500 to-orange-600 px-3',
+          collapsed ? 'justify-center' : 'justify-between'
+        )}
+      >
+        {!collapsed ? (
+          <div className="flex min-w-0 items-center gap-2 px-2">
+            <span className="text-lg font-semibold tracking-tight text-white truncate">Tarteel</span>
+            <span className="text-sm font-normal text-white/90" dir="rtl">ترتيل</span>
+          </div>
+        ) : (
+          <span className="text-xl font-bold text-white" aria-hidden>T</span>
+        )}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+          aria-label={collapsed ? t('sidebar.expand') || 'Expand sidebar' : t('sidebar.collapse') || 'Collapse sidebar'}
+        >
+          {isRTL ? (
+            collapsed ? <FiChevronLeft className="size-5" /> : <FiChevronRight className="size-5" />
+          ) : (
+            collapsed ? <FiChevronRight className="size-5" /> : <FiChevronLeft className="size-5" />
+          )}
+        </button>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3" aria-label={t('sidebar.navigation') || 'Main navigation'}>
+        <ul className="space-y-0.5">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/20'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* User & Logout */}
+      <div className="shrink-0 space-y-2 border-t border-gray-200 dark:border-gray-700 p-3">
+        {!collapsed && (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 px-3 py-2">
+            <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{user?.name || user?.email}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('sidebar.administrator')}</p>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={logout}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-orange-500/30',
+            collapsed && 'justify-center'
+          )}
+          title={collapsed ? t('sidebar.logout') : undefined}
+        >
+          <FiLogOut className="size-5 shrink-0" aria-hidden />
+          {!collapsed && <span>{t('sidebar.logout')}</span>}
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;

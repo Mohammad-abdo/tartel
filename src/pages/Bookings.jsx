@@ -1,0 +1,406 @@
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { adminAPI, bookingAPI } from '../services/api';
+import { toast } from 'react-toastify';
+import { FiCalendar, FiCheckCircle, FiXCircle, FiUser, FiEye, FiClock, FiDollarSign, FiGrid, FiList } from 'react-icons/fi';
+import { useLanguage } from '../context/LanguageContext';
+import { cn } from '../lib/utils';
+
+const Bookings = () => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+  const locale = language === 'ar' ? 'ar-SA' : 'en-US';
+  const isRTL = language === 'ar';
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [viewMode, setViewMode] = useState('admin');
+  const [viewLayout, setViewLayout] = useState('cards'); // 'cards' | 'table'
+
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (viewMode === 'admin') {
+        const params = { page, limit: 20, ...(statusFilter && { status: statusFilter }) };
+        const response = await adminAPI.getBookings(params);
+        const bookingsData = response.data.bookings || response.data.data || [];
+        const totalPagesData = response.data.pagination?.totalPages || response.data.totalPages || 1;
+        setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+        setTotalPages(totalPagesData);
+      } else {
+        const response = await bookingAPI.getMyBookings(statusFilter);
+        const bookingsData = response.data.data || response.data || [];
+        setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error('Failed to fetch bookings:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, statusFilter, viewMode]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
+  const handleForceAction = async (id, action) => {
+    try {
+      if (action === 'cancel') await adminAPI.forceCancelBooking(id);
+      else if (action === 'confirm') await adminAPI.forceConfirmBooking(id);
+      toast.success(t('bookings.updated'));
+      fetchBookings();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update');
+    }
+  };
+
+  const stats = useMemo(() => {
+    const total = bookings.length;
+    const pending = bookings.filter((b) => b.status === 'PENDING').length;
+    const confirmed = bookings.filter((b) => b.status === 'CONFIRMED').length;
+    const completed = bookings.filter((b) => b.status === 'COMPLETED').length;
+    const cancelled = bookings.filter((b) => b.status === 'CANCELLED').length;
+    return { total, pending, confirmed, completed, cancelled };
+  }, [bookings]);
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      PENDING: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
+      CONFIRMED: 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
+      CANCELLED: 'bg-red-50 text-red-800 ring-1 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-800',
+      COMPLETED: 'bg-blue-100 text-blue-800 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-800',
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Page header */}
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{t('bookings.title')}</h1>
+          <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">{t('bookings.manageSubtitle')}</p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50">
+            <button type="button" onClick={() => { setViewMode('admin'); setPage(1); }} className={cn('rounded-md px-3 py-2 text-sm font-medium transition-all', viewMode === 'admin' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')}>
+              {t('bookings.allBookings')}
+            </button>
+            <button type="button" onClick={() => { setViewMode('user'); setPage(1); }} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all', viewMode === 'user' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')}>
+              <FiUser className="size-4" />
+              {t('bookings.myBookings')}
+            </button>
+          </div>
+          <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50" title={t('bookings.viewCards')}>
+            <button type="button" onClick={() => setViewLayout('cards')} className={cn('rounded-md p-2 text-sm font-medium transition-all', viewLayout === 'cards' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')}>
+              <FiGrid className="size-4" />
+            </button>
+            <button type="button" onClick={() => setViewLayout('table')} className={cn('rounded-md p-2 text-sm font-medium transition-all', viewLayout === 'table' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')} title={t('bookings.viewTable')}>
+              <FiList className="size-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('bookings.total')}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+              <FiCalendar className="size-5" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.pending')}</p>
+            <p className="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+              <FiClock className="size-5" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.confirmed')}</p>
+            <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.confirmed}</p>
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
+              <FiCheckCircle className="size-5" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.completed')}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400">
+              <FiCheckCircle className="size-5" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-red-200 dark:border-red-800/50 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.cancelled')}</p>
+            <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">{stats.cancelled}</p>
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+              <FiXCircle className="size-5" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 min-w-[170px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500">
+            <option value="">{t('users.allStatus')}</option>
+            <option value="PENDING">{t('dashboard.pending')}</option>
+            <option value="CONFIRMED">{t('dashboard.confirmed')}</option>
+            <option value="CANCELLED">{t('dashboard.cancelled')}</option>
+            <option value="COMPLETED">{t('dashboard.completed')}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="size-12 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+              <FiCalendar className="size-12 text-orange-600 dark:text-orange-400" />
+            </div>
+            <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{t('bookings.empty')}</h2>
+            <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">{t('bookings.emptySubtitle')}</p>
+          </div>
+        ) : viewLayout === 'table' ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full caption-bottom text-sm">
+                <thead className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-700/50">
+                  <tr>
+                    <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('bookings.student')}</th>
+                    <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('bookings.teacher')}</th>
+                    <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('bookings.dateTime')}</th>
+                    <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('common.status')}</th>
+                    <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('bookings.totalPrice')}</th>
+                    <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-left' : 'text-right')}>{t('common.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {bookings.map((booking) => {
+                    const studentName = booking.student?.firstName && booking.student?.lastName ? `${booking.student.firstName} ${booking.student.lastName}` : booking.student?.name || booking.studentId || t('users.notAvailable');
+                    const teacherName = booking.teacher?.user?.firstName && booking.teacher?.user?.lastName ? `${booking.teacher.user.firstName} ${booking.teacher.user.lastName}` : booking.teacher?.user?.name || booking.teacherId || t('users.notAvailable');
+                    const bookingDate = new Date(booking.date || booking.startTime);
+                    const dateStr = bookingDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = booking.startTime && typeof booking.startTime === 'string' ? booking.startTime : bookingDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+                    return (
+                      <tr
+                        key={booking.id}
+                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                        onClick={() => navigate(`/bookings/${booking.id}`)}
+                      >
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>{studentName}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{teacherName}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{dateStr} · {timeStr}</td>
+                        <td className="px-6 py-4">
+                          <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getStatusBadge(booking.status))}>
+                            {booking.status === 'PENDING' && t('dashboard.pending')}
+                            {booking.status === 'CONFIRMED' && t('dashboard.confirmed')}
+                            {booking.status === 'COMPLETED' && t('dashboard.completed')}
+                            {booking.status === 'CANCELLED' && t('dashboard.cancelled')}
+                            {!['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(booking.status) && booking.status}
+                          </span>
+                        </td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white', isRTL && 'text-right')}>${(booking.totalPrice ?? 0).toFixed(2)}</td>
+                        <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                          <div className={cn('flex items-center gap-1', isRTL ? 'justify-start' : 'justify-end')}>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); navigate(`/bookings/${booking.id}`); }} className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600" title={t('bookings.viewDetails')}>
+                              <FiEye className="size-4" />
+                            </button>
+                            {viewMode === 'admin' && booking.status === 'PENDING' && (
+                              <>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); handleForceAction(booking.id, 'confirm'); }} className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20" title={t('bookings.confirmBooking')}>
+                                  <FiCheckCircle className="size-4" />
+                                </button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); handleForceAction(booking.id, 'cancel'); }} className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" title={t('bookings.cancelBooking')}>
+                                  <FiXCircle className="size-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {viewMode === 'admin' && totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-700 sm:px-6">
+                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:bg-gray-50">
+                  {t('common.previous')}
+                </button>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{t('users.pageOf', { page, totalPages })}</span>
+                <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:bg-gray-50">
+                  {t('common.next')}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="p-6">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
+              {bookings.map((booking) => {
+                const studentName =
+                  booking.student?.firstName && booking.student?.lastName
+                    ? `${booking.student.firstName} ${booking.student.lastName}`
+                    : booking.student?.name || booking.studentId || t('common.notAvailable');
+                const teacherName =
+                  booking.teacher?.user?.firstName && booking.teacher?.user?.lastName
+                    ? `${booking.teacher.user.firstName} ${booking.teacher.user.lastName}`
+                    : booking.teacher?.user?.name || booking.teacherId || t('common.notAvailable');
+                const bookingDate = new Date(booking.date || booking.startTime);
+                const dateStr = bookingDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                const timeStr = booking.startTime && typeof booking.startTime === 'string' ? booking.startTime : bookingDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+
+                return (
+                  <div
+                    key={booking.id}
+                    className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-orange-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-800 cursor-pointer flex flex-col"
+                    onClick={() => navigate(`/bookings/${booking.id}`)}
+                  >
+                    {/* Card header */}
+                    <div className="relative h-36 bg-gradient-to-br from-orange-500 to-orange-600">
+                      <div className="h-full w-full flex items-center justify-center text-white/90">
+                        <FiCalendar className="text-5xl" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <span
+                          className={cn(
+                            'px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-sm',
+                            getStatusBadge(booking.status)
+                          )}
+                        >
+                          {booking.status === 'PENDING' && t('dashboard.pending')}
+                          {booking.status === 'CONFIRMED' && t('dashboard.confirmed')}
+                          {booking.status === 'COMPLETED' && t('dashboard.completed')}
+                          {booking.status === 'CANCELLED' && t('dashboard.cancelled')}
+                          {!['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(booking.status) && booking.status}
+                        </span>
+                      </div>
+                      <div className="absolute top-3 right-3 flex gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/bookings/${booking.id}`);
+                          }}
+                          className="p-1.5 rounded-full bg-white/90 text-gray-700 hover:bg-white hover:text-orange-600 transition-colors shadow-sm dark:bg-gray-800/90 dark:text-gray-200"
+                          title={t('bookings.viewDetails')}
+                        >
+                          <FiEye className="text-sm" />
+                        </button>
+                        {viewMode === 'admin' && booking.status === 'PENDING' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleForceAction(booking.id, 'confirm');
+                              }}
+                              className="p-1.5 rounded-full bg-white/90 text-emerald-700 hover:bg-white hover:text-emerald-600 transition-colors shadow-sm"
+                              title={t('bookings.confirmBooking')}
+                            >
+                              <FiCheckCircle className="text-sm" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleForceAction(booking.id, 'cancel');
+                              }}
+                              className="p-1.5 rounded-full bg-white/90 text-red-700 hover:bg-white hover:text-red-600 transition-colors shadow-sm"
+                              title={t('bookings.cancelBooking')}
+                            >
+                              <FiXCircle className="text-sm" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="flex-1 flex flex-col p-4 space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">{t('bookings.student')}</p>
+                        <h2 className="text-base font-semibold text-gray-900 line-clamp-1">
+                          {studentName}
+                        </h2>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">{t('bookings.teacher')}</p>
+                        <p className="text-sm text-gray-700 line-clamp-1">{teacherName}</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <FiClock className="shrink-0 text-orange-500 dark:text-orange-400" />
+                        <span>{dateStr}</span>
+                        {timeStr && <span>· {timeStr}</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+                          <FiDollarSign className="text-emerald-600" />
+                          {(booking.totalPrice ?? 0).toFixed(2)}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/bookings/${booking.id}`);
+                            }}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+                          >
+                            <FiEye className="text-sm" />
+                            {t('common.view')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </div>
+            {viewMode === 'admin' && totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-700 sm:px-6">
+                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:bg-gray-50">
+                  {t('common.previous')}
+                </button>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{t('users.pageOf', { page, totalPages })}</span>
+                <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:bg-gray-50">
+                  {t('common.next')}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Bookings;

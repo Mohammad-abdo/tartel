@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* Tailwind v4: تفعيل الوضع الليلي عند وجود class="dark" على العنصر أو أحد الأصول */
+@custom-variant dark (&&:where(.dark, .dark *));
+
+/* ============================================
+   Design System — Courses Dashboard
+   Primary: Orange | Poppins (EN) / Alexandria (AR)
+   ============================================ */
+
+:root {
+  /* Primary: Orange (primary-500 #f97316, primary-600 #ea580c) */
+  --primary: 25 95% 53%;
+  --primary-foreground: 0 0% 100%;
+  /* Accent: same orange for consistency */
+  --accent: 25 92% 48%;
+  --accent-foreground: 0 0% 100%;
+  /* Neutrals — Light mode */
+  --background: 0 0% 98%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 25 95% 53%;
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 9%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  /* Layout & components */
+  --radius: 0.75rem;
+  --transition-duration: 200ms;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --chart-1: 25 95% 53%;
+  --chart-2: 25 92% 48%;
+  --chart-3: 0 0% 45%;
+  --chart-4: 160 45% 42%;
+  --chart-5: 38 35% 55%;
+}
+
+.dark {
+  --background: 0 0% 9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 13%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 13%;
+  --popover-foreground: 0 0% 98%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 0 0% 63%;
+  --border: 0 0% 22%;
+  --input: 0 0% 22%;
+  --ring: 25 92% 55%;
+  --primary: 25 92% 55%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 25 92% 48%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 0 0% 18%;
+  --secondary-foreground: 0 0% 98%;
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+  --chart-1: 25 92% 55%;
+  --chart-2: 25 90% 50%;
+  --chart-3: 0 0% 63%;
+  --chart-4: 160 45% 50%;
+  --chart-5: 38 35% 55%;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  html:not([dir="rtl"]) {
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+  html[dir="rtl"] {
+    font-family: 'Alexandria', 'Poppins', system-ui, sans-serif;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: top var(--transition-duration) ease;
+  }
+  .skip-link:focus {
+    top: 0.5rem;
+  }
+  h1, .text-page-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    color: hsl(var(--foreground));
+  }
+  @media (min-width: 640px) {
+    h1, .text-page-title { font-size: 2.25rem; }
+  }
+  @media (min-width: 1536px) {
+    h1, .text-page-title { font-size: 2.25rem; }
+  }
+  @media (min-width: 1920px) {
+    h1, .text-page-title { font-size: 2.5rem; }
+  }
+  h2, .text-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 1536px) {
+    h2, .text-section-title { font-size: 1.375rem; }
+  }
+  @media (min-width: 1920px) {
+    h2, .text-section-title { font-size: 1.5rem; }
+  }
+  .text-body {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .text-muted {
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+}
+
+@layer utilities {
+  .shadow-tarteel-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .shadow-tarteel {
+    box-shadow: var(--shadow);
+  }
+  .shadow-tarteel-md {
+    box-shadow: var(--shadow-md);
+  }
+  .rounded-tarteel {
+    border-radius: var(--radius);
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-in forwards;
+  }
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out forwards;
+  }
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
