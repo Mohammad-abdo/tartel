@@ -279,8 +279,11 @@ const EditCourse = () => {
         teacherId: formData.teacherIds[0],
         price: parseFloat(formData.price) || 0,
         duration: formData.duration ? parseFloat(formData.duration) : undefined,
-        lessons,
+        lessons: lessons,
       };
+      
+      console.log('Updating course with data:', submitData);
+      console.log('Lessons to update:', lessons);
       await courseAPI.updateCourse(id, submitData);
       toast.success(t('courses.updateSuccess'));
       navigate(`/courses/${id}`);

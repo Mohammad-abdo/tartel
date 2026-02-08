@@ -39,6 +39,7 @@ import AddTeacher from './pages/AddTeacher';
 import EditTeacher from './pages/EditTeacher';
 import AddCourse from './pages/AddCourse';
 import EditCourse from './pages/EditCourse';
+import ManageLessons from './pages/ManageLessons';
 import './App.css';
 
 function ThemedToastContainer() {
@@ -274,6 +275,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <EditCourse />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses/:id/lessons"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ManageLessons />
             </DashboardLayout>
           </ProtectedRoute>
         }

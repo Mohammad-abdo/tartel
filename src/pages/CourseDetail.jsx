@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { courseAPI } from '../services/api';
 import ImageModal from '../components/ImageModal';
+import YouTubeThumbnail from '../components/YouTubeThumbnail';
 import {
   FiArrowLeft,
   FiBook,
@@ -132,11 +133,11 @@ const CourseDetail = () => {
             </button>
             
             <button
-              onClick={() => navigate(`/courses/${id}/lessons/add`)}
+              onClick={() => navigate(`/courses/${id}/lessons`)}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all duration-300 font-medium shadow-lg"
             >
               <FiVideo />
-              إضافة درس
+              إدارة الدروس
             </button>
             
             <button
@@ -411,14 +412,12 @@ const CourseDetail = () => {
                                     {/* مشغل الفيديو داخل الصفحة مثل الانترو */}
                                     <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden">
                                       {video.videoUrl ? (
-                                        isYoutube && embedUrl ? (
-                                          <iframe
-                                            className="w-full h-full"
-                                            src={embedUrl}
-                                            title={video.title || `Video ${videoIndex + 1}`}
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
+                                        isYoutube ? (
+                                          <YouTubeThumbnail
+                                            videoUrl={video.videoUrl}
+                                            alt={video.title || `Video ${videoIndex + 1}`}
+                                            className="w-full h-full rounded-t-lg"
+                                            showPlayIcon={true}
                                           />
                                         ) : (
                                           <video

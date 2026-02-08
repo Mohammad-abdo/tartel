@@ -226,8 +226,11 @@ const AddCourse = () => {
         introVideoUrl: formData.introVideoUrl,
         introVideoThumbnail: formData.introVideoThumbnail,
         status: formData.status,
-        ...(lessons.length > 0 && { lessons }),
+        lessons: lessons,
       };
+      
+      console.log('Submitting course data:', submitData);
+      console.log('Lessons to submit:', lessons);
       await courseAPI.createCourse(submitData);
       toast.success(t('courses.createSuccess'));
       navigate('/courses');
