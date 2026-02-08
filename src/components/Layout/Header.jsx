@@ -93,8 +93,8 @@ const Header = () => {
               type="text"
               placeholder={t('header.searchPlaceholder')}
               className={cn(
-                'h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 transition-colors dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400',
-                'focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none',
+                'h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 transition-colors dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 arabic-text',
+                'focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none',
                 isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'
               )}
             />
@@ -105,7 +105,7 @@ const Header = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="size-9 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="size-9 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-200"
           onClick={toggleTheme}
           aria-label={theme === 'dark' ? t('theme.switchToLight') || 'Switch to light mode' : t('theme.switchToDark') || 'Switch to dark mode'}
         >
@@ -115,12 +115,12 @@ const Header = () => {
         {/* Language dropdown */}
         <DropdownMenuRoot open={langMenuOpen} onOpenChange={setLangMenuOpen}>
           <DropdownMenuTrigger
-            className="flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+            className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-sm font-medium text-emerald-900 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-100 dark:hover:bg-emerald-900/30 transition-all duration-200 arabic-text"
             onClick={() => setLangMenuOpen(!langMenuOpen)}
           >
-            <FiGlobe className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <FiGlobe className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="hidden sm:inline">{language === 'ar' ? 'العربية' : 'English'}</span>
-            <FiChevronDown className={cn('size-4 text-gray-500 dark:text-gray-400 transition-transform shrink-0', langMenuOpen && 'rotate-180')} />
+            <FiChevronDown className={cn('size-4 text-emerald-600 dark:text-emerald-400 transition-transform shrink-0', langMenuOpen && 'rotate-180')} />
           </DropdownMenuTrigger>
           {langMenuOpen && (
             <DropdownMenuContent isRTL={isRTL} className="min-w-32 rounded-xl border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
@@ -135,12 +135,12 @@ const Header = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="relative size-9 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="relative size-9 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200"
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <FiBell className="size-4" />
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-orange-600 text-[10px] font-medium text-white shadow">
+              <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-[10px] font-medium text-white shadow-lg animate-pulse">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -158,7 +158,7 @@ const Header = () => {
                 <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-600 dark:bg-gray-700/50">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('header.notifications')}</h3>
                   {unreadCount > 0 && (
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-orange-600 dark:text-orange-400" onClick={handleMarkAllAsRead}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 dark:text-emerald-400 arabic-text" onClick={handleMarkAllAsRead}>
                       {t('header.markAllAsRead')}
                     </Button>
                   )}
@@ -170,8 +170,8 @@ const Header = () => {
                         key={notification.id}
                         onClick={() => handleMarkAsRead(notification.id)}
                         className={cn(
-                          'cursor-pointer border-b border-gray-100 px-4 py-3 transition-colors last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50',
-                          !notification.read && 'bg-orange-50 dark:bg-orange-900/20'
+                          'cursor-pointer border-b border-gray-100 px-4 py-3 transition-colors last:border-0 hover:bg-emerald-50 dark:border-gray-700 dark:hover:bg-emerald-900/20 arabic-text',
+                          !notification.read && 'bg-emerald-50 dark:bg-emerald-900/20 border-r-2 border-r-emerald-500'
                         )}
                       >
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</p>
@@ -188,22 +188,22 @@ const Header = () => {
           )}
         </div>
 
-        {/* User menu — avatar with orange gradient */}
+        {/* User menu — avatar with Islamic green gradient */}
         <DropdownMenuRoot open={userMenuOpen} onOpenChange={setUserMenuOpen}>
           <DropdownMenuTrigger
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:bg-gray-700"
+            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-sm transition-all duration-200 hover:bg-emerald-100 hover:shadow-md dark:border-emerald-700 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30"
             onClick={() => setUserMenuOpen(!userMenuOpen)}
           >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-sm font-semibold text-white shadow">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-sm font-semibold text-white shadow-lg">
               {initial}
             </div>
-            <div className={cn('hidden text-left sm:block', isRTL && 'text-right')}>
-              <p className="text-xs font-medium leading-tight text-gray-900 truncate max-w-[120px] 2xl:max-w-[160px] dark:text-white">
+            <div className={cn('hidden text-left sm:block arabic-text', isRTL && 'text-right')}>
+              <p className="text-xs font-medium leading-tight text-emerald-900 truncate max-w-[120px] 2xl:max-w-[160px] dark:text-emerald-100">
                 {displayName}
               </p>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400">{t('sidebar.administrator')}</p>
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{t('sidebar.administrator')}</p>
             </div>
-            <FiChevronDown className={cn('size-4 text-gray-500 dark:text-gray-400 transition-transform shrink-0', userMenuOpen && 'rotate-180')} />
+            <FiChevronDown className={cn('size-4 text-emerald-600 dark:text-emerald-400 transition-transform shrink-0', userMenuOpen && 'rotate-180')} />
           </DropdownMenuTrigger>
           {userMenuOpen && (
             <DropdownMenuContent isRTL={isRTL} className="min-w-44 rounded-xl border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">

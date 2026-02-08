@@ -72,25 +72,32 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
       style={{ width: `${width}px` }}
       aria-label={t('sidebar.navigation') || 'Main navigation'}
     >
-      {/* Logo bar — orange gradient */}
+      {/* Logo bar — Islamic green gradient */}
       <div
         className={cn(
-          'flex h-14 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-orange-500 to-orange-600 px-3',
+          'flex h-14 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-emerald-600 to-emerald-700 px-3 islamic-pattern',
           collapsed ? 'justify-center' : 'justify-between'
         )}
       >
         {!collapsed ? (
-          <div className="flex min-w-0 items-center gap-2 px-2">
-            <span className="text-lg font-semibold tracking-tight text-white truncate">Tarteel</span>
-            <span className="text-sm font-normal text-white/90" dir="rtl">ترتيل</span>
+          <div className="flex min-w-0 items-center gap-3 px-2">
+            <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
+              <FiBook className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight text-white truncate arabic-text" dir="rtl">ترتيل</span>
+              <span className="text-xs font-medium text-white/80">منصة حفظ القرآن</span>
+            </div>
           </div>
         ) : (
-          <span className="text-xl font-bold text-white" aria-hidden>T</span>
+          <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
+            <FiBook className="w-5 h-5 text-white" />
+          </div>
         )}
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white/90 transition-all duration-200 hover:bg-white/20 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50"
           aria-label={collapsed ? t('sidebar.expand') || 'Expand sidebar' : t('sidebar.collapse') || 'Collapse sidebar'}
         >
           {isRTL ? (
@@ -112,10 +119,10 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 arabic-text',
                     isActive
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/20'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-300'
                   )}
                   title={collapsed ? item.label : undefined}
                 >
@@ -131,16 +138,16 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
       {/* User & Logout */}
       <div className="shrink-0 space-y-2 border-t border-gray-200 dark:border-gray-700 p-3">
         {!collapsed && (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 px-3 py-2">
-            <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{user?.name || user?.email}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{t('sidebar.administrator')}</p>
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-700 bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/30 dark:to-amber-900/30 px-3 py-2.5">
+            <p className="truncate text-sm font-medium text-emerald-900 dark:text-emerald-100 arabic-text">{user?.name || user?.email}</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 arabic-text">{t('sidebar.administrator')}</p>
           </div>
         )}
         <button
           type="button"
           onClick={logout}
           className={cn(
-            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-orange-500/30',
+            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 arabic-text',
             collapsed && 'justify-center'
           )}
           title={collapsed ? t('sidebar.logout') : undefined}
