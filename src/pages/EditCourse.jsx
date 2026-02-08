@@ -611,7 +611,7 @@ const EditCourse = () => {
                               className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
                             >
                               <option value="">—</option>
-                              {teachers.map((tch) => (
+                              {getSelectedTeachers().map((tch) => (
                                 <option key={tch.id} value={tch.id}>
                                   {tch.user?.firstName} {tch.user?.lastName}
                                 </option>

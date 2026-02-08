@@ -87,6 +87,28 @@ const ManageLessons = () => {
     }
   };
 
+  const getSelectedTeachers = () => {
+    if (!course) return [];
+    
+    const courseTeacherIds = [];
+    
+    // Add main teacher
+    if (course.teacherId) {
+      courseTeacherIds.push(course.teacherId);
+    }
+    
+    // Add course teachers
+    if (course.courseTeachers && course.courseTeachers.length > 0) {
+      course.courseTeachers.forEach(ct => {
+        if (ct.teacherId && !courseTeacherIds.includes(ct.teacherId)) {
+          courseTeacherIds.push(ct.teacherId);
+        }
+      });
+    }
+    
+    return teachers.filter(teacher => courseTeacherIds.includes(teacher.id));
+  };
+
   const addLessonRow = () => {
     setLessonRows([...lessonRows, newLessonRow()]);
   };
@@ -287,7 +309,7 @@ const ManageLessons = () => {
                             className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           >
                             <option value="">اختر معلم</option>
-                            {teachers.map((teacher) => (
+                            {getSelectedTeachers().map((teacher) => (
                               <option key={teacher.id} value={teacher.id}>
                                 {teacher.user?.firstName} {teacher.user?.lastName}
                               </option>

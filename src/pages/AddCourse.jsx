@@ -331,7 +331,7 @@ const AddCourse = () => {
                 </CardContent>
               </Card>
 
-              <Card className="islamic-border shadow-lg">
+              <Card className="islamic-border shadow-lg overflow-visible">
                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
                   <CardTitle className="flex items-center gap-3 text-base arabic-text">
                     <div className="p-2 bg-blue-200 rounded-lg">
@@ -340,7 +340,7 @@ const AddCourse = () => {
                     <span className="text-blue-800 dark:text-blue-200">اختيار المعلمين *</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 overflow-visible">
                   {formData.teacherIds.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {getSelectedTeachers().map((teacher) => (
@@ -365,7 +365,7 @@ const AddCourse = () => {
                       <FiChevronDown className={cn('size-4 transition-transform', showTeacherDropdown && 'rotate-180')} aria-hidden />
                     </button>
                     {showTeacherDropdown && (
-                      <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-64 overflow-hidden rounded-xl border border-border bg-popover shadow-tarteel-md">
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-hidden rounded-xl border border-border bg-popover shadow-tarteel-md">
                         <div className="border-b border-border p-2">
                           <div className="relative">
                             <FiSearch className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -536,7 +536,7 @@ const AddCourse = () => {
                               className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
                             >
                               <option value="">—</option>
-                              {teachers.map((tch) => (
+                              {getSelectedTeachers().map((tch) => (
                                 <option key={tch.id} value={tch.id}>
                                   {tch.user?.firstName} {tch.user?.lastName}
                                 </option>
