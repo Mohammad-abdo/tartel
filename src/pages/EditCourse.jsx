@@ -318,25 +318,52 @@ const EditCourse = () => {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col">
-      {/* Top bar – مثل صفحة إضافة الدورة */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Button type="button" variant="ghost" size="icon" onClick={() => navigate(`/courses/${id}`)} aria-label={t('common.back')}>
-            <FiArrowLeft className="size-5" aria-hidden />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">{t('courses.editCourse')}</h1>
-            <p className="text-xs text-muted-foreground">{t('courses.editCourseSubtitle')}</p>
+      {/* Islamic Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white shadow-lg">
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => navigate(`/courses/${id}`)}
+                className="p-3 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-sm"
+                aria-label={t('common.back')}
+              >
+                <FiArrowLeft className="size-6" />
+              </button>
+              <div className="islamic-pattern">
+                <div className="flex items-center gap-4 mb-2">
+                  <FiBook className="text-3xl text-white/90" />
+                  <div>
+                    <h1 className="text-3xl font-bold arabic-text tracking-tight">تعديل الدورة</h1>
+                    <p className="text-blue-100 mt-1 arabic-text">حدّث معلومات الدورة وطوّر محتواها العلمي</p>
+                  </div>
+                </div>
+                <div className="mt-3 text-blue-100 text-sm arabic-text">
+                  "وَمَا أُوتِيتُم مِّنَ الْعِلْمِ إِلَّا قَلِيلًا" - سورة الإسراء
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate(`/courses/${id}`)}
+                className="px-4 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 font-medium border border-white/20"
+              >
+                إلغاء
+              </button>
+              <button
+                type="submit"
+                form="edit-course-form"
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all duration-300 font-medium shadow-lg arabic-text"
+              >
+                <FiSave className="size-5" />
+                {loading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" onClick={() => navigate(`/courses/${id}`)}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" form="edit-course-form" variant="default" disabled={loading} className="gap-2">
-            <FiSave className="size-4" aria-hidden />
-            {loading ? t('common.saving') : t('courses.saveChanges')}
-          </Button>
         </div>
       </div>
 
@@ -345,11 +372,13 @@ const EditCourse = () => {
           <div className="mx-auto grid max-w-[1600px] gap-6 xl:grid-cols-2">
             {/* العمود الأيسر: معلومات الدورة، المعلمون، السعر، الوسائط */}
             <div className="flex flex-col gap-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FiBook className="size-4 text-primary" aria-hidden />
-                    {t('courses.courseInfo')}
+              <Card className="islamic-border shadow-lg">
+                <CardHeader className="pb-3 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
+                  <CardTitle className="flex items-center gap-3 text-base arabic-text">
+                    <div className="p-2 bg-emerald-200 rounded-lg">
+                      <FiBook className="size-5 text-emerald-700" aria-hidden />
+                    </div>
+                    <span className="text-emerald-800 dark:text-emerald-200">معلومات الدورة الأساسية</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -374,11 +403,13 @@ const EditCourse = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FiUser className="size-4 text-primary" aria-hidden />
-                    {t('courses.teachers')} *
+              <Card className="islamic-border shadow-lg">
+                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+                  <CardTitle className="flex items-center gap-3 text-base arabic-text">
+                    <div className="p-2 bg-blue-200 rounded-lg">
+                      <FiUser className="size-5 text-blue-700" aria-hidden />
+                    </div>
+                    <span className="text-blue-800 dark:text-blue-200">اختيار المعلمين *</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -453,11 +484,13 @@ const EditCourse = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FiDollarSign className="size-4 text-primary" aria-hidden />
-                    {t('courses.price')} &amp; {t('courses.statusLabel')}
+              <Card className="islamic-border shadow-lg">
+                <CardHeader className="pb-3 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20">
+                  <CardTitle className="flex items-center gap-3 text-base arabic-text">
+                    <div className="p-2 bg-amber-200 rounded-lg">
+                      <FiDollarSign className="size-5 text-amber-700" aria-hidden />
+                    </div>
+                    <span className="text-amber-800 dark:text-amber-200">السعر والحالة</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -482,11 +515,13 @@ const EditCourse = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FiImage className="size-4 text-primary" aria-hidden />
-                    {t('courses.media')}
+              <Card className="islamic-border shadow-lg">
+                <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+                  <CardTitle className="flex items-center gap-3 text-base arabic-text">
+                    <div className="p-2 bg-purple-200 rounded-lg">
+                      <FiImage className="size-5 text-purple-700" aria-hidden />
+                    </div>
+                    <span className="text-purple-800 dark:text-purple-200">الوسائط والصور</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -521,11 +556,13 @@ const EditCourse = () => {
             </div>
 
             {/* العمود الأيمن: فيديوهات الدورة (الدروس) */}
-            <Card className="xl:max-h-[calc(100vh-8rem)] xl:flex xl:flex-col">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <FiVideo className="size-4 text-primary" aria-hidden />
-                  {t('courses.courseVideos')}
+            <Card className="xl:max-h-[calc(100vh-8rem)] xl:flex xl:flex-col islamic-border shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+                <CardTitle className="flex items-center gap-3 text-base arabic-text">
+                  <div className="p-2 bg-green-200 rounded-lg">
+                    <FiVideo className="size-5 text-green-700" aria-hidden />
+                  </div>
+                  <span className="text-green-800 dark:text-green-200">فيديوهات الدورة (الدروس)</span>
                 </CardTitle>
                 <Button type="button" variant="default" size="sm" onClick={addLessonRow} className="gap-1.5">
                   <FiPlus className="size-4" aria-hidden />
