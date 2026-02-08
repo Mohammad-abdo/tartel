@@ -23,12 +23,24 @@ export default defineConfig({
     sourcemap: false, // Disable source maps in production
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks: (id) => {
           // Split vendor libraries for better caching
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['react-icons', 'react-toastify'],
-          i18n: ['i18next', 'react-i18next'],
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor';
+            }
+            if (id.includes('react-router-dom')) {
+              return 'router';
+            }
+            if (id.includes('react-icons') || id.includes('react-toastify')) {
+              return 'ui';
+            }
+            if (id.includes('i18next') || id.includes('react-i18next')) {
+              return 'i18n';
+            }
+            // Other node_modules
+            return 'vendor-libs';
+          }
         },
       },
     },
