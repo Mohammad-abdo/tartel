@@ -43,7 +43,6 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "@tarteel_api_url",
     "VITE_APP_NAME": "Tarteel Platform",
     "VITE_DEFAULT_LANGUAGE": "ar"
   }
