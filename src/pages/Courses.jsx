@@ -548,7 +548,7 @@ function CourseCard({
         <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
           <FiUsers className="size-4 text-indigo-600 dark:text-indigo-400" />
           <span className="font-medium text-gray-900 dark:text-white">
-            {(course.teacherId ? 1 : 0) + (course._count?.courseTeachers || 0)}
+            {course.sheikhCount || 0}
           </span>
           <span>{t('courses.sheikhs')}</span>
         </div>
