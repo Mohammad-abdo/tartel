@@ -134,10 +134,10 @@
     "settings": "Settings"
   },
   "users": {
-    "title": "Users", 
+    "title": "Users",
     "studentsTitle": "Students",
     "totalStudents": "Total Students",
-    "allStudents": "All Students", 
+    "allStudents": "All Students",
     "activeStudents": "Active Students",
     "bannedStudents": "Banned Students",
     "subtitle": "Manage all platform users",
@@ -469,7 +469,12 @@
     "videoTeacher": "Teacher for this video",
     "lessonNumber": "Lesson {{n}}",
     "watchVideo": "Watch",
-    "noVideosInLesson": "No videos in this lesson"
+    "noVideosInLesson": "No videos in this lesson",
+    "featuredCourses": "Featured Courses",
+    "markedFeatured": "Course marked as featured",
+    "removedFeatured": "Course removed from featured",
+    "markFeatured": "Mark as Featured",
+    "removeFeatured": "Remove from Featured"
   },
   "exams": {
     "title": "Exams",

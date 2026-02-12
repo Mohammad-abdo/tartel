@@ -18,6 +18,7 @@ import {
   FiRefreshCw,
   FiGrid,
   FiList,
+  FiStar,
 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -66,14 +67,25 @@ const Courses = () => {
     const published = courses.filter((c) => c.status === 'PUBLISHED').length;
     const draft = courses.filter((c) => c.status === 'DRAFT').length;
     const archived = courses.filter((c) => c.status === 'ARCHIVED').length;
+    const featured = courses.filter((c) => c.isFeatured).length;
     const totalStudents =
       courses.reduce(
         (sum, c) =>
           sum + (c.enrolledCount || c.enrollments?.length || c._count?.enrollments || 0),
         0
       ) || 0;
-    return { total, published, draft, archived, totalStudents };
+    return { total, published, draft, archived, featured, totalStudents };
   }, [courses]);
+
+  const handleToggleFeatured = async (course) => {
+    try {
+      await courseAPI.toggleFeatured(course.id, !course.isFeatured);
+      toast.success(course.isFeatured ? t('courses.removedFeatured') || 'تم إزالة التمييز' : t('courses.markedFeatured') || 'تم تمييز الدورة');
+      fetchCourses();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل في تغيير حالة التمييز');
+    }
+  };
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -229,6 +241,19 @@ const Courses = () => {
             </div>
           </div>
         </div>
+        <div className="overflow-hidden rounded-2xl border border-yellow-200 dark:border-yellow-800/50 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              {t('courses.featuredCourses') || 'دورات مميزة'}
+            </p>
+            <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+              {stats.featured}
+            </p>
+            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400">
+              <FiStar className="size-5" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search, Filter & View Toggle */}
@@ -350,6 +375,7 @@ const Courses = () => {
             onView={(c) => navigate(`/courses/${c.id}`)}
             onEdit={(c) => navigate(`/courses/${c.id}/edit`)}
             onDelete={openDeleteModal}
+            onToggleFeatured={handleToggleFeatured}
           />
         ) : (
           <div className="p-6">
@@ -366,6 +392,7 @@ const Courses = () => {
                   onView={() => navigate(`/courses/${course.id}`)}
                   onEdit={() => navigate(`/courses/${course.id}/edit`)}
                   onDelete={() => openDeleteModal(course)}
+                  onToggleFeatured={() => handleToggleFeatured(course)}
                 />
               ))}
             </div>
@@ -446,6 +473,7 @@ function CourseCard({
   onView,
   onEdit,
   onDelete,
+  onToggleFeatured,
 }) {
   const students = studentsCount(course);
   return (
@@ -478,6 +506,11 @@ function CourseCard({
               ? t('courses.draft')
               : t('courses.archived')}
         </span>
+        {course.isFeatured && (
+          <span className="absolute top-2 left-2 flex size-8 items-center justify-center rounded-full bg-yellow-400/90 text-white shadow">
+            <FiStar className="size-4 fill-current" />
+          </span>
+        )}
       </div>
       <div className="p-5">
       <div className="flex items-start justify-between gap-2">
@@ -520,6 +553,19 @@ function CourseCard({
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
+            onClick={onToggleFeatured}
+            className={cn(
+              'rounded-lg p-2 transition-colors',
+              course.isFeatured
+                ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+            )}
+            title={course.isFeatured ? (t('courses.removeFeatured') || 'إزالة التمييز') : (t('courses.markFeatured') || 'تمييز')}
+          >
+            <FiStar className={cn('size-4', course.isFeatured && 'fill-current')} />
+          </button>
+          <button
+            type="button"
             onClick={onView}
             className="rounded-lg p-2 text-blue-600 dark:text-blue-400 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
             title={t('courses.viewDetails')}
@@ -559,6 +605,7 @@ function CoursesTable({
   onView,
   onEdit,
   onDelete,
+  onToggleFeatured,
 }) {
   return (
     <Table>
@@ -643,6 +690,15 @@ function CoursesTable({
             </TableCell>
             <TableCell className="px-6 py-4 text-end">
               <div className={cn('flex items-center justify-end gap-1', isRTL && 'flex-row-reverse')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn('h-8', course.isFeatured ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50')}
+                  onClick={() => onToggleFeatured(course)}
+                  title={course.isFeatured ? (t('courses.removeFeatured') || 'إزالة التمييز') : (t('courses.markFeatured') || 'تمييز')}
+                >
+                  <FiStar className={cn('size-4', course.isFeatured && 'fill-current')} />
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

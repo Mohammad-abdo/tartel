@@ -37,18 +37,18 @@ api.interceptors.response.use(
     if (body && typeof body === 'object' && body.success === true && 'data' in body) {
       response.data = body.data;
     }
-    
+
     // Fix image URLs in response data
     if (response.data) {
       const imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl', 'videoUrl', 'thumbnailUrl'];
-      
+
       if (Array.isArray(response.data)) {
         // Fix image URLs in array of objects
         response.data = fixImageUrlsInArray(response.data, imageFields);
       } else if (typeof response.data === 'object') {
         // Fix image URLs in single object
         response.data = fixImageUrls(response.data, imageFields);
-        
+
         // Handle nested arrays (like courses, teachers, etc.)
         Object.keys(response.data).forEach(key => {
           if (Array.isArray(response.data[key])) {
@@ -59,7 +59,7 @@ api.interceptors.response.use(
         });
       }
     }
-    
+
     return response;
   },
   (error) => {
@@ -82,7 +82,7 @@ export const authAPI = {
 export const adminAPI = {
   // Dashboard
   getDashboard: () => api.get('/admin/dashboard'),
-  
+
   // Users
   getUsers: (params) => api.get('/admin/users', { params }),
   getUserById: (id) => api.get(`/admin/users/${id}`),
@@ -92,23 +92,25 @@ export const adminAPI = {
   updateUserStatus: (id, status) => api.put(`/admin/users/${id}/status`, { status }),
   banUser: (id) => api.post(`/admin/users/${id}/ban`),
   activateUser: (id) => api.post(`/admin/users/${id}/activate`),
-  
+
   // Teachers
   getTeachers: (params) => api.get('/admin/teachers', { params }),
   getTeacherById: (id) => api.get(`/admin/teachers/${id}`),
   createTeacher: (data) => api.post('/admin/teachers', data),
   updateTeacher: (id, data) => api.put(`/admin/teachers/${id}`, data),
-  
+
   // Bookings
   getBookings: (params) => api.get('/admin/bookings', { params }),
   forceCancelBooking: (id) => api.post(`/admin/bookings/${id}/force-cancel`),
   forceConfirmBooking: (id) => api.post(`/admin/bookings/${id}/force-confirm`),
   exportBookings: (status) => api.get('/admin/bookings/export', { params: { status } }),
-  
+  toggleBookingFeatured: (id, isFeatured) => api.patch(`/admin/bookings/${id}/featured`, { isFeatured }),
+  getFeaturedBookings: (params) => api.get('/admin/bookings/featured', { params }),
+
   // Payments
   getPayments: (params) => api.get('/admin/payments', { params }),
   getPaymentStats: () => api.get('/admin/payments/stats'),
-  
+
   // Reports
   getPrincipalReport: (params) => api.get('/admin/reports/principal', { params }),
   getTeacherReport: (params) => api.get('/admin/reports/teachers', { params }),
@@ -117,11 +119,11 @@ export const adminAPI = {
   getDailyReport: (date) => api.get('/admin/reports/daily', { params: { date } }),
   getMonthlyReport: (year, month) => api.get('/admin/reports/monthly', { params: { year, month } }),
   getBookingTrends: (params) => api.get('/admin/reports/trends', { params }),
-  
+
   // Notifications
   sendGlobalNotification: (data) => api.post('/admin/notifications/global', data),
   sendNotificationToUsers: (data) => api.post('/admin/notifications/users', data),
-  
+
   // Wallets
   getTeacherWallets: (params) => api.get('/admin/wallets', { params }),
   getTeacherWallet: (id) => api.get(`/admin/wallets/${id}`),
@@ -131,7 +133,7 @@ export const adminAPI = {
   createWalletForTeacher: (teacherId) => api.post(`/admin/wallets/create/${teacherId}`),
   disableWallet: (id) => api.put(`/admin/wallets/${id}/disable`),
   enableWallet: (id) => api.put(`/admin/wallets/${id}/enable`),
-  
+
   // Student Wallets
   getStudentWallets: (params) => api.get('/admin/student-wallets', { params }),
   getStudentWallet: (studentId) => api.get(`/admin/student-wallets/${studentId}`),
@@ -160,12 +162,14 @@ export const subscriptionAPI = {
 export const courseAPI = {
   getAllCourses: (params) => api.get('/courses', { params }),
   getCourseById: (id) => api.get(`/courses/${id}`),
+  getFeaturedCourses: (params) => api.get('/courses/featured', { params }),
   /** جلب المشايخ المضافين لدورة محددة (معرف الدورة) */
   getCourseSheikhs: (courseId, params) => api.get(`/courses/${courseId}/sheikhs`, { params }),
   createCourse: (data) => api.post('/courses', data),
   createTeacherCourse: (data) => api.post('/courses/teacher/create', data), // For teachers to create their own courses
   updateCourse: (id, data) => api.put(`/courses/${id}`, data),
   deleteCourse: (id) => api.delete(`/courses/${id}`),
+  toggleFeatured: (id, isFeatured) => api.patch(`/courses/${id}/featured`, { isFeatured }),
 };
 
 // Exams API
@@ -207,7 +211,7 @@ export const rbacAPI = {
   removeRole: (userId, roleId) => api.delete(`/rbac/users/${userId}/roles/${roleId}`),
   getUserRoles: (userId) => api.get(`/rbac/users/${userId}/roles`),
   getUserPermissions: (userId) => api.get(`/rbac/users/${userId}/permissions`),
-  
+
   // Permissions
   getAllPermissions: () => api.get('/rbac/permissions'),
   createPermission: (data) => api.post('/rbac/permissions', data),

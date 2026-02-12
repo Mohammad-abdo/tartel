@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { adminAPI, bookingAPI } from '../services/api';
 import { toast } from 'react-toastify';
-import { FiCalendar, FiCheckCircle, FiXCircle, FiUser, FiEye, FiClock, FiDollarSign, FiGrid, FiList } from 'react-icons/fi';
+import { FiCalendar, FiCheckCircle, FiXCircle, FiUser, FiEye, FiClock, FiDollarSign, FiGrid, FiList, FiStar } from 'react-icons/fi';
 import { useLanguage } from '../context/LanguageContext';
 import { cn } from '../lib/utils';
 
@@ -65,8 +65,19 @@ const Bookings = () => {
     const confirmed = bookings.filter((b) => b.status === 'CONFIRMED').length;
     const completed = bookings.filter((b) => b.status === 'COMPLETED').length;
     const cancelled = bookings.filter((b) => b.status === 'CANCELLED').length;
-    return { total, pending, confirmed, completed, cancelled };
+    const featured = bookings.filter((b) => b.isFeatured).length;
+    return { total, pending, confirmed, completed, cancelled, featured };
   }, [bookings]);
+
+  const handleToggleFeatured = async (booking) => {
+    try {
+      await adminAPI.toggleBookingFeatured(booking.id, !booking.isFeatured);
+      toast.success(booking.isFeatured ? 'تم إزالة التمييز' : 'تم تمييز الحجز');
+      fetchBookings();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل في تغيير حالة التمييز');
+    }
+  };
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -134,7 +145,7 @@ const Bookings = () => {
       </section>
 
       {/* Stats cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <div className="islamic-card group hover:shadow-xl transition-all duration-300">
           <div className="islamic-border-gradient p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
             <div className="flex items-center justify-between">
@@ -205,6 +216,21 @@ const Bookings = () => {
               </div>
               <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <FiXCircle className="size-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300">
+          <div className="islamic-border-gradient p-5 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-yellow-700 dark:text-yellow-300 font-alexandria">{isRTL ? 'مميزة' : 'Featured'}</p>
+                <p className="mt-2 text-3xl font-bold text-yellow-800 dark:text-yellow-200">{stats.featured}</p>
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 font-alexandria">{isRTL ? 'حجوزات مميزة' : 'Featured Bookings'}</p>
+              </div>
+              <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiStar className="size-6 text-white" />
               </div>
             </div>
           </div>
@@ -281,6 +307,11 @@ const Bookings = () => {
                         <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white', isRTL && 'text-right')}>${(booking.totalPrice ?? 0).toFixed(2)}</td>
                         <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
                           <div className={cn('flex items-center gap-1', isRTL ? 'justify-start' : 'justify-end')}>
+                            {viewMode === 'admin' && (
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleFeatured(booking); }} className={cn('p-2 rounded-lg transition-colors', booking.isFeatured ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700')} title={booking.isFeatured ? 'إزالة التمييز' : 'تمييز'}>
+                                <FiStar className={cn('size-4', booking.isFeatured && 'fill-current')} />
+                              </button>
+                            )}
                             <button type="button" onClick={(e) => { e.stopPropagation(); navigate(`/bookings/${booking.id}`); }} className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600" title={t('bookings.viewDetails')}>
                               <FiEye className="size-4" />
                             </button>
@@ -396,6 +427,24 @@ const Bookings = () => {
                           </>
                         )}
                       </div>
+                      {viewMode === 'admin' && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleFeatured(booking);
+                          }}
+                          className={cn(
+                            'absolute bottom-3 right-3 p-1.5 rounded-full transition-colors shadow-sm',
+                            booking.isFeatured
+                              ? 'bg-yellow-400/90 text-white hover:bg-yellow-500'
+                              : 'bg-white/90 text-gray-400 hover:bg-white hover:text-yellow-500 dark:bg-gray-800/90 dark:text-gray-400'
+                          )}
+                          title={booking.isFeatured ? 'إزالة التمييز' : 'تمييز'}
+                        >
+                          <FiStar className={cn('text-sm', booking.isFeatured && 'fill-current')} />
+                        </button>
+                      )}
                     </div>
 
                     {/* Body */}

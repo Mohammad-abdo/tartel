@@ -476,7 +476,12 @@
     "videoTeacher": "الشيخ التابع للفيديو",
     "lessonNumber": "درس {{n}}",
     "watchVideo": "مشاهدة",
-    "noVideosInLesson": "لا توجد فيديوهات في هذا الدرس"
+    "noVideosInLesson": "لا توجد فيديوهات في هذا الدرس",
+    "featuredCourses": "دورات مميزة",
+    "markedFeatured": "تم تمييز الدورة",
+    "removedFeatured": "تم إزالة التمييز",
+    "markFeatured": "تمييز كمميز",
+    "removeFeatured": "إزالة التمييز"
   },
   "exams": {
     "title": "الامتحانات",
