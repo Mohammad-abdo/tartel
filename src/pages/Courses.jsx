@@ -546,6 +546,13 @@ function CourseCard({
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-4">
         <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+          <FiUsers className="size-4 text-indigo-600 dark:text-indigo-400" />
+          <span className="font-medium text-gray-900 dark:text-white">
+            {(course.teacherId ? 1 : 0) + (course._count?.courseTeachers || 0)}
+          </span>
+          <span>{t('courses.sheikhs')}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
           <FiUsers className="size-4 text-blue-600 dark:text-blue-400" />
           <span className="font-medium text-gray-900 dark:text-white">{students}</span>
           <span>{t('courses.students')}</span>
