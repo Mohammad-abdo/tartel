@@ -25,6 +25,9 @@ const AddUser = () => {
     avatar: '',
     role: 'STUDENT',
     status: 'ACTIVE',
+    // حقول إضافية للطلاب
+    memorizedParts: 0, // عدد أجزاء الحفظ
+    gender: '', // جنس الطالب
   });
 
   const handleChange = (e) => {
@@ -92,6 +95,19 @@ const AddUser = () => {
       return;
     }
     
+    // التحقق من الحقول الخاصة بالطلاب
+    if (formData.role === 'STUDENT') {
+      if (!formData.gender) {
+        toast.error('جنس الطالب مطلوب.');
+        return;
+      }
+      
+      if (formData.memorizedParts < 0 || formData.memorizedParts > 30) {
+        toast.error('عدد أجزاء الحفظ يجب أن يكون بين 0 و 30.');
+        return;
+      }
+    }
+    
     setLoading(true);
     try {
       await adminAPI.createUser(formData);
@@ -107,29 +123,54 @@ const AddUser = () => {
   };
 
   return (
-    <div className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mb-6 flex items-center gap-4">
-        <button
-          onClick={() => navigate('/users')}
-          className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md"
-        >
-          <FiArrowRight className="text-xl text-gray-600 rotate-180" />
-        </button>
-        <div>
-          <p className="text-xs font-semibold tracking-wide text-primary-600 uppercase mb-1">
-            المستخدمين
+    <div className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} style={{ fontFamily: 'Alexandria, sans-serif' }}>
+      {/* Islamic Header */}
+      <div className="text-center mb-6">
+        <div className="islamic-border inline-block px-8 py-4 bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 rounded-xl">
+          <p className="text-emerald-700 dark:text-emerald-300 text-sm font-semibold mb-1 font-alexandria">
+            {isRTL ? 'بسم الله الرحمن الرحيم' : 'In the name of Allah, the Most Gracious, the Most Merciful'}
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">إضافة مستخدم جديد</h1>
-          <p className="text-gray-600 mt-1">إنشاء حساب مستخدم جديد في النظام</p>
+          <p className="text-amber-600 dark:text-amber-400 text-xs font-alexandria">
+            {isRTL ? 'إضافة طالب جديد لتعلم القرآن الكريم' : 'Adding a New Student to Learn the Quran'}
+          </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <div className="islamic-border p-6 bg-gradient-to-r from-emerald-50 via-white to-amber-50 dark:from-emerald-900/20 dark:via-gray-800 dark:to-amber-900/20 rounded-xl shadow-lg mb-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/users')}
+            className="islamic-button-secondary p-3"
+          >
+            <FiArrowRight className="text-xl rotate-180" />
+          </button>
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+              <FiUser className="size-8 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-emerald-600 dark:text-emerald-400 uppercase mb-1 font-alexandria">
+                المستخدمين
+              </p>
+              <h1 className="text-3xl font-bold tracking-tight text-emerald-800 dark:text-emerald-200 sm:text-4xl font-alexandria">إضافة مستخدم جديد</h1>
+              <p className="text-amber-700 dark:text-amber-300 mt-1 font-alexandria">إنشاء حساب مستخدم جديد في النظام</p>
+              <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 mt-2">
+                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                <span className="font-alexandria">{isRTL ? 'وقل رب زدني علماً' : 'And say: My Lord, increase me in knowledge'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="islamic-card p-8 bg-gradient-to-br from-white via-emerald-50/30 to-amber-50/30 dark:from-gray-800 dark:via-emerald-900/10 dark:to-amber-900/10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Email */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiMail />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiMail className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               البريد الإلكتروني *
             </label>
             <input
@@ -138,15 +179,17 @@ const AddUser = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="user@example.com"
             />
           </div>
 
           {/* First Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiUser />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiUser className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               الاسم الأول (بالإنجليزية) *
             </label>
             <input
@@ -155,14 +198,14 @@ const AddUser = () => {
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="Ahmed"
             />
           </div>
 
           {/* First Name Arabic */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2 font-alexandria">
               الاسم الأول (بالعربية)
             </label>
             <input
@@ -170,7 +213,7 @@ const AddUser = () => {
               name="firstNameAr"
               value={formData.firstNameAr}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="أحمد"
               dir="rtl"
             />
@@ -178,8 +221,10 @@ const AddUser = () => {
 
           {/* Last Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiUser />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiUser className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               اسم العائلة (بالإنجليزية) *
             </label>
             <input
@@ -188,14 +233,14 @@ const AddUser = () => {
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="Mohamed"
             />
           </div>
 
           {/* Last Name Arabic */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2 font-alexandria">
               اسم العائلة (بالعربية)
             </label>
             <input
@@ -203,7 +248,7 @@ const AddUser = () => {
               name="lastNameAr"
               value={formData.lastNameAr}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="محمد"
               dir="rtl"
             />
@@ -211,8 +256,10 @@ const AddUser = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiLock />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiLock className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               كلمة المرور *
             </label>
             <input
@@ -222,15 +269,17 @@ const AddUser = () => {
               onChange={handleChange}
               required
               minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="كلمة مرور قوية (6 أحرف على الأقل)"
             />
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiPhone />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiPhone className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               رقم الهاتف
             </label>
             <input
@@ -238,24 +287,26 @@ const AddUser = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+              className="islamic-input font-alexandria"
               placeholder="+201234567890"
             />
           </div>
 
           {/* صورة المستخدم مطلوبة */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiImage />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiImage className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               صورة المستخدم *
             </label>
             <input type="file" ref={avatarFileRef} accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             {formData.avatar ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 p-4 islamic-border bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 rounded-xl">
                 <div className="relative">
-                  <img src={formData.avatar} alt="صورة المستخدم" className="h-24 w-24 rounded-xl object-cover border-2 border-gray-200 shadow-sm" />
-                  <div className="absolute -top-1 -right-1 h-6 w-6 bg-green-500 rounded-full flex items-center justify-center">
-                    <FiCheckCircle className="h-3 w-3 text-white" />
+                  <img src={formData.avatar} alt="صورة المستخدم" className="h-24 w-24 rounded-xl object-cover islamic-border shadow-lg" />
+                  <div className="absolute -top-2 -right-2 h-8 w-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                    <FiCheckCircle className="h-4 w-4 text-white" />
                   </div>
                 </div>
                 <div className="flex-1">
@@ -263,7 +314,7 @@ const AddUser = () => {
                     type="button" 
                     onClick={() => avatarFileRef.current?.click()} 
                     disabled={uploadingAvatar} 
-                    className="text-sm text-primary-600 hover:underline font-medium"
+                    className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:underline font-medium font-alexandria"
                   >
                     {uploadingAvatar ? 'جاري الرفع...' : 'تغيير الصورة'}
                   </button>
@@ -273,7 +324,7 @@ const AddUser = () => {
                     value={formData.avatar}
                     onChange={handleChange}
                     placeholder="أو الصق رابط الصورة هنا"
-                    className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+                    className="mt-2 islamic-input font-alexandria text-sm"
                   />
                 </div>
               </div>
@@ -282,26 +333,33 @@ const AddUser = () => {
                 type="button"
                 onClick={() => avatarFileRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="w-full flex items-center justify-center gap-3 px-4 py-6 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary-400 hover:bg-primary-50/30 text-gray-600 transition-all duration-200 hover:text-primary-600"
+                className="w-full flex items-center justify-center gap-3 px-4 py-8 rounded-xl islamic-border bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 hover:from-emerald-100 hover:to-amber-100 dark:hover:from-emerald-900/30 dark:hover:to-amber-900/30 text-emerald-700 dark:text-emerald-300 transition-all duration-300 hover:shadow-lg border-2 border-dashed"
               >
-                <FiUpload className="text-2xl" />
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl">
+                  <FiUpload className="text-2xl text-white" />
+                </div>
                 <div className="text-center">
-                  <div className="font-medium">
+                  <div className="font-medium font-alexandria">
                     {uploadingAvatar ? 'جاري رفع الصورة...' : 'انقر لرفع صورة المستخدم'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">JPG, PNG, GIF (أقل من 5MB)</div>
+                  <div className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-alexandria">JPG, PNG, GIF (أقل من 5MB)</div>
                 </div>
               </button>
             )}
-            <p className="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded-lg border border-blue-200">
-              📸 صورة المستخدم مطلوبة لجميع المستخدمين الجدد
-            </p>
+            <div className="mt-3 text-xs islamic-border p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-alexandria">
+                <span className="text-lg">📸</span>
+                <span>صورة المستخدم مطلوبة لجميع المستخدمين الجدد</span>
+              </div>
+            </div>
           </div>
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiShield />
+            <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+              <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                <FiShield className="text-emerald-600 dark:text-emerald-400" />
+              </div>
               دور المستخدم *
             </label>
             <select
@@ -309,7 +367,7 @@ const AddUser = () => {
               value={formData.role}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 bg-white"
+              className="islamic-select font-alexandria"
             >
               <option value="STUDENT">طالب</option>
               <option value="TEACHER">شيخ</option>
@@ -319,49 +377,145 @@ const AddUser = () => {
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">حالة المستخدم *</label>
+            <label className="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2 font-alexandria">حالة المستخدم *</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 bg-white"
+              className="islamic-select font-alexandria"
             >
               <option value="ACTIVE">نشط</option>
               <option value="INACTIVE">غير نشط</option>
               <option value="BANNED">محظور</option>
             </select>
           </div>
+
+          {/* حقول خاصة بالطلاب */}
+          {formData.role === 'STUDENT' && (
+            <>
+              {/* جنس الطالب */}
+              <div>
+                <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2 font-alexandria">
+                  <div className="p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-md">
+                    <FiUser className="text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  جنس الطالب *
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  required={formData.role === 'STUDENT'}
+                  className="islamic-select font-alexandria"
+                >
+                  <option value="">اختر الجنس</option>
+                  <option value="MALE">ذكر</option>
+                  <option value="FEMALE">أنثى</option>
+                </select>
+              </div>
+
+              {/* عدد أجزاء الحفظ */}
+              <div>
+                <label className="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2 font-alexandria">
+                  <div className="p-1 bg-amber-100 dark:bg-amber-900/30 rounded-md">
+                    <span className="text-amber-600 dark:text-amber-400 text-sm">📖</span>
+                  </div>
+                  عدد أجزاء الحفظ من القرآن الكريم
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="memorizedParts"
+                    value={formData.memorizedParts}
+                    onChange={handleChange}
+                    min="0"
+                    max="30"
+                    className="islamic-input font-alexandria"
+                    placeholder="عدد الأجزاء المحفوظة (0-30)"
+                  />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500 text-sm">
+                    / 30
+                  </div>
+                </div>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-alexandria">
+                  💡 أدخل عدد أجزاء القرآن الكريم التي يحفظها الطالب (من 0 إلى 30 جزء)
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* ملخص البيانات */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="font-medium text-gray-900 mb-3">ملخص البيانات المدخلة:</h3>
+        <div className="mt-6 islamic-card p-6 bg-gradient-to-r from-emerald-50 via-white to-amber-50 dark:from-emerald-900/20 dark:via-gray-800 dark:to-amber-900/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+              <FiCheckCircle className="size-5 text-white" />
+            </div>
+            <h3 className="font-bold text-emerald-800 dark:text-emerald-200 text-lg font-alexandria">ملخص البيانات المدخلة</h3>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium">البريد الإلكتروني:</span> {formData.email || 'غير محدد'}
+            <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+              <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">البريد الإلكتروني:</span> 
+              <span className="text-gray-700 dark:text-gray-300 font-alexandria">{formData.email || 'غير محدد'}</span>
             </div>
-            <div>
-              <span className="font-medium">الاسم:</span> {`${formData.firstName} ${formData.lastName}`.trim() || 'غير محدد'}
+            <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+              <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">الاسم:</span> 
+              <span className="text-gray-700 dark:text-gray-300 font-alexandria">{`${formData.firstName} ${formData.lastName}`.trim() || 'غير محدد'}</span>
             </div>
-            <div>
-              <span className="font-medium">الدور:</span> {
+            <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+              <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">الدور:</span> 
+              <span className="text-amber-600 dark:text-amber-400 font-alexandria font-semibold">{
                 formData.role === 'ADMIN' ? 'مدير' : 
                 formData.role === 'TEACHER' ? 'شيخ' : 'طالب'
-              }
+              }</span>
             </div>
-            <div>
-              <span className="font-medium">الحالة:</span> {
+            <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+              <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">الحالة:</span> 
+              <span className={`font-alexandria font-semibold ${
+                formData.status === 'ACTIVE' ? 'text-green-600 dark:text-green-400' : 
+                formData.status === 'BANNED' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+              }`}>{
                 formData.status === 'ACTIVE' ? 'نشط' : 
                 formData.status === 'BANNED' ? 'محظور' : 'غير نشط'
-              }
+              }</span>
             </div>
-            <div>
-              <span className="font-medium">الصورة:</span> {formData.avatar ? '✅ تم الرفع' : '❌ غير مرفوعة'}
+            <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+              <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">الصورة:</span> 
+              <span className={`font-alexandria font-semibold ${formData.avatar ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {formData.avatar ? '✅ تم الرفع' : '❌ غير مرفوعة'}
+              </span>
             </div>
-            <div>
-              <span className="font-medium">رقم الهاتف:</span> {formData.phone || 'غير محدد'}
+            <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+              <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">رقم الهاتف:</span> 
+              <span className="text-gray-700 dark:text-gray-300 font-alexandria">{formData.phone || 'غير محدد'}</span>
             </div>
+            
+            {/* حقول خاصة بالطلاب */}
+            {formData.role === 'STUDENT' && (
+              <>
+                <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">جنس الطالب:</span> 
+                  <span className="text-amber-600 dark:text-amber-400 font-alexandria font-semibold">
+                    {formData.gender === 'MALE' ? '👨 ذكر' : formData.gender === 'FEMALE' ? '👩 أنثى' : 'غير محدد'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-700/50 rounded-lg">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-300 font-alexandria">أجزاء الحفظ:</span> 
+                  <span className="text-amber-600 dark:text-amber-400 font-alexandria font-semibold">
+                    📖 {formData.memorizedParts || 0} / 30 جزء
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Islamic blessing */}
+          <div className="text-center mt-4 pt-4 islamic-border-top">
+            <p className="text-xs text-amber-600 dark:text-amber-400 font-alexandria italic">
+              {isRTL ? 'اللهم بارك لنا فيما رزقتنا وقنا عذاب النار' : 'O Allah, bless us in what You have provided for us and save us from the punishment of the Fire'}
+            </p>
           </div>
         </div>
 
@@ -369,11 +523,11 @@ const AddUser = () => {
           <button
             type="submit"
             disabled={loading || uploadingAvatar}
-            className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="islamic-button-primary px-8 py-4 font-bold flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-alexandria disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 جاري إنشاء المستخدم...
               </>
             ) : (
@@ -386,10 +540,19 @@ const AddUser = () => {
           <button
             type="button"
             onClick={() => navigate('/users')}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="islamic-button-secondary px-6 py-4 font-alexandria"
           >
             إلغاء
           </button>
+        </div>
+        
+        {/* Islamic footer blessing */}
+        <div className="mt-6 text-center">
+          <div className="inline-block islamic-border px-6 py-3 bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 rounded-xl">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-alexandria">
+              {isRTL ? 'وفقنا الله وإياكم لما يحب ويرضى' : 'May Allah grant us success in what He loves and is pleased with'}
+            </p>
+          </div>
         </div>
       </form>
     </div>
