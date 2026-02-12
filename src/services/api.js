@@ -297,6 +297,10 @@ export const paymentAPI = {
   createPaymentIntent: (bookingId, data) => api.post(`/payments/bookings/${bookingId}/intent`, data),
   getPaymentByBooking: (bookingId) => api.get(`/payments/bookings/${bookingId}`),
   refundPayment: (bookingId, data) => api.post(`/payments/bookings/${bookingId}/refund`, data),
+  // Fawry (Express Checkout Link)
+  getFawryInfo: () => api.get('/payments/fawry'),
+  createFawryCheckoutLink: (data) => api.post('/payments/fawry/checkout-link', data),
+  getFawryPaymentStatus: (merchantRefNum) => api.get(`/payments/fawry/status/${encodeURIComponent(merchantRefNum)}`),
 };
 
 // File Upload API - use post with FormData so multipart/form-data is sent with correct boundary (field name: "file")

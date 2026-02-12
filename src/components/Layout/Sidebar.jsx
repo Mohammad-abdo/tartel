@@ -23,6 +23,7 @@ import {
   FiActivity,
   FiChevronLeft,
   FiChevronRight,
+  FiZap,
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -46,6 +47,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
     { path: '/bookings', icon: FiCalendar, label: t('sidebar.bookings') },
     { path: '/sessions', icon: FiVideo, label: t('sidebar.sessions') },
     { path: '/payments', icon: FiDollarSign, label: t('sidebar.payments') },
+    { path: '/fawry-test', icon: FiZap, label: language === 'ar' ? 'تجربة فوري' : 'Fawry test' },
     { path: '/finance', icon: FiTrendingUp, label: t('sidebar.finance') },
     { path: '/wallets', icon: FiCreditCard, label: t('sidebar.wallets') },
     { path: '/subscriptions', icon: FiBox, label: t('sidebar.subscriptions') },

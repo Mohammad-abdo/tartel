@@ -32,6 +32,7 @@ import UserDetail from './pages/UserDetail';
 import TeacherDetail from './pages/TeacherDetail';
 import BookingDetail from './pages/BookingDetail';
 import PaymentDetail from './pages/PaymentDetail';
+import FawryTest from './pages/FawryTest';
 import CourseDetail from './pages/CourseDetail';
 import AddUser from './pages/AddUser';
 import EditUser from './pages/EditUser';
@@ -195,6 +196,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <PaymentDetail />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/fawry-test"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <FawryTest />
             </DashboardLayout>
           </ProtectedRoute>
         }
