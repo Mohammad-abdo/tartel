@@ -21,6 +21,7 @@ import {
   FiInfo,
 } from 'react-icons/fi';
 import { cn } from '../lib/utils';
+import QuranProgressBar from '../components/QuranProgressBar';
 
 const UserDetail = () => {
   const { id } = useParams();
@@ -119,48 +120,69 @@ const UserDetail = () => {
   const initials = (user.firstName?.[0] || user.name?.[0] || user.email?.[0] || 'U').toUpperCase();
 
   return (
-    <div className={cn('space-y-4 sm:space-y-5 lg:space-y-6 2xl:space-y-5', isRTL && 'text-right')} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* تنبيه خيارات التعديل */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-        <div className="p-2 bg-blue-100 rounded-lg">
-          <FiInfo className="h-5 w-5 text-blue-600" />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-sm font-medium text-blue-900 mb-1">خيارات تعديل المستخدم</h3>
-          <p className="text-sm text-blue-700">
-            يمكنك تعديل بيانات المستخدم من الزر الأزرق في الأعلى أو من قسم "إجراءات سريعة" في الشريط الجانبي.
+    <div className={cn('space-y-4 sm:space-y-5 lg:space-y-6 2xl:space-y-5', isRTL && 'text-right')} dir={isRTL ? 'rtl' : 'ltr'} style={{ fontFamily: 'Alexandria, sans-serif' }}>
+      {/* Islamic Header */}
+      <div className="text-center mb-6">
+        <div className="islamic-border inline-block px-8 py-4 bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 rounded-xl">
+          <p className="text-emerald-700 dark:text-emerald-300 text-sm font-semibold mb-1 font-alexandria">
+            {isRTL ? 'بسم الله الرحمن الرحيم' : 'In the name of Allah, the Most Gracious, the Most Merciful'}
+          </p>
+          <p className="text-amber-600 dark:text-amber-400 text-xs font-alexandria">
+            {isRTL ? 'تفاصيل طالب القرآن الكريم' : 'Details of Quran Student'}
           </p>
         </div>
       </div>
 
+      {/* تنبيه خيارات التعديل */}
+      <div className="islamic-card bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 p-4 flex items-start gap-3">
+        <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg shadow-lg">
+          <FiInfo className="h-5 w-5 text-white" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1 font-alexandria">خيارات تعديل المستخدم</h3>
+          <p className="text-sm text-amber-700 dark:text-amber-300 font-alexandria">
+            يمكنك تعديل بيانات المستخدم من الزر الأزرق في الأعلى أو من قسم "إجراءات سريعة" في الشريط الجانبي.
+          </p>
+          <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            <span className="font-alexandria italic">{isRTL ? 'وقل رب أدخلني مدخل صدق' : 'And say: My Lord, admit me an entrance of truth'}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Page header */}
-      <div className="flex flex-col gap-4">
+      <div className="islamic-card p-6 bg-gradient-to-r from-emerald-50 via-white to-amber-50 dark:from-emerald-900/20 dark:via-gray-800 dark:to-amber-900/20 shadow-lg">
         {/* Header - Mobile */}
         <div className="md:hidden">
           <div className="flex items-center gap-4 mb-4">
             <button
               onClick={() => navigate('/users')}
-              className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+              className="islamic-button-secondary p-3"
               aria-label="العودة"
             >
-              <FiArrowRight className="text-xl text-gray-600 dark:text-gray-300 rotate-180" />
+              <FiArrowRight className="text-xl rotate-180" />
             </button>
-            <div className="flex-1">
-              <p className="text-xs font-semibold tracking-wide text-primary-600 dark:text-primary-400 uppercase mb-1">
-                المستخدمين
-              </p>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                تفاصيل المستخدم
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-                معلومات المستخدم الكاملة وأنشطته
-              </p>
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                <FiUser className="size-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-semibold tracking-wide text-emerald-600 dark:text-emerald-400 uppercase mb-1 font-alexandria">
+                  المستخدمين
+                </p>
+                <h1 className="text-2xl font-bold tracking-tight text-emerald-800 dark:text-emerald-200 font-alexandria">
+                  تفاصيل المستخدم
+                </h1>
+                <p className="text-amber-700 dark:text-amber-300 mt-1 text-sm font-alexandria">
+                  معلومات المستخدم الكاملة وأنشطته
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => navigate(`/users/${id}/edit`)}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 border border-blue-500 hover:shadow-xl transform hover:-translate-y-0.5"
+              className="flex-1 islamic-button-primary text-sm font-bold py-3"
             >
               <FiEdit className="text-lg" />
               تعديل المستخدم
@@ -173,27 +195,36 @@ const UserDetail = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/users')}
-              className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+              className="islamic-button-secondary p-3"
               aria-label="العودة"
             >
-              <FiArrowRight className="text-xl text-gray-600 dark:text-gray-300 rotate-180" />
+              <FiArrowRight className="text-xl rotate-180" />
             </button>
-            <div>
-              <p className="text-xs font-semibold tracking-wide text-primary-600 dark:text-primary-400 uppercase mb-1">
-                المستخدمين
-              </p>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
-                تفاصيل المستخدم
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-                معلومات المستخدم الكاملة وأنشطته
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                <FiUser className="size-8 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-emerald-600 dark:text-emerald-400 uppercase mb-1 font-alexandria">
+                  المستخدمين
+                </p>
+                <h1 className="text-2xl font-bold tracking-tight text-emerald-800 dark:text-emerald-200 sm:text-3xl font-alexandria">
+                  تفاصيل المستخدم
+                </h1>
+                <p className="text-amber-700 dark:text-amber-300 mt-1 text-sm font-alexandria">
+                  معلومات المستخدم الكاملة وأنشطته
+                </p>
+                <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                  <span className="font-alexandria italic">{isRTL ? 'رب اشرح لي صدري' : 'My Lord, expand for me my chest'}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => navigate(`/users/${id}/edit`)}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 border border-blue-500 hover:shadow-xl transform hover:-translate-y-0.5"
+              className="islamic-button-primary px-6 py-3 text-sm font-bold"
             >
               <FiEdit className="text-lg" />
               تعديل بيانات المستخدم
@@ -204,43 +235,58 @@ const UserDetail = () => {
 
       {/* KPI cards - إحصائيات سريعة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 2xl:gap-3 3xl:grid-cols-6 3xl:gap-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between shadow-sm">
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">إجمالي الحجوزات</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{user._count?.studentBookings ?? user.studentBookings?.length ?? 0}</p>
-          </div>
-          <div className="h-11 w-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
-            <FiBook className="text-primary-600 dark:text-primary-400 text-xl" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between shadow-sm">
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">الإشعارات</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{user._count?.notifications ?? 0}</p>
-          </div>
-          <div className="h-11 w-11 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-            <FiBell className="text-amber-600 dark:text-amber-400 text-xl" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between shadow-sm">
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">الأدوار</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{user.userRoles?.length ?? 0}</p>
-          </div>
-          <div className="h-11 w-11 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-            <FiShield className="text-emerald-600 dark:text-emerald-400 text-xl" />
-          </div>
-        </div>
-        {user.teacherProfile?.wallet && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between shadow-sm">
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300 p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">رصيد المحفظة</p>
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-                ${(user.teacherProfile.wallet.balance ?? 0).toFixed(2)}
-              </p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1 font-alexandria">إجمالي الحجوزات</p>
+              <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-200">{user._count?.studentBookings ?? user.studentBookings?.length ?? 0}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-alexandria">جلسات تعلم القرآن</p>
             </div>
-            <div className="h-11 w-11 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-              <FiDollarSign className="text-emerald-600 dark:text-emerald-400 text-xl" />
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FiBook className="text-white text-xl" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300 p-4 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mb-1 font-alexandria">الإشعارات</p>
+              <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">{user._count?.notifications ?? 0}</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-alexandria">رسائل وتذكيرات</p>
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FiBell className="text-white text-xl" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300 p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mb-1 font-alexandria">الأدوار</p>
+              <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{user.userRoles?.length ?? 0}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-alexandria">صلاحيات النظام</p>
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FiShield className="text-white text-xl" />
+            </div>
+          </div>
+        </div>
+        
+        {user.teacherProfile?.wallet && (
+          <div className="islamic-card group hover:shadow-xl transition-all duration-300 p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-green-700 dark:text-green-300 mb-1 font-alexandria">رصيد المحفظة</p>
+                <p className="text-2xl font-bold text-green-800 dark:text-green-200">
+                  ${(user.teacherProfile.wallet.balance ?? 0).toFixed(2)}
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-alexandria">الأرباح المتاحة</p>
+              </div>
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiDollarSign className="text-white text-xl" />
+              </div>
             </div>
           </div>
         )}
@@ -315,6 +361,39 @@ const UserDetail = () => {
                     {user.status === 'ACTIVE' ? 'نشط' : user.status === 'BANNED' ? 'محظور' : 'غير نشط'}
                   </span>
                 </div>
+
+                {/* حقول خاصة بالطلاب */}
+                {user.role === 'STUDENT' && (
+                  <>
+                    {/* جنس الطالب */}
+                    {user.gender && (
+                      <div>
+                        <label className="text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wide mb-1.5 flex items-center gap-1.5 font-alexandria">
+                          <FiUser className="text-emerald-500 dark:text-emerald-400 text-sm" />
+                          جنس الطالب
+                        </label>
+                        <span className="inline-flex px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-700 font-alexandria">
+                          {user.gender === 'MALE' ? '👨 ذكر' : '👩 أنثى'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* عدد أجزاء الحفظ */}
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wide mb-3 flex items-center gap-1.5 font-alexandria">
+                        <span className="text-amber-500 dark:text-amber-400 text-sm">📖</span>
+                        عدد أجزاء الحفظ من القرآن الكريم
+                      </label>
+                      <QuranProgressBar 
+                        memorizedParts={user.memorizedParts || 0}
+                        size="large"
+                        isRTL={isRTL}
+                        className="mt-2"
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div>
                   <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                     <FiCalendar className="text-gray-400 dark:text-gray-500 text-sm" />

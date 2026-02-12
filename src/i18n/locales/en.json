@@ -107,6 +107,7 @@
     "settings": "Settings",
     "activity": "Activity Logs",
     "users": "Users",
+    "students": "Students",
     "teachers": "Teachers",
     "bookings": "Bookings",
     "sessions": "Sessions",
@@ -133,7 +134,12 @@
     "settings": "Settings"
   },
   "users": {
-    "title": "Users",
+    "title": "Users", 
+    "studentsTitle": "Students",
+    "totalStudents": "Total Students",
+    "allStudents": "All Students", 
+    "activeStudents": "Active Students",
+    "bannedStudents": "Banned Students",
     "subtitle": "Manage all platform users",
     "addUser": "Add User",
     "addStudent": "Add Student",

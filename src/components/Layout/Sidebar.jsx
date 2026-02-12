@@ -41,7 +41,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
   const menuItems = [
     { path: '/dashboard', icon: FiHome, label: t('sidebar.dashboard') },
     { path: '/profile', icon: FiUser, label: t('sidebar.profile') },
-    { path: '/users', icon: FiUsers, label: t('sidebar.users') },
+    { path: '/users', icon: FiUsers, label: t('sidebar.students') },
     { path: '/teachers', icon: FiUserCheck, label: t('sidebar.teachers') },
     { path: '/bookings', icon: FiCalendar, label: t('sidebar.bookings') },
     { path: '/sessions', icon: FiVideo, label: t('sidebar.sessions') },

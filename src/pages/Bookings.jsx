@@ -79,78 +79,133 @@ const Bookings = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Page header */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{t('bookings.title')}</h1>
-          <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">{t('bookings.manageSubtitle')}</p>
+    <div className="space-y-6 animate-fade-in islamic-container" style={{ fontFamily: 'Alexandria, sans-serif' }}>
+      {/* Islamic Header */}
+      <div className="text-center mb-6">
+        <div className="islamic-border inline-block px-8 py-4 bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 rounded-xl">
+          <p className="text-emerald-700 dark:text-emerald-300 text-sm font-semibold mb-1 font-alexandria">
+            {isRTL ? 'بسم الله الرحمن الرحيم' : 'In the name of Allah, the Most Gracious, the Most Merciful'}
+          </p>
+          <p className="text-amber-600 dark:text-amber-400 text-xs font-alexandria">
+            {isRTL ? 'إدارة مواعيد تعلم القرآن الكريم' : 'Managing Quran Learning Appointments'}
+          </p>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50">
-            <button type="button" onClick={() => { setViewMode('admin'); setPage(1); }} className={cn('rounded-md px-3 py-2 text-sm font-medium transition-all', viewMode === 'admin' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')}>
-              {t('bookings.allBookings')}
-            </button>
-            <button type="button" onClick={() => { setViewMode('user'); setPage(1); }} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all', viewMode === 'user' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')}>
-              <FiUser className="size-4" />
-              {t('bookings.myBookings')}
-            </button>
+      </div>
+
+      {/* Page header */}
+      <section className="islamic-border p-6 bg-gradient-to-r from-emerald-50 via-white to-amber-50 dark:from-emerald-900/20 dark:via-gray-800 dark:to-amber-900/20 rounded-xl shadow-lg">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                <FiCalendar className="size-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-emerald-800 dark:text-emerald-200 sm:text-4xl font-alexandria">{t('bookings.title') || 'الحجوزات والمواعيد'}</h1>
+                <p className="text-amber-700 dark:text-amber-300 text-sm font-alexandria">{isRTL ? 'جدولة مواعيد القرآن الكريم' : 'Quran Learning Schedule'}</p>
+              </div>
+            </div>
+            <p className="max-w-2xl text-base text-emerald-700 dark:text-emerald-300 font-alexandria">{t('bookings.manageSubtitle') || 'إدارة حجوزات ومواعيد تعلم القرآن الكريم'}</p>
+            <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+              <span className="font-alexandria">{isRTL ? 'واتقوا الله ويعلمكم الله' : 'And fear Allah, and Allah will teach you'}</span>
+            </div>
           </div>
-          <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50" title={t('bookings.viewCards')}>
-            <button type="button" onClick={() => setViewLayout('cards')} className={cn('rounded-md p-2 text-sm font-medium transition-all', viewLayout === 'cards' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')}>
-              <FiGrid className="size-4" />
-            </button>
-            <button type="button" onClick={() => setViewLayout('table')} className={cn('rounded-md p-2 text-sm font-medium transition-all', viewLayout === 'table' ? 'bg-white text-orange-600 shadow dark:bg-gray-600 dark:text-orange-400' : 'text-gray-600 hover:bg-white/50 dark:text-gray-400 dark:hover:bg-gray-600/50')} title={t('bookings.viewTable')}>
-              <FiList className="size-4" />
-            </button>
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
+            <div className="flex gap-1 islamic-border bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 p-1 rounded-lg">
+              <button type="button" onClick={() => { setViewMode('admin'); setPage(1); }} className={cn('islamic-button-secondary px-3 py-2 text-sm font-alexandria', viewMode === 'admin' && 'islamic-button-primary')}>
+                {t('bookings.allBookings') || 'جميع الحجوزات'}
+              </button>
+              <button type="button" onClick={() => { setViewMode('user'); setPage(1); }} className={cn('islamic-button-secondary px-3 py-2 text-sm font-alexandria flex items-center gap-2', viewMode === 'user' && 'islamic-button-primary')}>
+                <FiUser className="size-4" />
+                {t('bookings.myBookings') || 'حجوزاتي'}
+              </button>
+            </div>
+            <div className="flex gap-1 islamic-border bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 p-1 rounded-lg" title={t('bookings.viewCards')}>
+              <button type="button" onClick={() => setViewLayout('cards')} className={cn('islamic-button-secondary p-2', viewLayout === 'cards' && 'islamic-button-primary')}>
+                <FiGrid className="size-4" />
+              </button>
+              <button type="button" onClick={() => setViewLayout('table')} className={cn('islamic-button-secondary p-2', viewLayout === 'table' && 'islamic-button-primary')} title={t('bookings.viewTable')}>
+                <FiList className="size-4" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('bookings.total')}</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-              <FiCalendar className="size-5" />
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300">
+          <div className="islamic-border-gradient p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 font-alexandria">{t('bookings.total') || 'الإجمالي'}</p>
+                <p className="mt-2 text-3xl font-bold text-emerald-800 dark:text-emerald-200">{stats.total}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-alexandria">{isRTL ? 'جميع الحجوزات' : 'All Bookings'}</p>
+              </div>
+              <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiCalendar className="size-6 text-white" />
+              </div>
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.pending')}</p>
-            <p className="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
-              <FiClock className="size-5" />
+        
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300">
+          <div className="islamic-border-gradient p-5 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300 font-alexandria">{t('dashboard.pending') || 'قيد الانتظار'}</p>
+                <p className="mt-2 text-3xl font-bold text-amber-800 dark:text-amber-200">{stats.pending}</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-alexandria">{isRTL ? 'تحتاج موافقة' : 'Needs Approval'}</p>
+              </div>
+              <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiClock className="size-6 text-white" />
+              </div>
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.confirmed')}</p>
-            <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.confirmed}</p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
-              <FiCheckCircle className="size-5" />
+        
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300">
+          <div className="islamic-border-gradient p-5 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-300 font-alexandria">{t('dashboard.confirmed') || 'مؤكدة'}</p>
+                <p className="mt-2 text-3xl font-bold text-green-800 dark:text-green-200">{stats.confirmed}</p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-alexandria">{isRTL ? 'حجوزات مؤكدة' : 'Confirmed Bookings'}</p>
+              </div>
+              <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiCheckCircle className="size-6 text-white" />
+              </div>
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.completed')}</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400">
-              <FiCheckCircle className="size-5" />
+        
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300">
+          <div className="islamic-border-gradient p-5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300 font-alexandria">{t('dashboard.completed') || 'مكتملة'}</p>
+                <p className="mt-2 text-3xl font-bold text-blue-800 dark:text-blue-200">{stats.completed}</p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-alexandria">{isRTL ? 'دروس مكتملة' : 'Completed Lessons'}</p>
+              </div>
+              <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiCheckCircle className="size-6 text-white" />
+              </div>
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-red-200 dark:border-red-800/50 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('dashboard.cancelled')}</p>
-            <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">{stats.cancelled}</p>
-            <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
-              <FiXCircle className="size-5" />
+        
+        <div className="islamic-card group hover:shadow-xl transition-all duration-300">
+          <div className="islamic-border-gradient p-5 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-300 font-alexandria">{t('dashboard.cancelled') || 'ملغية'}</p>
+                <p className="mt-2 text-3xl font-bold text-red-800 dark:text-red-200">{stats.cancelled}</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-alexandria">{isRTL ? 'حجوزات ملغية' : 'Cancelled Bookings'}</p>
+              </div>
+              <div className="flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FiXCircle className="size-6 text-white" />
+              </div>
             </div>
           </div>
         </div>
