@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { studentSubscriptionAPI } from '../services/api';
 import { FiPackage, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import PackageModal from '../components/PackageModal';
+import { toast } from 'sonner';
 
 const StudentSubscriptions = () => {
   const { t } = useTranslation();
@@ -18,12 +20,10 @@ const StudentSubscriptions = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab, page, statusFilter]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'packages') {
@@ -38,6 +38,50 @@ const StudentSubscriptions = () => {
       console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
+    }
+  }, [activeTab, page, statusFilter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleCreatePackage = () => {
+    setSelectedPackage(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditPackage = (pkg) => {
+    setSelectedPackage(pkg);
+    setIsModalOpen(true);
+  };
+
+  const handleDeletePackage = async (id) => {
+    if (!window.confirm(t('packages.deleteConfirm'))) return;
+    try {
+      await studentSubscriptionAPI.deletePackage(id);
+      toast.success(t('packages.deleteSuccess'));
+      fetchData();
+    } catch (error) {
+      console.error('Failed to delete package:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete package');
+    }
+  };
+
+  const handleSubmitPackage = async (data) => {
+    try {
+      if (selectedPackage) {
+        await studentSubscriptionAPI.updatePackage(selectedPackage.id, data);
+        toast.success(t('packages.updateSuccess'));
+      } else {
+        await studentSubscriptionAPI.createPackage(data);
+        toast.success(t('packages.createSuccess'));
+      }
+      fetchData();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to submit package:', error);
+      toast.error(error.response?.data?.message || 'Failed to save package');
+      throw error;
     }
   };
 
@@ -68,7 +112,7 @@ const StudentSubscriptions = () => {
           <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">{t('packages.subtitle')}</p>
         </div>
         {activeTab === 'packages' && (
-          <Button className="shrink-0 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800">
+          <Button onClick={handleCreatePackage} className="shrink-0 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800">
             <FiPlus className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
             {t('packages.createPackage')}
           </Button>
@@ -149,8 +193,10 @@ const StudentSubscriptions = () => {
                     {activeTab === 'packages' ? (
                       <>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.packageName')}</th>
-                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.price')}</th>
-                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.duration')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.durationMonths')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.maxTeachers')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.monthlyPrice')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.yearlyPrice')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('common.status')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-left' : 'text-right')}>{t('common.actions')}</th>
                       </>
@@ -169,9 +215,22 @@ const StudentSubscriptions = () => {
                   {activeTab === 'packages'
                     ? packages.map((pkg) => (
                         <tr key={pkg.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>{pkg.name}</td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>${pkg.price?.toFixed(2)}</td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{pkg.durationDays} {t('packages.days')}</td>
+                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                            {isRTL ? (pkg.nameAr || pkg.name) : pkg.name}
+                            {pkg.isPopular && <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">⭐</span>}
+                          </td>
+                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                            {pkg.durationMonths ? `${pkg.durationMonths} ${t('packages.months')}` : '-'}
+                          </td>
+                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                            {pkg.maxTeachers ? `${pkg.maxTeachers} ${t('packages.teachers')}` : t('subscriptions.unlimited')}
+                          </td>
+                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                            {pkg.monthlyPrice ? `$${pkg.monthlyPrice.toFixed(2)}` : '-'}
+                          </td>
+                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                            {pkg.yearlyPrice ? `$${pkg.yearlyPrice.toFixed(2)}` : '-'}
+                          </td>
                           <td className="px-6 py-4">
                             <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', pkg.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')}>
                               {pkg.isActive ? t('users.active') : t('users.inactive')}
@@ -179,10 +238,10 @@ const StudentSubscriptions = () => {
                           </td>
                           <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
                             <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
-                              <Button variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                              <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
                                 <FiEdit className="size-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                              <Button onClick={() => handleDeletePackage(pkg.id)} variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                 <FiTrash2 className="size-4" />
                               </Button>
                             </div>
@@ -219,6 +278,14 @@ const StudentSubscriptions = () => {
           </>
         )}
       </div>
+
+      {/* Package Modal */}
+      <PackageModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmitPackage}
+        initialData={selectedPackage}
+      />
     </div>
   );
 };
