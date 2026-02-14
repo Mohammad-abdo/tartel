@@ -1,8 +1,5 @@
 /* Islamic Theme Styles */
 
-/* Import Alexandria Font */
-@import url("https://fonts.googleapis.com/css2?family=Alexandria:wght@100;200;300;400;500;600;700;800;900&display=swap");
-
 /* Font Family Class */
 .font-alexandria {
   font-family: "Alexandria", sans-serif;
@@ -293,10 +290,12 @@
 .islamic-select {
   @apply w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-all duration-300 cursor-pointer;
   border-color: #d1d5db;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     rgba(16, 185, 129, 0.02) 0%,
     rgba(255, 255, 255, 1) 50%,
-    rgba(245, 158, 11, 0.02) 100%);
+    rgba(245, 158, 11, 0.02) 100%
+  );
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
@@ -453,10 +452,12 @@
 .islamic-notification-warning,
 .islamic-notification-error {
   @apply rounded-xl shadow-lg border p-4 mb-4;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     rgba(16, 185, 129, 0.1) 0%,
     rgba(255, 255, 255, 0.95) 50%,
-    rgba(245, 158, 11, 0.1) 100%);
+    rgba(245, 158, 11, 0.1) 100%
+  );
   border-left: 5px solid;
   border-image: linear-gradient(to bottom, #10b981, #f59e0b) 1;
 }
