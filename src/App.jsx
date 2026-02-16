@@ -63,7 +63,7 @@ function ThemedToastContainer() {
     />
   );
 }
-//new app routes
+//new
 const AppRoutes = () => {
   const { user } = useAuth();
 
