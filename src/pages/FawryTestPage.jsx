@@ -204,14 +204,15 @@ const FawryTestPage = () => {
         },
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = rawData.data || rawData;
 
       if (response.ok) {
         setStatusResult(data);
         toast.success('Status retrieved successfully!');
       } else {
-        toast.error(data.message || 'Failed to get payment status');
-        setStatusResult({ error: data });
+        toast.error(rawData.message || data.message || 'Failed to get payment status');
+        setStatusResult({ error: rawData });
       }
     } catch (error) {
       console.error('Error:', error);
@@ -681,30 +682,52 @@ const FawryTestPage = () => {
                 
                 <div className="space-y-3">
                   <div className="bg-white p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Status</p>
+                    <p className="text-sm text-gray-600 mb-1">Order Status</p>
                     <p className={`text-2xl font-bold ${
-                      statusResult.status === 'COMPLETED' ? 'text-green-600' :
-                      statusResult.status === 'PENDING' ? 'text-yellow-600' :
+                      (statusResult.fawryStatus?.orderStatus || statusResult.orderStatus) === 'PAID' ? 'text-green-600' :
+                      (statusResult.fawryStatus?.orderStatus || statusResult.orderStatus) === 'UNPAID' ? 'text-yellow-600' :
                       'text-red-600'
                     }`}>
-                      {statusResult.status}
+                      {statusResult.fawryStatus?.orderStatus || statusResult.orderStatus || statusResult.status || 'N/A'}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white p-3 rounded-lg">
                       <p className="text-xs text-gray-600">Amount</p>
-                      <p className="font-semibold">{statusResult.amount} {statusResult.currency}</p>
+                      <p className="font-semibold">
+                        {statusResult.fawryStatus?.paymentAmount || statusResult.amount || 'N/A'}
+                      </p>
                     </div>
                     <div className="bg-white p-3 rounded-lg">
                       <p className="text-xs text-gray-600">Fawry Ref Number</p>
-                      <p className="font-mono text-sm">{statusResult.fawryRefNumber || 'N/A'}</p>
+                      <p className="font-mono text-sm">
+                        {statusResult.fawryStatus?.referenceNumber || statusResult.fawryRefNumber || 'N/A'}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg">
-                    <p className="text-xs text-gray-600">Payment ID</p>
-                    <p className="font-mono text-sm truncate">{statusResult.paymentId}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-xs text-gray-600">Payment Method</p>
+                      <p className="font-semibold">
+                        {statusResult.fawryStatus?.paymentMethod || 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-xs text-gray-600">Status Description</p>
+                      <p className="text-sm">
+                        {statusResult.fawryStatus?.statusDescription || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Full Fawry Response Debug */}
+                  <div className="bg-gray-100 p-3 rounded-lg overflow-hidden" dir="ltr">
+                    <p className="text-xs text-gray-600 mb-1">Full Fawry Status Response:</p>
+                    <pre className="text-xs font-mono overflow-auto max-h-60">
+                      {JSON.stringify(statusResult, null, 2)}
+                    </pre>
                   </div>
                 </div>
               </div>
