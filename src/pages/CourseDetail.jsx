@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
@@ -31,11 +31,7 @@ const CourseDetail = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    fetchCourse();
-  }, [id, fetchCourse]);
-
-  const fetchCourse = async () => {
+  const fetchCourse = useCallback(async () => {
     setLoading(true);
     try {
       const response = await courseAPI.getCourseById(id);
@@ -45,7 +41,11 @@ const CourseDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchCourse();
+  }, [fetchCourse]);
 
   const getStatusBadge = (status) => {
     const badges = {

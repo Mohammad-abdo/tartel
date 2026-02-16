@@ -32,7 +32,10 @@ import UserDetail from './pages/UserDetail';
 import TeacherDetail from './pages/TeacherDetail';
 import BookingDetail from './pages/BookingDetail';
 import PaymentDetail from './pages/PaymentDetail';
-import FawryTest from './pages/FawryTest';
+import FawryTestPage from './pages/FawryTestPage';
+import SubscriptionCallback from './pages/SubscriptionCallback';
+
+
 import CourseDetail from './pages/CourseDetail';
 import AddUser from './pages/AddUser';
 import EditUser from './pages/EditUser';
@@ -205,7 +208,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <FawryTest />
+              <FawryTestPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -356,6 +359,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <StudentSubscriptions />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/subscriptions/callback"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SubscriptionCallback />
             </DashboardLayout>
           </ProtectedRoute>
         }

@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import AvailabilityScheduler from '../components/Teacher/AvailabilityScheduler';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -132,6 +133,12 @@ const Profile = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {user?.role === 'TEACHER' && (
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+          <AvailabilityScheduler />
+        </motion.div>
+      )}
     </motion.div>
   );
 };

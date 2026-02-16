@@ -643,6 +643,24 @@
         "updateFailed": "Failed to update user",
         "loadUserFailed": "Failed to load user data"
     },
+    "fawry": {
+        "payAtFawry": "Pay at Fawry",
+        "payWithCard": "Pay with Card",
+        "referenceNumber": "Fawry Reference Number",
+        "merchantRefNum": "Merchant Ref Num",
+        "amount": "Amount",
+        "expiry": "Expires At",
+        "instructions": "Instructions",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "payAtFawryDesc": "Pay with cash at any Fawry store using the reference number.",
+        "payWithCardDesc": "Pay online using your credit or debit card securely.",
+        "steps": "Steps to Pay",
+        "step1": "Go to any Fawry store.",
+        "step2": "Ask to pay for 'Sheikhy App' or provide service code.",
+        "step3": "Give the reference number to the cashier.",
+        "step4": "Keep the receipt after payment."
+    },
     "subscriptions": {
         "title": "Subscriptions",
         "subtitle": "Manage subscription packages and subscriptions",
@@ -661,7 +679,16 @@
         "expired": "Expired",
         "noPackages": "No packages found",
         "noSubscriptions": "No subscriptions found",
-        "changeFilter": "Try changing the filter."
+        "changeFilter": "Try changing the filter.",
+        "selectPaymentMethod": "Select Payment Method",
+        "confirmSubscription": "Confirm Subscription",
+        "paymentInitiated": "Payment Initiated",
+        "success": "Subscription successful!",
+        "cancelSuccess": "Subscription cancelled successfully",
+        "renew": "Renew",
+        "cancel": "Cancel Subscription",
+        "active": "Active",
+        "pending": "Pending Payment"
     },
     "packages": {
         "title": "Packages",

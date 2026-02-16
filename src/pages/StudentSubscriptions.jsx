@@ -6,11 +6,14 @@ import { FiPackage, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import PackageModal from '../components/PackageModal';
+import SubscribeModal from '../components/SubscribeModal';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
 const StudentSubscriptions = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { user } = useAuth();
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
   const [activeTab, setActiveTab] = useState('packages');
@@ -21,25 +24,32 @@ const StudentSubscriptions = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'packages') {
-        const response = await studentSubscriptionAPI.getAllPackages(false);
+        const response = await studentSubscriptionAPI.getAllPackages(user?.role !== 'ADMIN'); // Students see active only
         setPackages(response.data || []);
       } else {
-        const response = await studentSubscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
-        setSubscriptions(response.data.data || []);
-        setTotalPages(response.data.totalPages || 1);
+        if (user?.role === 'ADMIN') {
+           const response = await studentSubscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
+           setSubscriptions(response.data.data || []);
+           setTotalPages(response.data.totalPages || 1);
+        } else {
+           const response = await studentSubscriptionAPI.getMySubscriptions();
+           setSubscriptions(response.data || []);
+           setTotalPages(1); // No pagination for student yet?
+        }
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, statusFilter]);
+  }, [activeTab, page, statusFilter, user?.role]);
 
   useEffect(() => {
     fetchData();
@@ -111,7 +121,8 @@ const StudentSubscriptions = () => {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{t('packages.title')}</h1>
           <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">{t('packages.subtitle')}</p>
         </div>
-        {activeTab === 'packages' && (
+
+        {activeTab === 'packages' && user?.role === 'ADMIN' && (
           <Button onClick={handleCreatePackage} className="shrink-0 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800">
             <FiPlus className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
             {t('packages.createPackage')}
@@ -236,16 +247,28 @@ const StudentSubscriptions = () => {
                               {pkg.isActive ? t('users.active') : t('users.inactive')}
                             </span>
                           </td>
-                          <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
-                            <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
-                              <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
-                                <FiEdit className="size-4" />
+                          {user?.role === 'ADMIN' ? (
+                            <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                              <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
+                                <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                                  <FiEdit className="size-4" />
+                                </Button>
+                                <Button onClick={() => handleDeletePackage(pkg.id)} variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                  <FiTrash2 className="size-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          ) : (
+                            <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                              <Button 
+                                size="sm" 
+                                onClick={() => { setSelectedPackage(pkg); setIsSubscribeModalOpen(true); }}
+                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                              >
+                                {t('common.subscribe') || 'Subscribe'}
                               </Button>
-                              <Button onClick={() => handleDeletePackage(pkg.id)} variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                <FiTrash2 className="size-4" />
-                              </Button>
-                            </div>
-                          </td>
+                            </td>
+                          )}
                         </tr>
                       ))
                     : subscriptions.map((sub) => (
@@ -285,6 +308,13 @@ const StudentSubscriptions = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmitPackage}
         initialData={selectedPackage}
+      />
+
+      <SubscribeModal 
+         pkg={selectedPackage}
+         isOpen={isSubscribeModalOpen}
+         onClose={() => setIsSubscribeModalOpen(false)}
+         onSuccess={() => { fetchData(); setActiveTab('subscriptions'); }}
       />
     </div>
   );

@@ -253,6 +253,10 @@ export const studentSubscriptionAPI = {
   updatePackage: (id, data) => api.put(`/student-subscriptions/packages/${id}`, data),
   deletePackage: (id) => api.delete(`/student-subscriptions/packages/${id}`),
   getAllSubscriptions: (params) => api.get('/student-subscriptions/admin/all', { params }),
+  getMySubscriptions: () => api.get('/student-subscriptions/my-subscriptions'),
+  getMyActive: () => api.get('/student-subscriptions/my-active'),
+  subscribe: (data) => api.post('/student-subscriptions/subscribe', data),
+  cancel: (id) => api.post(`/student-subscriptions/cancel/${id}`),
 };
 
 // Finance API
@@ -275,6 +279,8 @@ export const notificationAPI = {
 
 // Teacher API
 export const teacherAPI = {
+  getProfile: () => api.get('/teachers/profile/me'),
+  getAvailability: (teacherId, startDate, endDate) => api.get(`/teachers/${teacherId}/availability`, { params: { startDate, endDate } }),
   getAllTeachers: (params) => api.get('/teachers', { params }),
   getTeacherById: (id) => api.get(`/teachers/${id}`),
   createTeacher: (data) => api.post('/teachers', data),

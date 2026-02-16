@@ -669,23 +669,62 @@ const TeacherDetail = () => {
 
           {/* Schedules - only for full teachers */}
           {!isCourseSheikh && teacher.schedules && teacher.schedules.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiCalendar className="text-primary-600 dark:text-primary-400" />
                 {t('teachers.activeSchedules')}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {teacher.schedules.map((schedule) => (
-                  <div
-                    key={schedule.id}
-                    className="p-4 border border-gray-200 rounded-lg bg-gray-50"
-                  >
-                    <p className="font-medium text-gray-900">{schedule.dayOfWeek}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {schedule.startTime} - {schedule.endTime}
-                    </p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(() => {
+                  const dayOrder = {
+                    SATURDAY: 0, SUNDAY: 1, MONDAY: 2, TUESDAY: 3, WEDNESDAY: 4, THURSDAY: 5, FRIDAY: 6
+                  };
+                  
+                  const intToDay = {
+                    0: 'SATURDAY', 1: 'SUNDAY', 2: 'MONDAY', 3: 'TUESDAY', 4: 'WEDNESDAY', 5: 'THURSDAY', 6: 'FRIDAY'
+                  };
+
+                  const getDayString = (val) => {
+                    if (typeof val === 'string') return val;
+                    return intToDay[val];
+                  };
+
+                  const uniqueDays = [...new Set(teacher.schedules
+                    .map(s => getDayString(s.dayOfWeek))
+                    .filter(d => d)
+                  )].sort((a, b) => (dayOrder[a] || 99) - (dayOrder[b] || 99));
+
+                  return uniqueDays.map(day => (
+                    <div key={day} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-200">
+                      <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2">
+                        <FiCalendar className="text-primary-500 size-4" />
+                        <h3 className="font-bold text-gray-900 dark:text-white text-center capitalize">
+                          {t(`days.${String(day).toLowerCase()}`, day)}
+                        </h3>
+                      </div>
+                      <div className="p-3 space-y-2 bg-white dark:bg-gray-800">
+                        {teacher.schedules
+                          .filter(s => getDayString(s.dayOfWeek) === day)
+                          .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                          .map(slot => (
+                            <div 
+                              key={slot.id}
+                              className="group flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-primary-50 dark:bg-gray-700/30 dark:hover:bg-primary-900/20 rounded-lg transition-colors border border-transparent hover:border-primary-100 dark:hover:border-primary-800"
+                            >
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 group-hover:text-primary-700 dark:group-hover:text-primary-300">
+                                <FiClock className="size-4" />
+                                <span className="text-sm font-medium" style={{ direction: 'ltr' }}>
+                                  {new Date(`2000-01-01T${slot.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                  {' - '}
+                                  {new Date(`2000-01-01T${slot.endTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           )}

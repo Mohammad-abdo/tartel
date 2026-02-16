@@ -84,7 +84,6 @@
     "completed": "مكتمل",
     "failed": "فشل",
     "refunded": "مسترد",
-    "students": "الطلاب",
     "admins": "المديرون"
   },
   "login": {
@@ -130,8 +129,7 @@
     "myAccount": "حسابي",
     "navigation": "القائمة الرئيسية",
     "expand": "توسيع القائمة",
-    "collapse": "طي القائمة",
-    "settings": "الإعدادات"
+    "collapse": "طي القائمة"
   },
   "users": {
     "title": "المستخدمون",
@@ -251,7 +249,6 @@
     "basicInfoDesc": "التخصص، السعر، الخبرة والسيرة",
     "specialties": "التخصصات (مفصولة بفاصلة)",
     "experience": "سنوات الخبرة",
-    "approved": "موافق عليه",
     "photoAndVideo": "الصورة والفيديو التعريفي",
     "photoAndVideoDesc": "رفع صورة من الجهاز أو لصق الرابط. رفع فيديو تعريفي للشيخ.",
     "photo": "الصورة",
@@ -665,7 +662,34 @@
     "expired": "منتهي",
     "noPackages": "لا توجد باقات",
     "noSubscriptions": "لا توجد اشتراكات",
-    "changeFilter": "جرّب تغيير المرشح."
+    "changeFilter": "جرّب تغيير المرشحات.",
+    "selectPaymentMethod": "اختر طريقة الدفع",
+    "confirmSubscription": "تأكيد الاشتراك",
+    "paymentInitiated": "تم بدء عملية الدفع",
+    "success": "تم الاشتراك بنجاح!",
+    "cancelSuccess": "تم إلغاء الاشتراك بنجاح",
+    "renew": "تجديد",
+    "cancel": "إلغاء الاشتراك",
+    "active": "نشط",
+    "pending": "في انتظار الدفع"
+  },
+  "fawry": {
+    "payAtFawry": "الدفع عبر فوري",
+    "payWithCard": "الدفع بالبطاقة",
+    "referenceNumber": "رقم مرجعي فوري",
+    "merchantRefNum": "رقم مرجع التاجر",
+    "amount": "المبلغ",
+    "expiry": "ينتهي في",
+    "instructions": "التعليمات",
+    "copy": "نسخ",
+    "copied": "تم النسخ!",
+    "payAtFawryDesc": "ادفع نقداً في أي متجر فوري باستخدام الرقم المرجعي.",
+    "payWithCardDesc": "ادفع عبر الإنترنت باستخدام بطاقتك الائتمانية بأمان.",
+    "steps": "خطوات الدفع",
+    "step1": "اذهب إلى أي متجر فوري.",
+    "step2": "اطلب الدفع لخدمة 'Sheikhy App' أو قدم كود الخدمة.",
+    "step3": "أعط الرقم المرجعي للكاشير.",
+    "step4": "احتفظ بالإيصال بعد الدفع."
   },
   "packages": {
     "title": "الباقات",
