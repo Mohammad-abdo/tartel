@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const FawryTestPage = () => {
-  const [activeTab, setActiveTab] = useState('reference'); // 'reference' or 'card'
+  const [activeTab, setActiveTab] = useState('reference'); // 'reference', 'card', 'wallet'
   const [bookingId, setBookingId] = useState('');
   const [expiryHours, setExpiryHours] = useState('24');
   const [language, setLanguage] = useState('ar-eg');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [merchantRefNum, setMerchantRefNum] = useState('');
@@ -45,7 +46,8 @@ const FawryTestPage = () => {
         }),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = rawData.data || rawData;
 
       if (response.ok) {
         setResult({ 
@@ -55,10 +57,73 @@ const FawryTestPage = () => {
           paymentId: data.paymentId,
           expiresAt: data.expiresAt
         });
-        setMerchantRefNum(data.merchantRefNum);
+        setMerchantRefNum(data.merchantRefNum || '');
         toast.success('Payment link generated successfully!');
       } else {
         toast.error(data.message || 'Failed to generate payment link');
+        setResult({ error: data });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Network error. Please try again.');
+      setResult({ error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateWalletPayment = async () => {
+    if (!bookingId) {
+      toast.error('Please enter a booking ID');
+      return;
+    }
+    // Mobile number is optional for QR Code flow
+    // if (!mobileNumber) { ... } 
+
+    if (!token) {
+      toast.error('Please login first');
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const response = await fetch(`${apiUrl}/payments/fawry/checkout-link`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId,
+          paymentMethod: 'MWALLET',
+          language,
+          mobileNumber // Send empty string if not provided
+        }),
+      });
+
+      console.log('Response Status:', response.status);
+      const rawData = await response.json();
+      // Backend wraps response in {success, message, data}, unwrap it
+      const data = rawData.data || rawData;
+      console.log('Wallet Payment Response (unwrapped):', JSON.stringify(data)); 
+
+      if (response.ok) {
+        setResult({ 
+          type: 'wallet',
+          merchantRefNum: data.merchantRefNum,
+          paymentId: data.paymentId,
+          paymentUrl: data.paymentUrl, 
+          paymentQr: data.paymentQr || data.walletQr, 
+          referenceNumber: data.referenceNumber || (data.originalResponse && data.originalResponse.referenceNumber),
+          expiresAt: data.expiresAt,
+          originalResponse: data.originalResponse
+        });
+        setMerchantRefNum(data.merchantRefNum || '');
+        toast.success('Wallet payment initiated successfully!');
+      } else {
+        toast.error(data.message || 'Failed to initiate wallet payment');
         setResult({ error: data });
       }
     } catch (error) {
@@ -98,11 +163,12 @@ const FawryTestPage = () => {
         }),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = rawData.data || rawData;
 
       if (response.ok) {
         setResult(data);
-        setMerchantRefNum(data.merchantRefNum);
+        setMerchantRefNum(data.merchantRefNum || '');
         toast.success('Reference number generated successfully!');
       } else {
         toast.error(data.message || 'Failed to generate reference number');
@@ -213,7 +279,20 @@ const FawryTestPage = () => {
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                💳 Card Payment (Visa/Mastercard)
+                💳 Card Payment
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('wallet');
+                  setResult(null);
+                }}
+                className={`flex-1 px-6 py-3 font-semibold rounded-lg transition ${
+                  activeTab === 'wallet'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                📱 Mobile Wallet
               </button>
             </div>
           </div>
@@ -293,19 +372,147 @@ const FawryTestPage = () => {
                       </div>
                     </div>
 
-                    {result.expiresAt && (
-                      <div className="bg-white p-3 rounded-lg">
-                        <p className="text-xs text-gray-600">Expires At</p>
-                        <p className="text-sm">{new Date(result.expiresAt).toLocaleString('ar-EG')}</p>
-                      </div>
-                    )}
-
                     <button
                       onClick={() => window.open(result.paymentUrl, '_blank')}
                       className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                       Open Payment Page
                     </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Wallet Payment Section */}
+          {activeTab === 'wallet' && (
+            <div className="border-t pt-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                📱 Mobile Wallet Payment
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Booking ID
+                  </label>
+                  <input
+                    type="text"
+                    value={bookingId}
+                    onChange={(e) => setBookingId(e.target.value)}
+                    placeholder="Enter booking ID"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mobile Number <span className="text-gray-400 font-normal">(Optional for QR)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    placeholder="Leave empty for QR Code"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Language
+                  </label>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="ar-eg">Arabic (ar-eg)</option>
+                    <option value="en-gb">English (en-gb)</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={generateWalletPayment}
+                  disabled={loading}
+                  className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Processing...' : 'Pay with Wallet'}
+                </button>
+              </div>
+
+               {/* Wallet Payment Result */}
+               {result && result.type === 'wallet' && !result.error && (
+                <div className="mt-6 p-6 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                  <h3 className="text-lg font-bold text-purple-800 mb-4">
+                    ✅ Wallet Payment Initiated
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-700">
+                        Please check your mobile wallet application to complete the payment.
+                    </p>
+
+                    {result.paymentUrl && (
+                        <div className="bg-white p-4 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-2">Payment/Redirect URL</p>
+                        <a
+                            href={result.paymentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-600 hover:text-purple-800 underline break-all"
+                        >
+                            {result.paymentUrl}
+                        </a>
+                        </div>
+                    )}
+                     
+                     {result.referenceNumber && (
+                        <div className="bg-white p-3 rounded-lg">
+                            <p className="text-xs text-gray-600">Reference Number</p>
+                            <p className="font-mono text-xl font-bold">{result.referenceNumber}</p>
+                        </div>
+                     )}
+
+                    {result.paymentQr && (
+                        <div className="bg-white p-4 rounded-lg border-2 border-dashed border-purple-300">
+                            <p className="text-sm font-bold text-gray-800 mb-2 text-center">Scan QR Code</p>
+                            {result.paymentQr.startsWith('data:image') ? (
+                                <div className="text-center">
+                                    <img src={result.paymentQr} alt="Payment QR" className="mx-auto mb-2 max-w-[200px]" />
+                                     <p className="text-xs text-gray-400">Scan with your wallet app</p>
+                                </div>
+                            ) : result.paymentQr.startsWith('http') ? (
+                                <div className="text-center">
+                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.paymentQr)}`} alt="Payment QR" className="mx-auto mb-2" />
+                                    <a href={result.paymentQr} target="_blank" rel="noreferrer" className="text-xs text-purple-600 underline break-all block">{result.paymentQr}</a>
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-gray-100 rounded text-center break-all font-mono text-xs">
+                                     {result.paymentQr}
+                                </div>
+                            )}
+                        </div>
+                     )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600">Merchant Ref</p>
+                        <p className="font-mono text-sm">{result.merchantRefNum}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600">Payment ID</p>
+                        <p className="font-mono text-sm truncate">{result.paymentId}</p>
+                      </div>
+                    </div>
+
+                    {/* Debug: Show full response to find QR data */}
+                    <div className="bg-gray-100 p-3 rounded-lg overflow-hidden" dir="ltr">
+                        <p className="text-xs text-gray-600 mb-1">Debug Response (Full Result):</p>
+                        <pre className="text-xs font-mono overflow-auto max-h-60">
+                            {JSON.stringify(result, null, 2)}
+                        </pre>
+                    </div>
                   </div>
                 </div>
               )}
@@ -323,115 +530,117 @@ const FawryTestPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Booking ID
-                </label>
-                <input
-                  type="text"
-                  value={bookingId}
-                  onChange={(e) => setBookingId(e.target.value)}
-                  placeholder="Enter booking ID"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Expiry Hours
                   </label>
                   <input
-                    type="number"
-                    value={expiryHours}
-                    onChange={(e) => setExpiryHours(e.target.value)}
-                    placeholder="24"
+                    type="text"
+                    value={bookingId}
+                    onChange={(e) => setBookingId(e.target.value)}
+                    placeholder="Enter booking ID"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Language
-                  </label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  >
-                    <option value="ar-eg">Arabic (ar-eg)</option>
-                    <option value="en-gb">English (en-gb)</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Expiry Hours
+                    </label>
+                    <input
+                      type="number"
+                      value={expiryHours}
+                      onChange={(e) => setExpiryHours(e.target.value)}
+                      placeholder="24"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Language
+                    </label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    >
+                      <option value="ar-eg">Arabic (ar-eg)</option>
+                      <option value="en-gb">English (en-gb)</option>
+                    </select>
+                  </div>
                 </div>
+
+                <button
+                  onClick={generateReferenceNumber}
+                  disabled={loading}
+                  className="w-full px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Generating...' : 'Generate Reference Number'}
+                </button>
               </div>
 
-              <button
-                onClick={generateReferenceNumber}
-                disabled={loading}
-                className="w-full px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Generating...' : 'Generate Reference Number'}
-              </button>
+              {/* Result Display */}
+              {result && !result.error && (
+                <div className="mt-6 p-6 bg-emerald-50 border-2 border-emerald-200 rounded-xl">
+                  <h3 className="text-lg font-bold text-emerald-800 mb-4">
+                    ✅ Reference Number Generated
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-1">Reference Number</p>
+                      <p className="text-3xl font-bold text-emerald-600 font-mono">
+                        {result.referenceNumber}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600">Merchant Ref</p>
+                        <p className="font-mono text-sm">{result.merchantRefNum}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600">Payment ID</p>
+                        <p className="font-mono text-sm truncate">{result.paymentId}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600">Amount</p>
+                        <p className="font-semibold">{result.amount} {result.currency}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600">Expiry Hours</p>
+                        <p className="font-semibold">{result.expiryHours} hours</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-xs text-gray-600">Expires At</p>
+                      <p className="text-sm">{new Date(result.expiresAt).toLocaleString('ar-EG')}</p>
+                    </div>
+
+                    {result.instructions && (
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                        <p className="text-sm font-medium text-amber-800 mb-2">📍 Instructions:</p>
+                        <p className="text-sm text-amber-700">{result.instructions.ar}</p>
+                        <p className="text-sm text-amber-700 mt-2">{result.instructions.en}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Error Display for Reference Number */}
+              {result && result.error && !result.type && (
+                <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+                  <h3 className="text-lg font-bold text-red-800 mb-2">❌ Error</h3>
+                  <pre className="text-sm text-red-700 overflow-auto">
+                    {JSON.stringify(result.error, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
-
-            {/* Result Display */}
-            {result && !result.error && (
-              <div className="mt-6 p-6 bg-emerald-50 border-2 border-emerald-200 rounded-xl">
-                <h3 className="text-lg font-bold text-emerald-800 mb-4">
-                  ✅ Reference Number Generated
-                </h3>
-                
-                <div className="space-y-3">
-                  <div className="bg-white p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Reference Number</p>
-                    <p className="text-3xl font-bold text-emerald-600 font-mono">
-                      {result.referenceNumber}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">Merchant Ref</p>
-                      <p className="font-mono text-sm">{result.merchantRefNum}</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">Payment ID</p>
-                      <p className="font-mono text-sm truncate">{result.paymentId}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">Amount</p>
-                      <p className="font-semibold">{result.amount} {result.currency}</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">Expiry Hours</p>
-                      <p className="font-semibold">{result.expiryHours} hours</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-lg">
-                    <p className="text-xs text-gray-600">Expires At</p>
-                    <p className="text-sm">{new Date(result.expiresAt).toLocaleString('ar-EG')}</p>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-                    <p className="text-sm font-medium text-amber-800 mb-2">📍 Instructions:</p>
-                    <p className="text-sm text-amber-700">{result.instructions.ar}</p>
-                    <p className="text-sm text-amber-700 mt-2">{result.instructions.en}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Error Display for Reference Number */}
-            {result && result.error && !result.type && (
-              <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
-                <h3 className="text-lg font-bold text-red-800 mb-2">❌ Error</h3>
-                <pre className="text-sm text-red-700 overflow-auto">
-                  {JSON.stringify(result.error, null, 2)}
-                </pre>
-              </div>
-            )}
-          </div>
           )}
 
           {/* Check Payment Status Section */}
