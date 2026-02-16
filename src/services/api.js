@@ -304,6 +304,7 @@ export const paymentAPI = {
   // Fawry (Express Checkout Link)
   getFawryInfo: () => api.get('/payments/fawry'),
   createFawryCheckoutLink: (data) => api.post('/payments/fawry/checkout-link', data),
+  createFawryReferenceNumber: (data) => api.post('/payments/fawry/reference-number', data),
   getFawryPaymentStatus: (merchantRefNum) => api.get(`/payments/fawry/status/${encodeURIComponent(merchantRefNum)}`),
 };
 
