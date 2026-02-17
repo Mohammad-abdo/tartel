@@ -13,9 +13,9 @@ Copy the example env file and set the API URL to the **new NestJS backend**:
 ```bash
 cp .env.example .env
 ```
-Edit `.env` if needed (default points to `http://localhost:3001/api`):
+Edit `.env` if needed (default points to `http://localhost:8002/api`):
 ```env
-VITE_API_URL=http://localhost:3001/api
+VITE_API_URL=http://localhost:8002/api
 ```
 
 ### 3. Start Backend Server (NestJS – new backend)
@@ -25,7 +25,7 @@ cd backend
 npm install
 npm run start:dev
 ```
-The API will be at `http://localhost:3001` with global prefix `/api` (e.g. `http://localhost:3001/api/auth/login`).
+The API will be at `http://localhost:8002` with global prefix `/api` (e.g. `http://localhost:8002/api/auth/login`).
 
 ### 4. Start Frontend Development Server
 ```bash

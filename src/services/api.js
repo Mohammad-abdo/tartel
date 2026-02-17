@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
 
 // Create axios instance
 const api = axios.create({
@@ -119,6 +119,8 @@ export const adminAPI = {
   getDailyReport: (date) => api.get('/admin/reports/daily', { params: { date } }),
   getMonthlyReport: (year, month) => api.get('/admin/reports/monthly', { params: { year, month } }),
   getBookingTrends: (params) => api.get('/admin/reports/trends', { params }),
+  getSessionReports: (params) => api.get('/admin/reports/sessions', { params }),
+  getSessions: (params) => api.get('/admin/sessions', { params }),
 
   // Notifications
   sendGlobalNotification: (data) => api.post('/admin/notifications/global', data),
@@ -199,6 +201,14 @@ export const contentAPI = {
   deleteContent: (id) => api.delete(`/content/${id}`),
 };
 
+// Site pages API (about, app, policy, privacy)
+export const pagesAPI = {
+  getAll: () => api.get('/pages'),
+  getBySlug: (slug) => api.get(`/pages/${slug}`),
+  getBySlugPublic: (slug) => api.get(`/pages/by-slug/${slug}`),
+  update: (slug, data) => api.patch(`/pages/${slug}`, data),
+};
+
 // RBAC API
 export const rbacAPI = {
   // Roles
@@ -239,6 +249,7 @@ export const reviewAPI = {
 
 // Sessions API
 export const sessionAPI = {
+  listMySessions: (params) => api.get('/sessions', { params }),
   createSession: (bookingId, data) => api.post(`/sessions/bookings/${bookingId}`, data),
   getSession: (bookingId) => api.get(`/sessions/bookings/${bookingId}`),
   startSession: (bookingId) => api.post(`/sessions/bookings/${bookingId}/start`),
@@ -326,6 +337,7 @@ export const fileUploadAPI = {
 export const videoAPI = {
   createSession: (bookingId) => api.post('/video/session/create', { bookingId }),
   getSessionToken: (bookingId) => api.get(`/video/session/token/${bookingId}`),
+  getTestToken: (channelName, uid) => api.get('/video/session/test-token', { params: { channelName, uid } }),
   endSession: (bookingId) => api.post('/video/session/end', { bookingId }),
   getSessionHistory: () => api.get('/video/session/history'),
 };

@@ -4,7 +4,7 @@
 
 // Get API base URL from environment
 const getApiBaseUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
   // Remove '/api' suffix to get base URL
   return apiUrl.replace('/api', '');
 };
@@ -33,7 +33,7 @@ export const fixImageUrl = (imageUrl) => {
   
   // If URL contains localhost:3001, replace with production URL  
   if (imageUrl.includes('localhost:3001')) {
-    return imageUrl.replace('http://localhost:3001', apiBaseUrl);
+    return imageUrl.replace('http://localhost:8002', apiBaseUrl);
   }
   
   // If URL starts with /uploads, prepend the API base URL

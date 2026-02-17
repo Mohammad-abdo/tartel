@@ -149,7 +149,7 @@ Single Page Application routing is handled by:
 
 ### 🏠 Local Development
 ```env
-VITE_API_URL=http://localhost:3001/api
+VITE_API_URL=http://localhost:8002/api
 VITE_DEV_MODE=true
 VITE_DEBUG=true
 ```

@@ -20,7 +20,6 @@ import Content from './pages/Content';
 import Notifications from './pages/Notifications';
 import RBAC from './pages/RBAC';
 import Reports from './pages/Reports';
-import Certificates from './pages/Certificates';
 import Reviews from './pages/Reviews';
 import Sessions from './pages/Sessions';
 import StudentSubscriptions from './pages/StudentSubscriptions';
@@ -34,6 +33,8 @@ import BookingDetail from './pages/BookingDetail';
 import PaymentDetail from './pages/PaymentDetail';
 import FawryTestPage from './pages/FawryTestPage';
 import SubscriptionCallback from './pages/SubscriptionCallback';
+import AgoraTestHost from './pages/AgoraTestHost';
+import AgoraTestJoin from './pages/AgoraTestJoin';
 
 
 import CourseDetail from './pages/CourseDetail';
@@ -383,16 +384,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/certificates"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Certificates />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/certificates" element={<Navigate to="/dashboard" replace />} />
       <Route
         path="/reports"
         element={
@@ -429,6 +421,26 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <Profile />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/agora-test-host"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <AgoraTestHost />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/agora-test-join"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <AgoraTestJoin />
             </DashboardLayout>
           </ProtectedRoute>
         }
