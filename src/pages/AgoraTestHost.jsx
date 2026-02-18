@@ -19,6 +19,19 @@ const AgoraTestHost = () => {
   const localPlayerRef = useRef(null);
   const clientRef = useRef(null);
   const localTracksRef = useRef([]);
+  const getReadableAgoraError = (err) => {
+    const rawMessage = err?.response?.data?.message || err?.message || '';
+    if (
+      rawMessage.includes('Agora configuration invalid') ||
+      rawMessage.includes('AGORA_APP_ID') ||
+      rawMessage.includes('AGORA_APP_CERTIFICATE')
+    ) {
+      return isRTL
+        ? 'إعدادات أجورا في الخادم غير صحيحة. تحقق من AGORA_APP_ID و AGORA_APP_CERTIFICATE (32 حرفًا hex) ومن أنهما من نفس مشروع Agora.'
+        : 'Agora server configuration is invalid. Verify AGORA_APP_ID and AGORA_APP_CERTIFICATE are 32-char hex values from the same Agora project.';
+    }
+    return rawMessage || (isRTL ? 'فشل الاتصال بأجورا' : 'Failed to connect to Agora');
+  };
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}${isRTL ? '/ar' : ''}/agora-test-join?channel=${encodeURIComponent(channelName)}`;
@@ -33,17 +46,49 @@ const AgoraTestHost = () => {
     try {
       const res = await videoAPI.getTestToken(channelName, 1);
       const data = res?.data ?? res;
-      const appId = (data.appId || import.meta.env.VITE_AGORA_APP_ID || '').trim();
-      const token = data.token;
-      const ch = data.channelName || channelName;
-      const uid = data.uid ?? 1;
-      if (!appId || !token) {
+      const appIdValue = (data.appId || import.meta.env.VITE_AGORA_APP_ID || '').trim();
+      const tokenValue = data.token;
+      const chValue = data.channelName;
+      const uidValue = data.uid;
+
+      console.group('Agora Connection Debug (Host)');
+      console.log('App ID Type:', typeof appIdValue);
+      console.log('App ID Value:', `"${appIdValue}"`);
+      console.log('Token Present:', !!tokenValue);
+      console.log('Channel:', chValue);
+      console.log('UID:', uidValue);
+      console.groupEnd();
+
+      if (!appIdValue || !tokenValue) {
+        console.error('Missing App ID or Token');
         setError(isRTL ? 'معرف تطبيق أجورا غير مضبوط. أضف AGORA_APP_ID في backend/.env أو VITE_AGORA_APP_ID في frontend/.env' : 'Agora App ID not set. Add AGORA_APP_ID in backend .env or VITE_AGORA_APP_ID in frontend .env');
         return;
       }
-      const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      clientRef.current = client;
-      await client.join(appId, ch, token, uid);
+
+      // Update state if needed commonly, otherwise just use local vars for join
+      // setAppId(appIdValue); // removed to avoid RefError if not defined
+      // setToken(tokenValue);
+      setChannelName(chValue);
+      // setUid(uidValue);
+
+      if (!clientRef.current) {
+        clientRef.current = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+      }
+      const client = clientRef.current;
+
+      // existing event listeners would go here if any
+
+      try {
+        console.log(`Attempting join with AppID: ${appIdValue}, Channel: ${chValue}, UID: ${uidValue}`);
+        await client.join(appIdValue, chValue, tokenValue, uidValue);
+        console.log('Join successful');
+      } catch (joinError) {
+        console.error('Agora client join failed:', joinError);
+        setError(joinError?.message || (isRTL ? 'فشل الانضمام إلى الغرفة' : 'Failed to join the room'));
+        setLoading(false);
+        return;
+      }
+
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks({ encoderConfig: '720p_2' });
       localTracksRef.current = [audioTrack, videoTrack];
       await client.publish([audioTrack, videoTrack]);
@@ -53,7 +98,7 @@ const AgoraTestHost = () => {
       setJoined(true);
     } catch (err) {
       console.error(err);
-      setError(err?.response?.data?.message || err?.message || (isRTL ? 'فشل الاتصال بأجورا' : 'Failed to connect to Agora'));
+      setError(getReadableAgoraError(err));
     } finally {
       setLoading(false);
     }
