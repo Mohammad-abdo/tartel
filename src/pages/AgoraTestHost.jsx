@@ -16,9 +16,21 @@ const AgoraTestHost = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [remoteUsers, setRemoteUsers] = useState([]);
   const localPlayerRef = useRef(null);
+  const remotePlayersRef = useRef({});
   const clientRef = useRef(null);
   const localTracksRef = useRef([]);
+  const playRemoteVideo = (user) => {
+    if (!user?.videoTrack) return;
+    const el = document.getElementById(`host-remote-${user.uid}`);
+    if (!el) return;
+    try {
+      user.videoTrack.play(el, { fit: 'cover' });
+    } catch (e) {
+      console.error('Failed to play host remote video:', e);
+    }
+  };
   const getReadableAgoraError = (err) => {
     const rawMessage = err?.response?.data?.message || err?.message || '';
     if (
@@ -76,7 +88,29 @@ const AgoraTestHost = () => {
       }
       const client = clientRef.current;
 
-      // existing event listeners would go here if any
+      client.on('user-published', async (user, mediaType) => {
+        try {
+          await client.subscribe(user, mediaType);
+        } catch (subscribeError) {
+          console.error('Host failed to subscribe remote media:', mediaType, subscribeError);
+          return;
+        }
+        setRemoteUsers((prev) => {
+          const next = prev.filter((u) => u.uid !== user.uid);
+          if (!next.find((u) => u.uid === user.uid)) next.push(user);
+          return next;
+        });
+        if (mediaType === 'audio' && user.audioTrack) user.audioTrack.play();
+        if (mediaType === 'video') setTimeout(() => playRemoteVideo(user), 0);
+      });
+
+      client.on('user-unpublished', (user) => {
+        setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+      });
+
+      client.on('user-left', (user) => {
+        setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+      });
 
       try {
         console.log(`Attempting join with AppID: ${appIdValue}, Channel: ${chValue}, UID: ${uidValue}`);
@@ -110,6 +144,9 @@ const AgoraTestHost = () => {
         track?.close?.();
       }
       localTracksRef.current = [];
+      Object.values(remotePlayersRef.current).forEach((el) => {
+        if (el) el.innerHTML = '';
+      });
       if (clientRef.current) {
         await clientRef.current.leave();
         clientRef.current = null;
@@ -117,8 +154,15 @@ const AgoraTestHost = () => {
     } catch (e) {
       console.error(e);
     }
+    setRemoteUsers([]);
     setJoined(false);
   };
+
+  useEffect(() => {
+    remoteUsers.forEach((user) => {
+      playRemoteVideo(user);
+    });
+  }, [remoteUsers]);
 
   useEffect(() => {
     return () => {
@@ -183,14 +227,42 @@ const AgoraTestHost = () => {
 
         {joined && (
           <div className="p-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
-              <FiVideo className="size-4" /> {isRTL ? 'كاميرتك (الشيخ)' : 'Your camera (Sheikh)'}
-            </p>
-            <div
-              ref={localPlayerRef}
-              className="w-full aspect-video max-w-2xl rounded-xl bg-gray-900 overflow-hidden"
-              style={{ minHeight: 240 }}
-            />
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                  <FiVideo className="size-4" /> {isRTL ? 'كاميرتك (الشيخ)' : 'Your camera (Sheikh)'}
+                </p>
+                <div
+                  ref={localPlayerRef}
+                  className="w-full aspect-video rounded-xl bg-gray-900 overflow-hidden"
+                  style={{ minHeight: 240 }}
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                  <FiRadio className="size-4" /> {isRTL ? 'الطالب (البث المباشر)' : 'Student (Live)'}
+                </p>
+                <div className="space-y-3">
+                  {remoteUsers.length === 0 ? (
+                    <div className="aspect-video rounded-xl bg-gray-800 flex items-center justify-center text-gray-500">
+                      {isRTL ? 'في انتظار دخول الطالب...' : 'Waiting for student to join...'}
+                    </div>
+                  ) : (
+                    remoteUsers.map((user) => (
+                      <div
+                        key={user.uid}
+                        id={`host-remote-${user.uid}`}
+                        ref={(el) => {
+                          remotePlayersRef.current[user.uid] = el;
+                        }}
+                        className="aspect-video rounded-xl bg-gray-900 overflow-hidden"
+                        style={{ minHeight: 240 }}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
