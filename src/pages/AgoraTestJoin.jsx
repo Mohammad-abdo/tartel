@@ -23,6 +23,19 @@ const AgoraTestJoin = () => {
   const clientRef = useRef(null);
   const localTracksRef = useRef([]);
   const localPlayerRef = useRef(null);
+  const getReadableAgoraError = (err) => {
+    const rawMessage = err?.response?.data?.message || err?.message || '';
+    if (
+      rawMessage.includes('Agora configuration invalid') ||
+      rawMessage.includes('AGORA_APP_ID') ||
+      rawMessage.includes('AGORA_APP_CERTIFICATE')
+    ) {
+      return isRTL
+        ? 'إعدادات أجورا في الخادم غير صحيحة. تحقق من AGORA_APP_ID و AGORA_APP_CERTIFICATE (32 حرفًا hex) ومن أنهما من نفس مشروع Agora.'
+        : 'Agora server configuration is invalid. Verify AGORA_APP_ID and AGORA_APP_CERTIFICATE are 32-char hex values from the same Agora project.';
+    }
+    return rawMessage || (isRTL ? 'فشل الاتصال' : 'Failed to connect');
+  };
 
   useEffect(() => {
     if (channelFromUrl) setChannelName(channelFromUrl);
@@ -73,7 +86,7 @@ const AgoraTestJoin = () => {
       setJoined(true);
     } catch (err) {
       console.error(err);
-      setError(err?.response?.data?.message || err?.message || (isRTL ? 'فشل الاتصال' : 'Failed to connect'));
+      setError(getReadableAgoraError(err));
     } finally {
       setLoading(false);
     }
