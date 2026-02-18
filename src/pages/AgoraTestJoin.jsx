@@ -8,12 +8,32 @@ import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
+function normalizeChannelInput(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+
+  // If user pastes full shared URL, extract ?channel=...
+  try {
+    const asUrl = new URL(raw);
+    const fromParam = asUrl.searchParams.get('channel');
+    if (fromParam) return decodeURIComponent(fromParam).trim();
+  } catch (_) {
+    // not a full URL
+  }
+
+  // Support partial pasted query like "channel=room-1"
+  const match = raw.match(/(?:\?|&)?channel=([^&]+)/i);
+  if (match && match[1]) return decodeURIComponent(match[1]).trim();
+
+  return raw;
+}
+
 const AgoraTestJoin = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const [searchParams] = useSearchParams();
-  const channelFromUrl = searchParams.get('channel') || '';
+  const channelFromUrl = normalizeChannelInput(searchParams.get('channel') || '');
   const [channelName, setChannelName] = useState(channelFromUrl || '');
   const [joined, setJoined] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,6 +43,16 @@ const AgoraTestJoin = () => {
   const clientRef = useRef(null);
   const localTracksRef = useRef([]);
   const localPlayerRef = useRef(null);
+  const playRemoteVideo = (user) => {
+    if (!user?.videoTrack) return;
+    const el = document.getElementById(`remote-${user.uid}`);
+    if (!el) return;
+    try {
+      user.videoTrack.play(el, { fit: 'cover' });
+    } catch (e) {
+      console.error('Failed to play remote video track:', e);
+    }
+  };
   const getReadableAgoraError = (err) => {
     const rawMessage = err?.response?.data?.message || err?.message || '';
     if (
@@ -38,22 +68,23 @@ const AgoraTestJoin = () => {
   };
 
   useEffect(() => {
-    if (channelFromUrl) setChannelName(channelFromUrl);
+    if (channelFromUrl) setChannelName(normalizeChannelInput(channelFromUrl));
   }, [channelFromUrl]);
 
   const handleJoin = async () => {
-    if (!channelName.trim()) {
+    const normalizedChannel = normalizeChannelInput(channelName).replace(/\s/g, '-');
+    if (!normalizedChannel.trim()) {
       setError(isRTL ? 'أدخل اسم الغرفة' : 'Enter room name');
       return;
     }
     setError('');
     setLoading(true);
     try {
-      const res = await videoAPI.getTestToken(channelName.trim(), 2);
+      const res = await videoAPI.getTestToken(normalizedChannel.trim(), 2);
       const data = res?.data ?? res;
       const appId = (data.appId || import.meta.env.VITE_AGORA_APP_ID || '').trim();
       const token = data.token;
-      const ch = data.channelName || channelName.trim();
+      const ch = data.channelName || normalizedChannel.trim();
       const uid = data.uid ?? 2;
       if (!appId || !token) {
         setError(isRTL ? 'معرف تطبيق أجورا غير مضبوط. أضف AGORA_APP_ID في backend/.env أو VITE_AGORA_APP_ID في frontend/.env' : 'Agora App ID not set. Add AGORA_APP_ID in backend .env or VITE_AGORA_APP_ID in frontend .env');
@@ -63,13 +94,21 @@ const AgoraTestJoin = () => {
       clientRef.current = client;
 
       client.on('user-published', async (user, mediaType) => {
-        await client.subscribe(user, mediaType);
+        try {
+          await client.subscribe(user, mediaType);
+        } catch (subscribeError) {
+          console.error('Failed to subscribe remote media:', mediaType, subscribeError);
+          return;
+        }
         setRemoteUsers((prev) => {
           const next = prev.filter((u) => u.uid !== user.uid);
           if (!next.find((u) => u.uid === user.uid)) next.push(user);
           return next;
         });
         if (mediaType === 'audio' && user.audioTrack) user.audioTrack.play();
+        if (mediaType === 'video') {
+          setTimeout(() => playRemoteVideo(user), 0);
+        }
       });
 
       client.on('user-unpublished', (user) => {
@@ -112,11 +151,7 @@ const AgoraTestJoin = () => {
 
   useEffect(() => {
     remoteUsers.forEach((user) => {
-      if (user.videoTrack) {
-        const id = `remote-${user.uid}`;
-        const el = document.getElementById(id);
-        if (el && el.innerHTML === '') user.videoTrack.play(id, { fit: 'cover' });
-      }
+      playRemoteVideo(user);
     });
   }, [remoteUsers]);
 
@@ -147,7 +182,7 @@ const AgoraTestJoin = () => {
             <input
               type="text"
               value={channelName}
-              onChange={(e) => setChannelName(e.target.value.replace(/\s/g, '-'))}
+              onChange={(e) => setChannelName(e.target.value)}
               disabled={joined}
               placeholder="e.g. sheikh-room-xxx"
               className="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
