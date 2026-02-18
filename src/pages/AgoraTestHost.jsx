@@ -18,6 +18,7 @@ const AgoraTestHost = () => {
   const [copied, setCopied] = useState(false);
   const [remoteUsers, setRemoteUsers] = useState([]);
   const localPlayerRef = useRef(null);
+  const localVideoTrackRef = useRef(null);
   const remotePlayersRef = useRef({});
   const clientRef = useRef(null);
   const localTracksRef = useRef([]);
@@ -125,10 +126,30 @@ const AgoraTestHost = () => {
 
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks({ encoderConfig: '720p_2' });
       localTracksRef.current = [audioTrack, videoTrack];
+      localVideoTrackRef.current = videoTrack;
       await client.publish([audioTrack, videoTrack]);
-      if (localPlayerRef.current) {
-        videoTrack.play(localPlayerRef.current, { fit: 'cover' });
+
+      // In case student already published before this host subscribes
+      for (const remoteUser of client.remoteUsers || []) {
+        if (remoteUser.hasAudio) {
+          try {
+            await client.subscribe(remoteUser, 'audio');
+            remoteUser.audioTrack?.play();
+          } catch (_) {}
+        }
+        if (remoteUser.hasVideo) {
+          try {
+            await client.subscribe(remoteUser, 'video');
+            setRemoteUsers((prev) => {
+              const next = prev.filter((u) => u.uid !== remoteUser.uid);
+              next.push(remoteUser);
+              return next;
+            });
+            setTimeout(() => playRemoteVideo(remoteUser), 0);
+          } catch (_) {}
+        }
       }
+
       setJoined(true);
     } catch (err) {
       console.error(err);
@@ -144,6 +165,7 @@ const AgoraTestHost = () => {
         track?.close?.();
       }
       localTracksRef.current = [];
+      localVideoTrackRef.current = null;
       Object.values(remotePlayersRef.current).forEach((el) => {
         if (el) el.innerHTML = '';
       });
@@ -163,6 +185,21 @@ const AgoraTestHost = () => {
       playRemoteVideo(user);
     });
   }, [remoteUsers]);
+
+  useEffect(() => {
+    if (!joined) return;
+    const videoTrack = localVideoTrackRef.current;
+    const container = localPlayerRef.current;
+    if (!videoTrack || !container) return;
+    const timer = setTimeout(() => {
+      try {
+        videoTrack.play(container, { fit: 'cover' });
+      } catch (e) {
+        console.error('Failed to play host local video:', e);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [joined]);
 
   useEffect(() => {
     return () => {
