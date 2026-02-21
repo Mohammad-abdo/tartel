@@ -309,6 +309,7 @@ export const bookingAPI = {
   createBooking: (data) => api.post('/bookings', data),
   getMyBookings: (status) => api.get('/bookings/my-bookings', { params: { status } }),
   getBookingById: (id) => api.get(`/bookings/${id}`),
+  getTeacherSubscriptionPackages: (teacherId) => api.get(`/bookings/teacher/${teacherId}/subscription-packages`),
   confirmBooking: (id) => api.post(`/bookings/${id}/confirm`),
   cancelBooking: (id) => api.post(`/bookings/${id}/cancel`),
   rejectBooking: (id) => api.post(`/bookings/${id}/reject`),
