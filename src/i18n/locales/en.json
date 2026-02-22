@@ -707,6 +707,7 @@
         "descriptionEn": "Description (English)",
         "descriptionAr": "Description (Arabic)",
         "durationMonths": "Duration (Months)",
+        "sessionsPerMonth": "Sessions / Month",
         "maxTeachers": "Max Teachers Allowed",
         "monthlyPrice": "Monthly Price",
         "yearlyPrice": "Yearly Price",

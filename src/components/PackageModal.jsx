@@ -17,6 +17,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     descriptionAr: '',
     price: '',
     durationMonths: '',
+    sessionsPerMonth: '',
     monthlyPrice: '',
     yearlyPrice: '',
     maxTeachers: '',
@@ -37,6 +38,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         descriptionAr: initialData.descriptionAr || '',
         price: initialData.price || '',
         durationMonths: initialData.durationMonths || '',
+        sessionsPerMonth: initialData.sessionsPerMonth ?? initialData.totalSessions ?? initialData.maxBookings ?? '',
         monthlyPrice: initialData.monthlyPrice || '',
         yearlyPrice: initialData.yearlyPrice || '',
         maxTeachers: initialData.maxTeachers || '',
@@ -53,6 +55,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         descriptionAr: '',
         price: '',
         durationMonths: '',
+        sessionsPerMonth: '',
         monthlyPrice: '',
         yearlyPrice: '',
         maxTeachers: '',
@@ -68,14 +71,16 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const parsedSessionsPerMonth = formData.sessionsPerMonth ? parseInt(formData.sessionsPerMonth) : null;
       const data = {
         ...formData,
         price: parseFloat(formData.price) || 0,
         durationMonths: formData.durationMonths ? parseInt(formData.durationMonths) : null,
+        sessionsPerMonth: parsedSessionsPerMonth,
         monthlyPrice: formData.monthlyPrice ? parseFloat(formData.monthlyPrice) : null,
         yearlyPrice: formData.yearlyPrice ? parseFloat(formData.yearlyPrice) : null,
         maxTeachers: formData.maxTeachers ? parseInt(formData.maxTeachers) : null,
-        maxBookings: formData.maxBookings ? parseInt(formData.maxBookings) : null,
+        maxBookings: formData.maxBookings ? parseInt(formData.maxBookings) : parsedSessionsPerMonth,
         maxCourses: formData.maxCourses ? parseInt(formData.maxCourses) : null,
       };
       await onSubmit(data);
@@ -207,7 +212,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
           </div>
 
           {/* Duration and Limits */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('packages.durationMonths')}
@@ -217,6 +222,18 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 min="1"
                 value={formData.durationMonths}
                 onChange={(e) => setFormData({ ...formData, durationMonths: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('packages.sessionsPerMonth')}
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={formData.sessionsPerMonth}
+                onChange={(e) => setFormData({ ...formData, sessionsPerMonth: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
               />
             </div>

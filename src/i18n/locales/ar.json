@@ -708,6 +708,7 @@
     "descriptionEn": "الوصف (إنجليزي)",
     "descriptionAr": "الوصف (عربي)",
     "durationMonths": "المدة (بالأشهر)",
+    "sessionsPerMonth": "عدد الحصص الشهري",
     "maxTeachers": "عدد الشيوخ المسموح",
     "monthlyPrice": "السعر الشهري",
     "yearlyPrice": "السعر السنوي",

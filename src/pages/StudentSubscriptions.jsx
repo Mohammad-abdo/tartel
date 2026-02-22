@@ -14,6 +14,7 @@ const StudentSubscriptions = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
   const [activeTab, setActiveTab] = useState('packages');
@@ -31,13 +32,16 @@ const StudentSubscriptions = () => {
     setLoading(true);
     try {
       if (activeTab === 'packages') {
-        const response = await studentSubscriptionAPI.getAllPackages(user?.role !== 'ADMIN'); // Students see active only
+        const response = await studentSubscriptionAPI.getAllPackages(!isAdmin); // Students see active only
         setPackages(response.data || []);
       } else {
-        if (user?.role === 'ADMIN') {
+        if (isAdmin) {
            const response = await studentSubscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
-           setSubscriptions(response.data.data || []);
-           setTotalPages(response.data.totalPages || 1);
+           const payload = response.data || {};
+           const list = payload.subscriptions?.data || payload.subscriptions || [];
+           const pages = payload.subscriptions?.pagination?.totalPages || payload.pagination?.totalPages || payload.totalPages || 1;
+           setSubscriptions(Array.isArray(list) ? list : []);
+           setTotalPages(pages);
         } else {
            const response = await studentSubscriptionAPI.getMySubscriptions();
            setSubscriptions(response.data || []);
@@ -49,7 +53,7 @@ const StudentSubscriptions = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, statusFilter, user?.role]);
+  }, [activeTab, page, statusFilter, isAdmin]);
 
   useEffect(() => {
     fetchData();
@@ -122,7 +126,7 @@ const StudentSubscriptions = () => {
           <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">{t('packages.subtitle')}</p>
         </div>
 
-        {activeTab === 'packages' && user?.role === 'ADMIN' && (
+        {activeTab === 'packages' && isAdmin && (
           <Button onClick={handleCreatePackage} className="shrink-0 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800">
             <FiPlus className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
             {t('packages.createPackage')}
@@ -205,6 +209,7 @@ const StudentSubscriptions = () => {
                       <>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.packageName')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.durationMonths')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.sessionsPerMonth')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.maxTeachers')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.monthlyPrice')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.yearlyPrice')}</th>
@@ -234,6 +239,9 @@ const StudentSubscriptions = () => {
                             {pkg.durationMonths ? `${pkg.durationMonths} ${t('packages.months')}` : '-'}
                           </td>
                           <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                            {pkg.sessionsPerMonth ?? pkg.totalSessions ?? pkg.maxBookings ?? '-'}
+                          </td>
+                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
                             {pkg.maxTeachers ? `${pkg.maxTeachers} ${t('packages.teachers')}` : t('subscriptions.unlimited')}
                           </td>
                           <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
@@ -247,7 +255,7 @@ const StudentSubscriptions = () => {
                               {pkg.isActive ? t('users.active') : t('users.inactive')}
                             </span>
                           </td>
-                          {user?.role === 'ADMIN' ? (
+                          {isAdmin ? (
                             <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
                               <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
                                 <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
