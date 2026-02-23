@@ -83,12 +83,15 @@ const Activity = () => {
               <select
                 value={filters.entity}
                 onChange={(e) => setFilters((s) => ({ ...s, entity: e.target.value, page: 1 }))}
-                className={cn('rounded-lg border border-gray-200 px-3 py-2 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none', isRTL ? 'text-right' : 'text-left')}
+                className={cn(
+                  'rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:bg-gray-800',
+                  isRTL ? 'text-right' : 'text-left'
+                )}
               >
-                <option value="">{t('common.filter')}</option>
-                <option value="User">User</option>
-                <option value="Booking">Booking</option>
-                <option value="Payment">Payment</option>
+                <option className="text-gray-900 dark:text-gray-100" value="">{t('common.filter')}</option>
+                <option className="text-gray-900 dark:text-gray-100" value="User">User</option>
+                <option className="text-gray-900 dark:text-gray-100" value="Booking">Booking</option>
+                <option className="text-gray-900 dark:text-gray-100" value="Payment">Payment</option>
               </select>
             </div>
           </div>
