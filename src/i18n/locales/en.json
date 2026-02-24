@@ -361,6 +361,8 @@
         "statusRejected": "Rejected",
         "viewCards": "Cards",
         "viewTable": "Table",
+        "sortNewestFirst": "Sort: Newest first",
+        "sortOldestFirst": "Sort: Oldest first",
         "total": "Total",
         "manageSubtitle": "View and manage all bookings.",
         "empty": "No bookings found",

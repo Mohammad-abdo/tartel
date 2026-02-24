@@ -18,6 +18,7 @@ const Bookings = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [sortByDate, setSortByDate] = useState('newest');
   const [viewMode, setViewMode] = useState('admin');
   const [viewLayout, setViewLayout] = useState('cards'); // 'cards' | 'table'
 
@@ -84,6 +85,34 @@ const Bookings = () => {
     const amount = Number(raw);
     return Number.isFinite(amount) ? amount : 0;
   };
+
+  const getBookingTimestamp = useCallback((booking) => {
+    const fallback = 0;
+    if (!booking) return fallback;
+
+    const bookingDate = booking.date ? new Date(booking.date) : null;
+    if (!bookingDate || Number.isNaN(bookingDate.getTime())) {
+      const startDateOnly = booking.startTime ? new Date(booking.startTime) : null;
+      return startDateOnly && !Number.isNaN(startDateOnly.getTime()) ? startDateOnly.getTime() : fallback;
+    }
+
+    const startTime = typeof booking.startTime === 'string' ? booking.startTime.trim() : '';
+    const timeMatch = startTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (timeMatch) {
+      const [, hour, minute, second = '0'] = timeMatch;
+      bookingDate.setHours(Number(hour), Number(minute), Number(second), 0);
+    }
+
+    return bookingDate.getTime();
+  }, []);
+
+  const sortedBookings = useMemo(() => {
+    const ordered = [...bookings].sort((a, b) => getBookingTimestamp(b) - getBookingTimestamp(a));
+    if (sortByDate === 'oldest') {
+      ordered.reverse();
+    }
+    return ordered;
+  }, [bookings, getBookingTimestamp, sortByDate]);
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -246,12 +275,16 @@ const Bookings = () => {
       {/* Filters */}
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 min-w-[170px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-10 min-w-[170px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500">
             <option value="">{t('users.allStatus')}</option>
             <option value="PENDING">{t('dashboard.pending')}</option>
             <option value="CONFIRMED">{t('dashboard.confirmed')}</option>
             <option value="CANCELLED">{t('dashboard.cancelled')}</option>
             <option value="COMPLETED">{t('dashboard.completed')}</option>
+          </select>
+          <select value={sortByDate} onChange={(e) => setSortByDate(e.target.value)} className="h-10 min-w-[220px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500">
+            <option value="newest">{t('bookings.sortNewestFirst')}</option>
+            <option value="oldest">{t('bookings.sortOldestFirst')}</option>
           </select>
         </div>
       </div>
@@ -263,7 +296,7 @@ const Bookings = () => {
             <div className="size-12 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
           </div>
-        ) : bookings.length === 0 ? (
+        ) : sortedBookings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
               <FiCalendar className="size-12 text-orange-600 dark:text-orange-400" />
@@ -286,7 +319,7 @@ const Bookings = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {bookings.map((booking) => {
+                  {sortedBookings.map((booking) => {
                     const studentName = booking.student?.firstName && booking.student?.lastName ? `${booking.student.firstName} ${booking.student.lastName}` : booking.student?.name || t('users.notAvailable');
                     const teacherName = booking.teacher?.user?.firstName && booking.teacher?.user?.lastName ? `${booking.teacher.user.firstName} ${booking.teacher.user.lastName}` : booking.teacher?.user?.name || booking.teacherId || t('users.notAvailable');
                     const bookingDate = new Date(booking.date || booking.startTime);
@@ -356,7 +389,7 @@ const Bookings = () => {
           <>
             <div className="p-6">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
-              {bookings.map((booking) => {
+              {sortedBookings.map((booking) => {
                 const studentName =
                   booking.student?.firstName && booking.student?.lastName
                     ? `${booking.student.firstName} ${booking.student.lastName}`

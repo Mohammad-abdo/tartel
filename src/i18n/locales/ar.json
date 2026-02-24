@@ -362,6 +362,8 @@
     "statusRejected": "مرفوض",
     "viewCards": "بطاقات",
     "viewTable": "جدول",
+    "sortNewestFirst": "الترتيب: الأحدث أولاً",
+    "sortOldestFirst": "الترتيب: الأقدم أولاً",
     "total": "الإجمالي",
     "manageSubtitle": "عرض وإدارة جميع الحجوزات.",
     "empty": "لا توجد حجوزات",
