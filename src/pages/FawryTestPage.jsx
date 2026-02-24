@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const FawryTestPage = () => {
@@ -18,6 +18,67 @@ const FawryTestPage = () => {
   const apiUrl = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
   const token = localStorage.getItem('token');
 
+  const normalizeApiPayload = (payload) => payload?.data || payload;
+  const getErrorMessage = (rawData, data, fallback) =>
+    rawData?.message || data?.message || fallback;
+
+  const ensureBookingConfirmed = async () => {
+    const bookingResponse = await fetch(`${apiUrl}/bookings/${bookingId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const bookingRaw = await bookingResponse.json();
+    const bookingData = normalizeApiPayload(bookingRaw);
+
+    if (!bookingResponse.ok) {
+      return {
+        ok: false,
+        message: getErrorMessage(bookingRaw, bookingData, 'Failed to load booking status'),
+      };
+    }
+
+    const bookingStatus = String(bookingData?.status || '').toUpperCase();
+    if (bookingStatus === 'CONFIRMED') return { ok: true, status: bookingStatus };
+
+    if (bookingStatus !== 'PENDING') {
+      return {
+        ok: false,
+        message: `Booking status is ${bookingStatus || 'UNKNOWN'}. Payment requires confirmed booking.`,
+      };
+    }
+
+    // Try teacher confirmation first, then admin force-confirm.
+    const confirmEndpoints = [
+      `${apiUrl}/bookings/${bookingId}/confirm`,
+      `${apiUrl}/admin/bookings/${bookingId}/force-confirm`,
+    ];
+
+    let lastError = '';
+    for (const endpoint of confirmEndpoints) {
+      const confirmResponse = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (confirmResponse.ok) {
+        return { ok: true, status: 'CONFIRMED', autoConfirmed: true };
+      }
+
+      const confirmRaw = await confirmResponse.json().catch(() => ({}));
+      const confirmData = normalizeApiPayload(confirmRaw);
+      lastError = getErrorMessage(confirmRaw, confirmData, `Failed to confirm booking (${confirmResponse.status})`);
+    }
+
+    return {
+      ok: false,
+      message: `Booking is PENDING and could not be confirmed automatically. ${lastError}`.trim(),
+    };
+  };
+
   const generateCardPaymentLink = async () => {
     if (!bookingId) {
       toast.error('Please enter a booking ID');
@@ -33,6 +94,16 @@ const FawryTestPage = () => {
     setResult(null);
 
     try {
+      const bookingCheck = await ensureBookingConfirmed();
+      if (!bookingCheck.ok) {
+        toast.error(bookingCheck.message);
+        setResult({ error: { message: bookingCheck.message } });
+        return;
+      }
+      if (bookingCheck.autoConfirmed) {
+        toast.info('Booking was auto-confirmed before creating payment');
+      }
+
       const response = await fetch(`${apiUrl}/payments/fawry/checkout-link`, {
         method: 'POST',
         headers: {
@@ -47,7 +118,7 @@ const FawryTestPage = () => {
       });
 
       const rawData = await response.json();
-      const data = rawData.data || rawData;
+      const data = normalizeApiPayload(rawData);
 
       if (response.ok) {
         setResult({ 
@@ -60,8 +131,9 @@ const FawryTestPage = () => {
         setMerchantRefNum(data.merchantRefNum || '');
         toast.success('Payment link generated successfully!');
       } else {
-        toast.error(data.message || 'Failed to generate payment link');
-        setResult({ error: data });
+        const errorMessage = getErrorMessage(rawData, data, 'Failed to generate payment link');
+        toast.error(errorMessage);
+        setResult({ error: rawData });
       }
     } catch (error) {
       console.error('Error:', error);
@@ -89,6 +161,16 @@ const FawryTestPage = () => {
     setResult(null);
 
     try {
+      const bookingCheck = await ensureBookingConfirmed();
+      if (!bookingCheck.ok) {
+        toast.error(bookingCheck.message);
+        setResult({ error: { message: bookingCheck.message } });
+        return;
+      }
+      if (bookingCheck.autoConfirmed) {
+        toast.info('Booking was auto-confirmed before creating payment');
+      }
+
       const response = await fetch(`${apiUrl}/payments/fawry/checkout-link`, {
         method: 'POST',
         headers: {
@@ -106,7 +188,7 @@ const FawryTestPage = () => {
       console.log('Response Status:', response.status);
       const rawData = await response.json();
       // Backend wraps response in {success, message, data}, unwrap it
-      const data = rawData.data || rawData;
+      const data = normalizeApiPayload(rawData);
       console.log('Wallet Payment Response (unwrapped):', JSON.stringify(data)); 
 
       if (response.ok) {
@@ -123,8 +205,9 @@ const FawryTestPage = () => {
         setMerchantRefNum(data.merchantRefNum || '');
         toast.success('Wallet payment initiated successfully!');
       } else {
-        toast.error(data.message || 'Failed to initiate wallet payment');
-        setResult({ error: data });
+        const errorMessage = getErrorMessage(rawData, data, 'Failed to initiate wallet payment');
+        toast.error(errorMessage);
+        setResult({ error: rawData });
       }
     } catch (error) {
       console.error('Error:', error);
@@ -150,6 +233,16 @@ const FawryTestPage = () => {
     setResult(null);
 
     try {
+      const bookingCheck = await ensureBookingConfirmed();
+      if (!bookingCheck.ok) {
+        toast.error(bookingCheck.message);
+        setResult({ error: { message: bookingCheck.message } });
+        return;
+      }
+      if (bookingCheck.autoConfirmed) {
+        toast.info('Booking was auto-confirmed before creating payment');
+      }
+
       const response = await fetch(`${apiUrl}/payments/fawry/reference-number`, {
         method: 'POST',
         headers: {
@@ -164,15 +257,16 @@ const FawryTestPage = () => {
       });
 
       const rawData = await response.json();
-      const data = rawData.data || rawData;
+      const data = normalizeApiPayload(rawData);
 
       if (response.ok) {
         setResult(data);
         setMerchantRefNum(data.merchantRefNum || '');
         toast.success('Reference number generated successfully!');
       } else {
-        toast.error(data.message || 'Failed to generate reference number');
-        setResult({ error: data });
+        const errorMessage = getErrorMessage(rawData, data, 'Failed to generate reference number');
+        toast.error(errorMessage);
+        setResult({ error: rawData });
       }
     } catch (error) {
       console.error('Error:', error);
@@ -205,13 +299,13 @@ const FawryTestPage = () => {
       });
 
       const rawData = await response.json();
-      const data = rawData.data || rawData;
+      const data = normalizeApiPayload(rawData);
 
       if (response.ok) {
         setStatusResult(data);
         toast.success('Status retrieved successfully!');
       } else {
-        toast.error(rawData.message || data.message || 'Failed to get payment status');
+        toast.error(getErrorMessage(rawData, data, 'Failed to get payment status'));
         setStatusResult({ error: rawData });
       }
     } catch (error) {
@@ -240,10 +334,10 @@ const FawryTestPage = () => {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <h1 className="text-3xl font-bold text-emerald-800 mb-2">
-            🧪 Fawry PayAtFawry Test Page
+            ðŸ§ª Fawry PayAtFawry Test Page
           </h1>
           <p className="text-gray-600 mb-6">
-            صفحة تجريبية لاختبار دفع فوري عن طريق الرقم المرجعي
+            ØµÙØ­Ø© ØªØ¬Ø±ÙŠØ¨ÙŠØ© Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø¯ÙØ¹ ÙÙˆØ±ÙŠ Ø¹Ù† Ø·Ø±ÙŠÙ‚ Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ø±Ø¬Ø¹ÙŠ
           </p>
 
           <button
@@ -267,7 +361,7 @@ const FawryTestPage = () => {
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                💵 PayAtFawry (Reference Number)
+                ðŸ’µ PayAtFawry (Reference Number)
               </button>
               <button
                 onClick={() => {
@@ -280,7 +374,7 @@ const FawryTestPage = () => {
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                💳 Card Payment
+                ðŸ’³ Card Payment
               </button>
               <button
                 onClick={() => {
@@ -293,7 +387,7 @@ const FawryTestPage = () => {
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                📱 Mobile Wallet
+                ðŸ“± Mobile Wallet
               </button>
             </div>
           </div>
@@ -302,7 +396,7 @@ const FawryTestPage = () => {
           {activeTab === 'card' && (
             <div className="border-t pt-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">
-                💳 Generate Card Payment Link
+                ðŸ’³ Generate Card Payment Link
               </h2>
 
               <div className="space-y-4">
@@ -346,7 +440,7 @@ const FawryTestPage = () => {
               {result && result.type === 'card' && !result.error && (
                 <div className="mt-6 p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
                   <h3 className="text-lg font-bold text-blue-800 mb-4">
-                    ✅ Payment Link Generated
+                    âœ… Payment Link Generated
                   </h3>
                   
                   <div className="space-y-3">
@@ -389,7 +483,7 @@ const FawryTestPage = () => {
           {activeTab === 'wallet' && (
             <div className="border-t pt-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">
-                📱 Mobile Wallet Payment
+                ðŸ“± Mobile Wallet Payment
               </h2>
 
               <div className="space-y-4">
@@ -446,7 +540,7 @@ const FawryTestPage = () => {
                {result && result.type === 'wallet' && !result.error && (
                 <div className="mt-6 p-6 bg-purple-50 border-2 border-purple-200 rounded-xl">
                   <h3 className="text-lg font-bold text-purple-800 mb-4">
-                    ✅ Wallet Payment Initiated
+                    âœ… Wallet Payment Initiated
                   </h3>
                   
                   <div className="space-y-3">
@@ -524,7 +618,7 @@ const FawryTestPage = () => {
           {activeTab === 'reference' && (
             <div className="border-t pt-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">
-                📝 Generate Reference Number
+                ðŸ“ Generate Reference Number
               </h2>
 
               <div className="space-y-4">
@@ -583,7 +677,7 @@ const FawryTestPage = () => {
               {result && !result.error && (
                 <div className="mt-6 p-6 bg-emerald-50 border-2 border-emerald-200 rounded-xl">
                   <h3 className="text-lg font-bold text-emerald-800 mb-4">
-                    ✅ Reference Number Generated
+                    âœ… Reference Number Generated
                   </h3>
                   
                   <div className="space-y-3">
@@ -623,7 +717,7 @@ const FawryTestPage = () => {
 
                     {result.instructions && (
                       <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-                        <p className="text-sm font-medium text-amber-800 mb-2">📍 Instructions:</p>
+                        <p className="text-sm font-medium text-amber-800 mb-2">ðŸ“ Instructions:</p>
                         <p className="text-sm text-amber-700">{result.instructions.ar}</p>
                         <p className="text-sm text-amber-700 mt-2">{result.instructions.en}</p>
                       </div>
@@ -635,8 +729,8 @@ const FawryTestPage = () => {
               {/* Error Display for Reference Number */}
               {result && result.error && !result.type && (
                 <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
-                  <h3 className="text-lg font-bold text-red-800 mb-2">❌ Error</h3>
-                  <pre className="text-sm text-red-700 overflow-auto">
+                  <h3 className="text-lg font-bold text-red-800 mb-2">âŒ Error</h3>
+                  <pre className="text-sm text-red-700 overflow-auto" dir="ltr">
                     {JSON.stringify(result.error, null, 2)}
                   </pre>
                 </div>
@@ -647,7 +741,7 @@ const FawryTestPage = () => {
           {/* Check Payment Status Section */}
           <div className="border-t pt-6 mt-8">
             <h2 className="text-xl font-bold text-gray-800 mb-4">
-              🔍 Check Payment Status
+              ðŸ” Check Payment Status
             </h2>
 
             <div className="space-y-4">
@@ -677,7 +771,7 @@ const FawryTestPage = () => {
             {statusResult && !statusResult.error && (
               <div className="mt-6 p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
                 <h3 className="text-lg font-bold text-blue-800 mb-4">
-                  📊 Payment Status
+                  ðŸ“Š Payment Status
                 </h3>
                 
                 <div className="space-y-3">
@@ -735,8 +829,8 @@ const FawryTestPage = () => {
 
             {statusResult && statusResult.error && (
               <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
-                <h3 className="text-lg font-bold text-red-800 mb-2">❌ Error</h3>
-                <pre className="text-sm text-red-700 overflow-auto">
+                <h3 className="text-lg font-bold text-red-800 mb-2">âŒ Error</h3>
+                <pre className="text-sm text-red-700 overflow-auto" dir="ltr">
                   {JSON.stringify(statusResult.error, null, 2)}
                 </pre>
               </div>
@@ -746,13 +840,13 @@ const FawryTestPage = () => {
 
         {/* Info Card */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-6 text-white">
-          <h3 className="text-xl font-bold mb-3">💡 Testing Tips</h3>
+          <h3 className="text-xl font-bold mb-3">ðŸ’¡ Testing Tips</h3>
           <ul className="space-y-2 text-sm">
-            <li>✓ Make sure you're logged in (token in localStorage)</li>
-            <li>✓ Use a valid booking ID from your database</li>
-            <li>✓ Default expiry is 24 hours (can be customized)</li>
-            <li>✓ Check console for detailed API responses</li>
-            <li>✓ Webhook notifications will update payment status automatically</li>
+            <li>âœ“ Make sure you're logged in (token in localStorage)</li>
+            <li>âœ“ Use a valid booking ID from your database</li>
+            <li>âœ“ Default expiry is 24 hours (can be customized)</li>
+            <li>âœ“ Check console for detailed API responses</li>
+            <li>âœ“ Webhook notifications will update payment status automatically</li>
           </ul>
         </div>
       </div>
@@ -761,3 +855,4 @@ const FawryTestPage = () => {
 };
 
 export default FawryTestPage;
+

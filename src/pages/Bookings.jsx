@@ -79,6 +79,12 @@ const Bookings = () => {
     }
   };
 
+  const getBookingAmount = (booking) => {
+    const raw = booking?.totalPrice ?? booking?.price ?? booking?.payment?.amount;
+    const amount = Number(raw);
+    return Number.isFinite(amount) ? amount : 0;
+  };
+
   const getStatusBadge = (status) => {
     const badges = {
       PENDING: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
@@ -281,11 +287,12 @@ const Bookings = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {bookings.map((booking) => {
-                    const studentName = booking.student?.firstName && booking.student?.lastName ? `${booking.student.firstName} ${booking.student.lastName}` : booking.student?.name || booking.studentId || t('users.notAvailable');
+                    const studentName = booking.student?.firstName && booking.student?.lastName ? `${booking.student.firstName} ${booking.student.lastName}` : booking.student?.name || t('users.notAvailable');
                     const teacherName = booking.teacher?.user?.firstName && booking.teacher?.user?.lastName ? `${booking.teacher.user.firstName} ${booking.teacher.user.lastName}` : booking.teacher?.user?.name || booking.teacherId || t('users.notAvailable');
                     const bookingDate = new Date(booking.date || booking.startTime);
                     const dateStr = bookingDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
                     const timeStr = booking.startTime && typeof booking.startTime === 'string' ? booking.startTime : bookingDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+                    const amount = getBookingAmount(booking);
                     return (
                       <tr
                         key={booking.id}
@@ -304,7 +311,7 @@ const Bookings = () => {
                             {!['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(booking.status) && booking.status}
                           </span>
                         </td>
-                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white', isRTL && 'text-right')}>${(booking.totalPrice ?? 0).toFixed(2)}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white', isRTL && 'text-right')}>${amount.toFixed(2)}</td>
                         <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
                           <div className={cn('flex items-center gap-1', isRTL ? 'justify-start' : 'justify-end')}>
                             {viewMode === 'admin' && (
@@ -353,7 +360,7 @@ const Bookings = () => {
                 const studentName =
                   booking.student?.firstName && booking.student?.lastName
                     ? `${booking.student.firstName} ${booking.student.lastName}`
-                    : booking.student?.name || booking.studentId || t('common.notAvailable');
+                    : booking.student?.name || t('common.notAvailable');
                 const teacherName =
                   booking.teacher?.user?.firstName && booking.teacher?.user?.lastName
                     ? `${booking.teacher.user.firstName} ${booking.teacher.user.lastName}`
@@ -361,6 +368,7 @@ const Bookings = () => {
                 const bookingDate = new Date(booking.date || booking.startTime);
                 const dateStr = bookingDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
                 const timeStr = booking.startTime && typeof booking.startTime === 'string' ? booking.startTime : bookingDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+                const amount = getBookingAmount(booking);
 
                 return (
                   <div
@@ -467,7 +475,7 @@ const Bookings = () => {
                       <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                         <div className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
                           <FiDollarSign className="text-emerald-600" />
-                          {(booking.totalPrice ?? 0).toFixed(2)}
+                          {amount.toFixed(2)}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
