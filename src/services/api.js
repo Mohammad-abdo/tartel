@@ -176,6 +176,16 @@ export const courseAPI = {
   toggleFeatured: (id, isFeatured) => api.patch(`/courses/${id}/featured`, { isFeatured }),
 };
 
+// Enrollment API
+export const enrollmentAPI = {
+  enrollInCourse: (courseId, data) => api.post(`/v1/enrollments/${courseId}/enroll`, data),
+  createCourseFawryReference: (courseId, data) =>
+    api.post(`/v1/enrollments/${courseId}/fawry/reference-number`, data),
+  getEnrollmentStatus: (courseId) => api.get(`/v1/enrollments/${courseId}/status`),
+  getMyEnrolledCourses: (params) => api.get('/v1/enrollments/my-courses', { params }),
+  getCourseProgress: (courseId) => api.get(`/v1/enrollments/${courseId}/progress`),
+};
+
 // Exams API
 export const examAPI = {
   createExam: (data) => api.post('/exams', data),
