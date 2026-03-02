@@ -35,19 +35,20 @@ const StudentSubscriptions = () => {
     try {
       if (activeTab === 'packages') {
         const response = await studentSubscriptionAPI.getAllPackages(!isAdmin); // Students see active only
+      console.log(response.data)
         setPackages(response.data || []);
       } else {
         if (isAdmin) {
-           const response = await studentSubscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
-           const payload = response.data || {};
-           const list = payload.subscriptions?.data || payload.subscriptions || [];
-           const pages = payload.subscriptions?.pagination?.totalPages || payload.pagination?.totalPages || payload.totalPages || 1;
-           setSubscriptions(Array.isArray(list) ? list : []);
-           setTotalPages(pages);
+          const response = await studentSubscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
+          const payload = response.data || {};
+          const list = payload.subscriptions?.data || payload.subscriptions || [];
+          const pages = payload.subscriptions?.pagination?.totalPages || payload.pagination?.totalPages || payload.totalPages || 1;
+          setSubscriptions(Array.isArray(list) ? list : []);
+          setTotalPages(pages);
         } else {
-           const response = await studentSubscriptionAPI.getMySubscriptions();
-           setSubscriptions(response.data || []);
-           setTotalPages(1); // No pagination for student yet?
+          const response = await studentSubscriptionAPI.getMySubscriptions();
+          setSubscriptions(response.data || []);
+          setTotalPages(1);
         }
       }
     } catch (error) {
@@ -121,7 +122,7 @@ const StudentSubscriptions = () => {
 
   return (
     <div className={cn('space-y-6 animate-fade-in', isRTL && 'text-right')} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Page header - مثل باقي الصفحات */}
+      {/* Page header */}
       <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className={cn('min-w-0', isRTL && 'sm:text-right')}>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{t('packages.title')}</h1>
@@ -136,7 +137,7 @@ const StudentSubscriptions = () => {
         )}
       </section>
 
-      {/* Tabs - الاحتفاظ بمنطق التاب */}
+      {/* Tabs */}
       <div className="flex w-fit gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50">
         <button
           type="button"
@@ -160,7 +161,7 @@ const StudentSubscriptions = () => {
         </button>
       </div>
 
-      {/* Filters - مثل صفحة الاشتراكات */}
+      {/* Filters */}
       {activeTab === 'subscriptions' && (
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -182,7 +183,7 @@ const StudentSubscriptions = () => {
         </div>
       )}
 
-      {/* Content - كارد واحد مثل باقي الصفحات */}
+      {/* Content */}
       <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -210,11 +211,10 @@ const StudentSubscriptions = () => {
                     {activeTab === 'packages' ? (
                       <>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.packageName')}</th>
-                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.durationMonths')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.packageType')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.price')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.duration')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.sessionsPerMonth')}</th>
-                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.maxTeachers')}</th>
-                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.monthlyPrice')}</th>
-                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.yearlyPrice')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('common.status')}</th>
                         <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-left' : 'text-right')}>{t('common.actions')}</th>
                       </>
@@ -232,68 +232,94 @@ const StudentSubscriptions = () => {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {activeTab === 'packages'
                     ? packages.map((pkg) => (
-                        <tr key={pkg.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                            {isRTL ? (pkg.nameAr || pkg.name) : pkg.name}
-                            {pkg.isPopular && <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">⭐</span>}
-                          </td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
-                            {pkg.durationMonths ? `${pkg.durationMonths} ${t('packages.months')}` : '-'}
-                          </td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
-                            {pkg.sessionsPerMonth ?? pkg.totalSessions ?? pkg.maxBookings ?? '-'}
-                          </td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
-                            {pkg.maxTeachers ? `${pkg.maxTeachers} ${t('packages.teachers')}` : t('subscriptions.unlimited')}
-                          </td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                            {pkg.monthlyPrice ? formatCurrency(pkg.monthlyPrice) : '-'}
-                          </td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                            {pkg.yearlyPrice ? formatCurrency(pkg.yearlyPrice) : '-'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', pkg.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')}>
-                              {pkg.isActive ? t('users.active') : t('users.inactive')}
+                      <tr key={pkg.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        {/* 📦 Package Name */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                          {isRTL ? (pkg.nameAr || pkg.name) : pkg.name}
+                          {pkg.isPopular && <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">⭐</span>}
+                        </td>
+                        
+                        {/* 🏷️ Package Type Badge */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap', isRTL && 'text-right')}>
+                          <span className={cn(
+                            'px-2.5 py-1 rounded-full text-xs font-semibold',
+                            pkg.packageType === 'fixed' ? 'bg-purple-100 text-purple-800 ring-1 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400' :
+                            pkg.packageType === 'monthly' ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
+                            pkg.packageType === 'weekly' ? 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400' :
+                            'bg-amber-100 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400' // yearly
+                          )}>
+                            {t(`packages.${pkg.packageType || 'fixed'}`)}
+                          </span>
+                        </td>
+                        
+                        {/* Price */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                          ${pkg.price?.toFixed(2)}
+                          {pkg.packageType !== 'fixed' && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                              {`/${pkg.packageType}`}
                             </span>
-                          </td>
-                          {isAdmin ? (
-                            <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
-                              <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
-                                <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
-                                  <FiEdit className="size-4" />
-                                </Button>
-                                <Button onClick={() => handleDeletePackage(pkg.id)} variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                  <FiTrash2 className="size-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          ) : (
-                            <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
-                              <Button 
-                                size="sm" 
-                                onClick={() => { setSelectedPackage(pkg); setIsSubscribeModalOpen(true); }}
-                                className="bg-orange-600 hover:bg-orange-700 text-white"
-                              >
-                                {t('common.subscribe') || 'Subscribe'}
-                              </Button>
-                            </td>
                           )}
-                        </tr>
-                      ))
-                    : subscriptions.map((sub) => (
-                        <tr key={sub.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>{sub.student?.user?.name || sub.studentId || t('users.notAvailable')}</td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.package?.name || t('users.notAvailable')}</td>
-                          <td className="px-6 py-4">
-                            <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getStatusBadge(sub.status))}>
-                              {getStatusLabel(sub.status)}
-                            </span>
+                        </td>
+                        
+                        {/* ⏱️ Duration */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                          {pkg.period ? `${pkg.period} ${t(`common.${pkg.periodUnit || 'days'}`)}` : '-'}
+                        </td>
+                        
+                        {/* 📊 Sessions Per Month */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                          {pkg.sessionsPerMonth ?? pkg.totalSessions ?? pkg.maxBookings ?? t('subscriptions.unlimited')}
+                        </td>
+                        
+                        {/* ✅ Status */}
+                        <td className="px-6 py-4">
+                          <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', 
+                            pkg.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' : 
+                            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          )}>
+                            {pkg.isActive ? t('users.active') : t('users.inactive')}
+                          </span>
+                        </td>
+                        
+                        {/* ⚙️ Actions */}
+                        {isAdmin ? (
+                          <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                            <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
+                              <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                                <FiEdit className="size-4" />
+                              </Button>
+                              <Button onClick={() => handleDeletePackage(pkg.id)} variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <FiTrash2 className="size-4" />
+                              </Button>
+                            </div>
                           </td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{new Date(sub.startDate).toLocaleDateString(locale)}</td>
-                          <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.endDate ? new Date(sub.endDate).toLocaleDateString(locale) : t('users.notAvailable')}</td>
-                        </tr>
-                      ))}
+                        ) : (
+                          <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                            <Button
+                              size="sm"
+                              onClick={() => { setSelectedPackage(pkg); setIsSubscribeModalOpen(true); }}
+                              className="bg-orange-600 hover:bg-orange-700 text-white"
+                            >
+                              {t('common.subscribe')}
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                    : subscriptions.map((sub) => (
+                      <tr key={sub.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>{sub.student?.user?.name || sub.studentId || t('users.notAvailable')}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.package?.name || t('users.notAvailable')}</td>
+                        <td className="px-6 py-4">
+                          <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getStatusBadge(sub.status))}>
+                            {getStatusLabel(sub.status)}
+                          </span>
+                        </td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{new Date(sub.startDate).toLocaleDateString(locale)}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.endDate ? new Date(sub.endDate).toLocaleDateString(locale) : t('users.notAvailable')}</td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -320,11 +346,11 @@ const StudentSubscriptions = () => {
         initialData={selectedPackage}
       />
 
-      <SubscribeModal 
-         pkg={selectedPackage}
-         isOpen={isSubscribeModalOpen}
-         onClose={() => setIsSubscribeModalOpen(false)}
-         onSuccess={() => { fetchData(); setActiveTab('subscriptions'); }}
+      <SubscribeModal
+        pkg={selectedPackage}
+        isOpen={isSubscribeModalOpen}
+        onClose={() => setIsSubscribeModalOpen(false)}
+        onSuccess={() => { fetchData(); setActiveTab('subscriptions'); }}
       />
     </div>
   );

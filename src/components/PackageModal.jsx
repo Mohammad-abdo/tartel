@@ -9,18 +9,18 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
-  
+
+  //  UPDATED: Removed maxTeachers, added period for fixed packages
   const [formData, setFormData] = useState({
     name: '',
     nameAr: '',
     description: '',
     descriptionAr: '',
+    packageType: 'fixed', //  'fixed', 'monthly', 'weekly', 'yearly'
     price: '',
-    durationMonths: '',
+    period: '', // For all package types (fixed packages also have period)
+    periodUnit: 'months', // 'weeks', 'months', or 'years'
     sessionsPerMonth: '',
-    monthlyPrice: '',
-    yearlyPrice: '',
-    maxTeachers: '',
     maxBookings: '',
     maxCourses: '',
     isActive: true,
@@ -29,6 +29,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   const [loading, setLoading] = useState(false);
 
+  //  UPDATED: useEffect with new structure (removed maxTeachers)
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -36,12 +37,11 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         nameAr: initialData.nameAr || '',
         description: initialData.description || '',
         descriptionAr: initialData.descriptionAr || '',
+        packageType: initialData.packageType || 'fixed',
         price: initialData.price || '',
-        durationMonths: initialData.durationMonths || '',
+        period: initialData.period || '', // 🎯 Now used for all packages
+        periodUnit: initialData.periodUnit || 'months',
         sessionsPerMonth: initialData.sessionsPerMonth ?? initialData.totalSessions ?? initialData.maxBookings ?? '',
-        monthlyPrice: initialData.monthlyPrice || '',
-        yearlyPrice: initialData.yearlyPrice || '',
-        maxTeachers: initialData.maxTeachers || '',
         maxBookings: initialData.maxBookings || '',
         maxCourses: initialData.maxCourses || '',
         isActive: initialData.isActive !== undefined ? initialData.isActive : true,
@@ -53,12 +53,11 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         nameAr: '',
         description: '',
         descriptionAr: '',
+        packageType: 'fixed',
         price: '',
-        durationMonths: '',
+        period: '', // 🎯 Now used for all packages
+        periodUnit: 'months',
         sessionsPerMonth: '',
-        monthlyPrice: '',
-        yearlyPrice: '',
-        maxTeachers: '',
         maxBookings: '',
         maxCourses: '',
         isActive: true,
@@ -67,22 +66,34 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     }
   }, [initialData, isOpen]);
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const parsedSessionsPerMonth = formData.sessionsPerMonth ? parseInt(formData.sessionsPerMonth) : null;
       const data = {
-        ...formData,
+        name: formData.name,
+        nameAr: formData.nameAr,
+        description: formData.description,
+        descriptionAr: formData.descriptionAr,
+        packageType: formData.packageType,
         price: parseFloat(formData.price) || 0,
-        durationMonths: formData.durationMonths ? parseInt(formData.durationMonths) : null,
-        sessionsPerMonth: parsedSessionsPerMonth,
-        monthlyPrice: formData.monthlyPrice ? parseFloat(formData.monthlyPrice) : null,
-        yearlyPrice: formData.yearlyPrice ? parseFloat(formData.yearlyPrice) : null,
-        maxTeachers: formData.maxTeachers ? parseInt(formData.maxTeachers) : null,
-        maxBookings: formData.maxBookings ? parseInt(formData.maxBookings) : parsedSessionsPerMonth,
+        period: parseInt(formData.period) || 1, 
+        sessionsPerMonth: formData.sessionsPerMonth ? parseInt(formData.sessionsPerMonth) : null,
+        maxBookings: formData.maxBookings ? parseInt(formData.maxBookings) : null,
         maxCourses: formData.maxCourses ? parseInt(formData.maxCourses) : null,
+        isActive: formData.isActive,
+        isPopular: formData.isPopular,
       };
+
+      if (formData.packageType === 'fixed' || formData.packageType === 'weekly' || formData.packageType === 'monthly') {
+        data.periodUnit = formData.periodUnit;
+      }
+      // For yearly, periodUnit is always 'years'
+      else if (formData.packageType === 'yearly') {
+        data.periodUnit = 'years';
+      }
+
       await onSubmit(data);
       onClose();
     } catch (error) {
@@ -170,11 +181,32 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             </div>
           </div>
 
-          {/* Pricing */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/*  Package Type Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.basePrice')} ($) *
+                {t('packages.packageType')} *
+              </label>
+              <select
+                value={formData.packageType}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  packageType: e.target.value,
+                  periodUnit: e.target.value === 'yearly' ? 'years' : formData.periodUnit
+                })}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+              >
+                <option value="fixed">{t('packages.fixed')}</option>
+                <option value="monthly">{t('packages.monthly')}</option>
+                <option value="weekly">{t('packages.weekly')}</option>
+                <option value="yearly">{t('packages.yearly')}</option>
+              </select>
+            </div>
+
+            {/* Price Field - Always shown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('packages.price')} ($) *
               </label>
               <input
                 type="number"
@@ -183,48 +215,65 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.monthlyPrice')} ($)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.monthlyPrice}
-                onChange={(e) => setFormData({ ...formData, monthlyPrice: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.yearlyPrice')} ($)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.yearlyPrice}
-                onChange={(e) => setFormData({ ...formData, yearlyPrice: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                placeholder={formData.packageType === 'fixed' ? 'One-time price' : `Price per ${formData.packageType}`}
               />
             </div>
           </div>
 
-          {/* Duration and Limits */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {/* Period Field - For ALL package types (including fixed) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.durationMonths')}
+                {t('packages.period')} *
               </label>
               <input
                 type="number"
                 min="1"
-                value={formData.durationMonths}
-                onChange={(e) => setFormData({ ...formData, durationMonths: e.target.value })}
+                required
+                value={formData.period}
+                onChange={(e) => setFormData({ ...formData, period: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                placeholder={`Number of ${formData.periodUnit}`}
               />
             </div>
+
+            {/*Period Unit - Show for fixed, weekly, monthly as select (yearly stays fixed) */}
+            {(formData.packageType === 'fixed' || formData.packageType === 'weekly' || formData.packageType === 'monthly') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('packages.periodUnit')}
+                </label>
+                <select
+                  value={formData.periodUnit}
+                  onChange={(e) => setFormData({ ...formData, periodUnit: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                >
+                  <option value="months">{t('common.months')}</option>
+                  {(formData.packageType === 'weekly' || formData.packageType === 'fixed') && (
+                    <option value="weeks">{t('common.weeks')}</option>
+                  )}
+                  {formData.packageType === 'fixed' && (
+                    <option value="days">{t('common.days')}</option>
+                  )}
+                </select>
+              </div>
+            )}
+
+            {/* For yearly, keep it as text */}
+            {formData.packageType === 'yearly' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('packages.periodUnit')}
+                </label>
+                <div className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 px-4 py-2.5 text-gray-700 dark:text-gray-300">
+                  {t('common.years')}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Limits */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('packages.sessionsPerMonth')}
@@ -237,18 +286,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.maxTeachers')}
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxTeachers}
-                onChange={(e) => setFormData({ ...formData, maxTeachers: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-              />
-            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('packages.maxBookings')}
