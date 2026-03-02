@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
-import { courseAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { courseAPI, enrollmentAPI, paymentAPI } from '../services/api';
+import { toast } from 'react-toastify';
 import ImageModal from '../components/ImageModal';
 import YouTubeThumbnail from '../components/YouTubeThumbnail';
 import {
@@ -19,17 +21,29 @@ import {
   FiVideo,
   FiMail,
   FiStar,
+  FiCheckCircle,
+  FiLock,
+  FiCreditCard,
+  FiRefreshCw,
 } from 'react-icons/fi';
 
 const CourseDetail = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [fawryData, setFawryData] = useState(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+
+  const isStudent = user?.role === 'STUDENT';
+  const isAdminLike = ['ADMIN', 'SUPER_ADMIN', 'CONTENT_ADMIN', 'SUPPORT_ADMIN'].includes(user?.role);
 
   const fetchCourse = useCallback(async () => {
     setLoading(true);
@@ -47,6 +61,87 @@ const CourseDetail = () => {
     fetchCourse();
   }, [fetchCourse]);
 
+  const fetchEnrollmentStatus = useCallback(async () => {
+    if (!isStudent || !id) return;
+    try {
+      const response = await enrollmentAPI.getEnrollmentStatus(id);
+      const enrolled = !!response?.data?.isEnrolled;
+      setIsEnrolled(enrolled);
+    } catch (error) {
+      setIsEnrolled(false);
+    }
+  }, [id, isStudent]);
+
+  useEffect(() => {
+    fetchEnrollmentStatus();
+  }, [fetchEnrollmentStatus]);
+
+  const handleEnrollFreeCourse = async () => {
+    try {
+      setEnrollmentLoading(true);
+      await enrollmentAPI.enrollInCourse(id, {});
+      setIsEnrolled(true);
+      toast.success('تم تسجيلك في الدورة بنجاح');
+      fetchCourse();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل التسجيل في الدورة');
+    } finally {
+      setEnrollmentLoading(false);
+    }
+  };
+
+  const handleCreateFawryReference = async () => {
+    try {
+      setEnrollmentLoading(true);
+      const response = await enrollmentAPI.createCourseFawryReference(id, {
+        language: language === 'en' ? 'en-gb' : 'ar-eg',
+      });
+      const data = response.data;
+      if (data?.alreadyEnrolled) {
+        setIsEnrolled(true);
+        toast.success('أنت مشترك بالفعل في هذه الدورة');
+        return;
+      }
+      if (data?.freeCourse && data?.enrollment) {
+        setIsEnrolled(true);
+        toast.success('تم تسجيلك في الدورة المجانية');
+        fetchCourse();
+        return;
+      }
+      setFawryData(data);
+      toast.success('تم إنشاء رقم فوري بنجاح');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل إنشاء رقم فوري');
+    } finally {
+      setEnrollmentLoading(false);
+    }
+  };
+
+  const handleCheckFawryPayment = async () => {
+    if (!fawryData?.merchantRefNum) return;
+    try {
+      setCheckingPayment(true);
+      const response = await paymentAPI.getFawryPaymentStatus(fawryData.merchantRefNum);
+      const fawryStatus = response?.data?.fawryStatus;
+      const localPayment = response?.data?.localPayment;
+      const paid =
+        String(fawryStatus?.orderStatus || '').toUpperCase() === 'PAID' ||
+        String(localPayment?.status || '').toUpperCase() === 'COMPLETED';
+
+      if (paid) {
+        await fetchEnrollmentStatus();
+        await fetchCourse();
+        toast.success('تم تأكيد الدفع وفتح محتوى الدورة');
+      } else {
+        toast.info('الدفع لم يكتمل بعد، حاول مرة أخرى بعد قليل');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل التحقق من حالة الدفع');
+    } finally {
+      setCheckingPayment(false);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const badges = {
       DRAFT: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200',
@@ -58,6 +153,7 @@ const CourseDetail = () => {
 
   const enrolledStudentsCount = course?.enrollments?.length || course?._count?.enrollments || 0;
   const generatedRevenue = enrolledStudentsCount * (course?.price || 0);
+  const canAccessContent = !isStudent || isEnrolled;
 
   if (loading) {
     return (
@@ -123,22 +219,26 @@ const CourseDetail = () => {
           </div>
           
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => navigate(`/courses/${id}/edit`)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 font-medium border border-white/20 shadow-lg"
-            >
-              <FiEdit />
-              {t('courses.editCourse')}
-            </button>
-            
-            <button
-              onClick={() => navigate(`/courses/${id}/lessons`)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all duration-300 font-medium shadow-lg"
-            >
-              <FiVideo />
-              إدارة الدروس
-            </button>
-            
+            {isAdminLike && (
+              <>
+                <button
+                  onClick={() => navigate(`/courses/${id}/edit`)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 font-medium border border-white/20 shadow-lg"
+                >
+                  <FiEdit />
+                  {t('courses.editCourse')}
+                </button>
+
+                <button
+                  onClick={() => navigate(`/courses/${id}/lessons`)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all duration-300 font-medium shadow-lg"
+                >
+                  <FiVideo />
+                  إدارة الدروس
+                </button>
+              </>
+            )}
+
             <button
               onClick={() => navigate('/courses')}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 font-medium border border-white/20"
@@ -237,19 +337,21 @@ const CourseDetail = () => {
                 المعلمين
               </span>
             </button>
-            <button
-              onClick={() => setActiveTab('students')}
-              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all duration-300 border-b-2 arabic-text ${
-                activeTab === 'students'
-                  ? 'border-emerald-600 text-emerald-700 bg-white/50 shadow-sm'
-                  : 'border-transparent text-emerald-600 hover:text-emerald-700 hover:bg-white/30'
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <FiUsers />
-                الطلاب ({enrolledStudentsCount})
-              </span>
-            </button>
+            {isAdminLike && (
+              <button
+                onClick={() => setActiveTab('students')}
+                className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all duration-300 border-b-2 arabic-text ${
+                  activeTab === 'students'
+                    ? 'border-emerald-600 text-emerald-700 bg-white/50 shadow-sm'
+                    : 'border-transparent text-emerald-600 hover:text-emerald-700 hover:bg-white/30'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <FiUsers />
+                  الطلاب ({enrolledStudentsCount})
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -259,43 +361,95 @@ const CourseDetail = () => {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               
-              {/* Action Buttons Section */}
-              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-emerald-200/50 islamic-border">
-                <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-3 arabic-text">إجراءات الدورة</h3>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => navigate(`/courses/${id}/edit`)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiEdit />
-                    تعديل الدورة
-                  </button>
-                  
-                  <button
-                    onClick={() => navigate(`/courses/add`)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiVideo />
-                    إضافة دورة جديدة
-                  </button>
-                  
-                  <button
-                    onClick={() => navigate('/users')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiUsers />
-                    إدارة المستخدمين
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveTab('students')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiStar />
-                    عرض المشتركين
-                  </button>
+              {/* Action / Enrollment Section */}
+              {isStudent ? (
+                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-emerald-200/50 islamic-border">
+                  <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-3 arabic-text">حجز الدورة</h3>
+                  {isEnrolled ? (
+                    <div className="flex items-center gap-2 text-emerald-700 font-medium">
+                      <FiCheckCircle />
+                      أنت مشترك بالفعل في هذه الدورة ويمكنك مشاهدة المحتوى
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-700">سعر الدورة: ${(course.price || 0).toFixed(2)}</p>
+                      {(course.price || 0) > 0 ? (
+                        <button
+                          onClick={handleCreateFawryReference}
+                          disabled={enrollmentLoading}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                        >
+                          <FiCreditCard />
+                          {enrollmentLoading ? 'جارٍ إنشاء رقم فوري...' : 'احجز وادفع بفوري'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleEnrollFreeCourse}
+                          disabled={enrollmentLoading}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                        >
+                          <FiCheckCircle />
+                          {enrollmentLoading ? 'جارٍ التسجيل...' : 'تسجيل فوري (دورة مجانية)'}
+                        </button>
+                      )}
+
+                      {fawryData?.referenceNumber && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+                          <p className="text-sm font-semibold text-amber-900">
+                            رقم فوري: <span className="font-mono">{fawryData.referenceNumber}</span>
+                          </p>
+                          <p className="text-xs text-amber-800">استخدم الرقم في أي فرع فوري لإتمام الدفع.</p>
+                          <button
+                            onClick={handleCheckFawryPayment}
+                            disabled={checkingPayment}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white rounded-md text-sm"
+                          >
+                            <FiRefreshCw className={checkingPayment ? 'animate-spin' : ''} />
+                            {checkingPayment ? 'جارٍ التحقق...' : 'تحقق من حالة الدفع'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-emerald-200/50 islamic-border">
+                  <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-3 arabic-text">إجراءات الدورة</h3>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => navigate(`/courses/${id}/edit`)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                    >
+                      <FiEdit />
+                      تعديل الدورة
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/courses/add`)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                    >
+                      <FiVideo />
+                      إضافة دورة جديدة
+                    </button>
+
+                    <button
+                      onClick={() => navigate('/users')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                    >
+                      <FiUsers />
+                      إدارة المستخدمين
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('students')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                    >
+                      <FiStar />
+                      عرض المشتركين
+                    </button>
+                  </div>
+                </div>
+              )}
               
               {/* صورة الدورة + الفيديو التعريفي (جنباً إلى جنب) */}
               {(course.image || course.introVideoUrl) && (
@@ -370,90 +524,100 @@ const CourseDetail = () => {
                     <FiVideo />
                     {t('courses.courseVideos') || 'فيديوهات الدورة'}
                   </h3>
-                  <div className="space-y-6">
-                    {course.lessons.map((lesson, lessonIndex) => (
-                      <div
-                        key={lesson.id}
-                        className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 overflow-hidden"
-                      >
-                        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            {t('courses.lessonNumber', { n: lessonIndex + 1 }) || `درس ${lessonIndex + 1}`}
-                          </span>
-                          <h4 className="font-semibold text-gray-900 dark:text-white mt-0.5">
-                            {language === 'ar' && lesson.titleAr ? lesson.titleAr : lesson.title || `Lesson ${lessonIndex + 1}`}
-                          </h4>
-                          {lesson.durationMinutes > 0 && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                              <FiClock className="size-3.5" />
-                              {lesson.durationMinutes} {t('courses.minutes') || 'دقيقة'}
-                            </p>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          {lesson.videos && lesson.videos.length > 0 ? (
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                              {lesson.videos.map((video, videoIndex) => {
-                                const durationMin = video.durationSeconds ? Math.floor(video.durationSeconds / 60) : 0;
-                                const durationSec = video.durationSeconds ? video.durationSeconds % 60 : 0;
-                                const durationStr = `${durationMin}:${String(durationSec).padStart(2, '0')}`;
-                                const isYoutube = video.videoUrl && (video.videoUrl.includes('youtube.com') || video.videoUrl.includes('youtu.be'));
-                                return (
-                                  <div
-                                    key={video.id}
-                                    className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden"
-                                  >
-                                    {/* مشغل الفيديو داخل الصفحة مثل الانترو */}
-                                    <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden">
-                                      {video.videoUrl ? (
-                                        isYoutube ? (
-                                          <YouTubeThumbnail
-                                            videoUrl={video.videoUrl}
-                                            alt={video.title || `Video ${videoIndex + 1}`}
-                                            className="w-full h-full rounded-t-lg"
-                                            showPlayIcon={true}
-                                          />
-                                        ) : (
-                                          <video
-                                            className="w-full h-full"
-                                            controls
-                                            poster={video.thumbnailUrl || undefined}
-                                            src={video.videoUrl}
-                                          >
-                                            <source src={video.videoUrl} type="video/mp4" />
-                                            {t('videoModal.browserNotSupported')}
-                                          </video>
-                                        )
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                                          <FiVideo className="size-12 text-gray-500" />
-                                        </div>
-                                      )}
-                                      {video.durationSeconds > 0 && !video.videoUrl && (
-                                        <span className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
-                                          {durationStr}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="p-3">
-                                      <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-                                        {language === 'ar' && video.titleAr ? video.titleAr : video.title || `Video ${videoIndex + 1}`}
-                                      </p>
-                                      {durationStr !== '0:00' && (
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{durationStr}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 py-2">{t('courses.noVideosInLesson') || 'لا توجد فيديوهات في هذا الدرس'}</p>
-                          )}
-                        </div>
+                  {!canAccessContent ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-3">
+                      <FiLock className="text-amber-700 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-amber-900">المحتوى مقفول</p>
+                        <p className="text-sm text-amber-800">يجب إتمام الحجز والدفع أولًا لفتح دروس الدورة.</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {course.lessons.map((lesson, lessonIndex) => (
+                        <div
+                          key={lesson.id}
+                          className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 overflow-hidden"
+                        >
+                          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              {t('courses.lessonNumber', { n: lessonIndex + 1 }) || `درس ${lessonIndex + 1}`}
+                            </span>
+                            <h4 className="font-semibold text-gray-900 dark:text-white mt-0.5">
+                              {language === 'ar' && lesson.titleAr ? lesson.titleAr : lesson.title || `Lesson ${lessonIndex + 1}`}
+                            </h4>
+                            {lesson.durationMinutes > 0 && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                                <FiClock className="size-3.5" />
+                                {lesson.durationMinutes} {t('courses.minutes') || 'دقيقة'}
+                              </p>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            {lesson.videos && lesson.videos.length > 0 ? (
+                              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {lesson.videos.map((video, videoIndex) => {
+                                  const durationMin = video.durationSeconds ? Math.floor(video.durationSeconds / 60) : 0;
+                                  const durationSec = video.durationSeconds ? video.durationSeconds % 60 : 0;
+                                  const durationStr = `${durationMin}:${String(durationSec).padStart(2, '0')}`;
+                                  const isYoutube = video.videoUrl && (video.videoUrl.includes('youtube.com') || video.videoUrl.includes('youtu.be'));
+                                  return (
+                                    <div
+                                      key={video.id}
+                                      className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden"
+                                    >
+                                      {/* مشغل الفيديو داخل الصفحة مثل الانترو */}
+                                      <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden">
+                                        {video.videoUrl ? (
+                                          isYoutube ? (
+                                            <YouTubeThumbnail
+                                              videoUrl={video.videoUrl}
+                                              alt={video.title || `Video ${videoIndex + 1}`}
+                                              className="w-full h-full rounded-t-lg"
+                                              showPlayIcon={true}
+                                            />
+                                          ) : (
+                                            <video
+                                              className="w-full h-full"
+                                              controls
+                                              poster={video.thumbnailUrl || undefined}
+                                              src={video.videoUrl}
+                                            >
+                                              <source src={video.videoUrl} type="video/mp4" />
+                                              {t('videoModal.browserNotSupported')}
+                                            </video>
+                                          )
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                                            <FiVideo className="size-12 text-gray-500" />
+                                          </div>
+                                        )}
+                                        {video.durationSeconds > 0 && !video.videoUrl && (
+                                          <span className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+                                            {durationStr}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="p-3">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
+                                          {language === 'ar' && video.titleAr ? video.titleAr : video.title || `Video ${videoIndex + 1}`}
+                                        </p>
+                                        {durationStr !== '0:00' && (
+                                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{durationStr}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 py-2">{t('courses.noVideosInLesson') || 'لا توجد فيديوهات في هذا الدرس'}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -533,35 +697,28 @@ const CourseDetail = () => {
           {activeTab === 'teacher' && (
             <div className="space-y-6">
               
-              {/* Teacher Management Actions */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 islamic-border">
-                <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-3 arabic-text">إدارة المعلمين</h3>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => navigate('/teachers/add')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiUser />
-                    إضافة معلم جديد
-                  </button>
-                  
-                  <button
-                    onClick={() => navigate('/teachers')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiUsers />
-                    عرض جميع المعلمين
-                  </button>
-                  
-                  <button
-                    onClick={() => navigate('/teachers/add')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
-                  >
-                    <FiUser />
-                    إضافة معلم جديد
-                  </button>
+              {isAdminLike && (
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200/50 islamic-border">
+                  <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-3 arabic-text">إدارة المعلمين</h3>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => navigate('/teachers/add')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                    >
+                      <FiUser />
+                      إضافة معلم جديد
+                    </button>
+
+                    <button
+                      onClick={() => navigate('/teachers')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-md arabic-text"
+                    >
+                      <FiUsers />
+                      عرض جميع المعلمين
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
               {course.courseTeachers && course.courseTeachers.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4">
                   {course.courseTeachers.map((ct) => (
@@ -681,7 +838,7 @@ const CourseDetail = () => {
           )}
 
           {/* Students Tab */}
-          {activeTab === 'students' && (
+          {activeTab === 'students' && isAdminLike && (
             <div className="space-y-6">
               
               {/* Student Management Actions */}

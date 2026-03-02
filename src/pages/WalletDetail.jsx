@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from '../components/ui/dialog';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 
 function formatDate(d) {
   if (!d) return '—';
@@ -48,7 +49,6 @@ function formatDate(d) {
     return new Date(d).toISOString().slice(0, 16).replace('T', ' ');
   }
 }
-const formatAmount = (n) => `$${(Number(n) || 0).toFixed(2)}`;
 
 const WalletDetail = () => {
   const { id } = useParams();
@@ -56,6 +56,7 @@ const WalletDetail = () => {
   const isTeacher = location.pathname.includes('/wallets/teacher/');
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const navigate = useNavigate();
 
@@ -203,6 +204,7 @@ const WalletDetail = () => {
   const totalHours = wallet?.totalHours ?? 0;            // ← session-based (from creditFromSession)
   const totalWorkedHours = wallet?.totalWorkedHours ?? 0; // ← booking-duration-based (cross-check)
   const totalEarnedFromBookings = wallet?.totalEarnedFromBookings ?? (totalWorkedHours * hourPrice);
+  const totalEarnedFromSessions = wallet?.totalEarnedFromSessions ?? null; // صافي من معاملات الجلسات فقط
   const txPagination = studentTx.pagination;
 
   if (loading && !wallet) {
@@ -389,7 +391,7 @@ const WalletDetail = () => {
                   {isTeacher ? 'المتبقي (الرصيد الحالي)' : 'الرصيد الحالي'}
                 </p>
                 <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
-                  {formatAmount(wallet.balance)}
+                  {formatCurrency(wallet.balance)}
                 </p>
               </div>
               <div className="flex size-12 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
@@ -432,7 +434,7 @@ const WalletDetail = () => {
                       الرصيد المعلق
                     </p>
                     <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
-                      {formatAmount(wallet.pendingBalance)}
+                      {formatCurrency(wallet.pendingBalance)}
                     </p>
                   </div>
                   <div className="flex size-12 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
@@ -454,7 +456,7 @@ const WalletDetail = () => {
                       الرصيد المرسل (إجمالي الأرباح)
                     </p>
                     <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                      {formatAmount(wallet.totalEarned)}
+                      {formatCurrency(wallet.totalEarned)}
                     </p>
                   </div>
                   <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
@@ -480,7 +482,7 @@ const WalletDetail = () => {
                       إجمالي الإيداعات
                     </p>
                     <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-                      {formatAmount(wallet.totalDeposited)}
+                      {formatCurrency(wallet.totalDeposited)}
                     </p>
                   </div>
                   <div className="flex size-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
@@ -502,7 +504,7 @@ const WalletDetail = () => {
                       إجمالي المصروفات
                     </p>
                     <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
-                      {formatAmount(wallet.totalSpent)}
+                      {formatCurrency(wallet.totalSpent)}
                     </p>
                   </div>
                   <div className="flex size-12 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
@@ -564,30 +566,40 @@ const WalletDetail = () => {
               {/* سعر الساعة */}
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-700/30">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">سعر الساعة</p>
-                <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatAmount(hourPrice)}</p>
+                <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(hourPrice)}</p>
               </div>
-              {/* إجمالي الأرباح */}
+              {/* إجمالي الأرباح من الساعات المعروضة (قبل الرسوم) */}
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-700/30">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي الأرباح (محسوبة)</p>
-                <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatAmount(totalEarnedFromBookings)}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي الأرباح (محسوبة من الساعات)</p>
+                <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalHours * hourPrice)}</p>
+                <p className="mt-1 text-xs text-gray-500">قبل خصم رسوم المنصة</p>
               </div>
               {/* المعادلة */}
               <div className="lg:col-span-2 rounded-xl border border-indigo-200 dark:border-indigo-700 p-4 bg-indigo-50/50 dark:bg-indigo-900/20">
-                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">معادلة الاحتساب</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">معادلة الاحتساب (من الساعات المسجلة)</p>
                 <p className="mt-2 text-sm font-mono text-gray-700 dark:text-gray-300">
-                  {Number(totalHours).toFixed(2)} ساعة × {formatAmount(hourPrice)}
+                  {Number(totalHours).toFixed(2)} ساعة × {formatCurrency(hourPrice)}
                 </p>
-                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">= {formatAmount(totalHours * hourPrice)}</p>
-                <p className="mt-1 text-xs text-gray-500">(صافي بعد رسوم المنصة: {formatAmount(wallet.totalEarned ?? 0)})</p>
+                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">= {formatCurrency(totalHours * hourPrice)} <span className="text-xs font-normal text-gray-500">(إجمالي قبل رسوم المنصة)</span></p>
+                {totalEarnedFromSessions != null && (
+                  <p className="mt-2 text-xs text-indigo-600 dark:text-indigo-400">
+                    صافي من الجلسات فقط (من سجل المعاملات): <strong>{formatCurrency(totalEarnedFromSessions)}</strong>
+                  </p>
+                )}
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 text-sm">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                الرصيد المرسل: <strong className="text-emerald-600 dark:text-emerald-400">{formatAmount(wallet.totalEarned ?? 0)}</strong>
-              </span>
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                الرصيد المتاح: <strong className="text-purple-600 dark:text-purple-400">{formatAmount(wallet.balance ?? 0)}</strong>
-              </span>
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                إجمالي المرسل من المحفظة يشمل أرباح الجلسات وأي تحويلات يدوية أو إضافات أخرى منذ بداية العمل.
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  الرصيد المرسل (إجمالي الاعتمادات): <strong className="text-emerald-600 dark:text-emerald-400">{formatCurrency(wallet.totalEarned ?? 0)}</strong>
+                </span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  الرصيد المتاح: <strong className="text-purple-600 dark:text-purple-400">{formatCurrency(wallet.balance ?? 0)}</strong>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -632,7 +644,7 @@ const WalletDetail = () => {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {wallet.payoutRequests.map((req) => (
                     <tr key={req.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="px-6 py-4 tabular-nums text-sm font-bold text-orange-600 dark:text-orange-400">{formatAmount(req.amount)}</td>
+                      <td className="px-6 py-4 tabular-nums text-sm font-bold text-orange-600 dark:text-orange-400">{formatCurrency(req.amount)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={cn(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
@@ -770,7 +782,7 @@ const WalletDetail = () => {
                               ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-red-600 dark:text-red-400'
                         )}>
-                          {tx.type !== 'WITHDRAWAL' && tx.type !== 'PAYMENT' ? '+' : '-'}{formatAmount(tx.amount)}
+                          {tx.type !== 'WITHDRAWAL' && tx.type !== 'PAYMENT' ? '+' : '-'}{formatCurrency(tx.amount)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{tx.description || 'بدون وصف'}</td>
@@ -839,7 +851,7 @@ const WalletDetail = () => {
                 className="mt-2 text-lg font-semibold" 
                 placeholder="0.00"
               />
-              <p className="text-xs text-gray-500 mt-1">أدخل المبلغ بالدولار الأمريكي</p>
+              <p className="text-xs text-gray-500 mt-1">{isRTL ? 'أدخل المبلغ بالجنيه المصري' : 'Enter amount in Egyptian Pounds (EGP)'}</p>
             </div>
             <div>
               <Label htmlFor="send-desc" className="text-gray-900 font-medium">وصف العملية (اختياري)</Label>
@@ -905,7 +917,7 @@ const WalletDetail = () => {
                 className="mt-2 text-lg font-semibold" 
                 placeholder="0.00"
               />
-              <p className="text-xs text-gray-500 mt-1">أدخل المبلغ بالدولار الأمريكي</p>
+              <p className="text-xs text-gray-500 mt-1">{isRTL ? 'أدخل المبلغ بالجنيه المصري' : 'Enter amount in Egyptian Pounds (EGP)'}</p>
             </div>
             <div>
               <Label htmlFor="deposit-desc" className="text-gray-900 font-medium">وصف العملية (اختياري)</Label>
@@ -974,7 +986,7 @@ const WalletDetail = () => {
               />
               <div className="mt-2 flex items-center justify-between">
                 <p className="text-xs text-gray-500">الرصيد المتاح للسحب</p>
-                <p className="text-sm font-semibold text-orange-600">{formatAmount(wallet?.balance)}</p>
+                <p className="text-sm font-semibold text-orange-600">{formatCurrency(wallet?.balance)}</p>
               </div>
             </div>
             <div>

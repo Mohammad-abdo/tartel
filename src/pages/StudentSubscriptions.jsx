@@ -5,6 +5,7 @@ import { studentSubscriptionAPI } from '../services/api';
 import { FiPackage, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 import PackageModal from '../components/PackageModal';
 import SubscribeModal from '../components/SubscribeModal';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +15,7 @@ const StudentSubscriptions = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';

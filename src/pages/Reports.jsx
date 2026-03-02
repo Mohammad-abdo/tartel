@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { adminAPI } from '../services/api';
 import {
   FiBarChart2,
@@ -32,11 +33,6 @@ function formatDate(str) {
   return isNaN(d.getTime()) ? str : d.toLocaleDateString();
 }
 
-function formatCurrency(n) {
-  if (n == null || isNaN(n)) return '0';
-  return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function downloadCSV(filename, rows, columns) {
   const head = columns.map((c) => c.label).join(',');
   const body = rows.map((row) => columns.map((c) => (c.key ? (row[c.key] ?? '') : (c.get ? c.get(row) : ''))).join(',')).join('\n');
@@ -52,6 +48,7 @@ function downloadCSV(filename, rows, columns) {
 
 const Reports = () => {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const [selectedReport, setSelectedReport] = useState('principal');

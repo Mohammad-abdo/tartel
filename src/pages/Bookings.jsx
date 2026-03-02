@@ -6,10 +6,12 @@ import { toast } from 'react-toastify';
 import { FiCalendar, FiCheckCircle, FiXCircle, FiUser, FiEye, FiClock, FiDollarSign, FiGrid, FiList, FiStar } from 'react-icons/fi';
 import { useLanguage } from '../context/LanguageContext';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 
 const Bookings = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
   const isRTL = language === 'ar';
@@ -365,7 +367,7 @@ const Bookings = () => {
                             {!['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(booking.status) && booking.status}
                           </span>
                         </td>
-                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white', isRTL && 'text-right')}>${amount.toFixed(2)}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white', isRTL && 'text-right')}>{formatCurrency(amount)}</td>
                         <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
                           <div className={cn('flex items-center gap-1', isRTL ? 'justify-start' : 'justify-end')}>
                             {viewMode === 'admin' && (
@@ -529,7 +531,7 @@ const Bookings = () => {
                       <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                         <div className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
                           <FiDollarSign className="text-emerald-600" />
-                          {amount.toFixed(2)}
+                          {formatCurrency(amount)}
                         </div>
                         <div className="flex items-center gap-2">
                           <button

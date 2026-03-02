@@ -5,10 +5,12 @@ import { subscriptionAPI } from '../services/api';
 import { FiBox, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 
 const Subscriptions = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const [activeTab, setActiveTab] = useState('packages');
   const [packages, setPackages] = useState([]);
@@ -136,7 +138,7 @@ const Subscriptions = () => {
                     packages.map((pkg) => (
                       <tr key={pkg.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"><div className="font-medium">{pkg.name}</div></td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${pkg.price?.toFixed(2)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{formatCurrency(pkg.price)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{t('subscriptions.durationDays', { count: pkg.durationDays })}</td>
                         <td className="px-6 py-4">
                           <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', pkg.isActive ? 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')}>
