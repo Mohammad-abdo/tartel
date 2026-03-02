@@ -31,24 +31,29 @@ const Header = () => {
   const [langMenuOpen, setLangMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    if (user) fetchNotifications();
+  }, [user]);
 
   const fetchNotifications = async () => {
+    if (!user) return;
     try {
-      const response = await notificationAPI.getNotifications(true);
-      const unread = response.data.filter((n) => !n.read);
-      setNotifications(response.data || []);
-      setUnreadCount(unread.length);
+      const response = await notificationAPI.getNotifications({ limit: 20 });
+      const data = response?.data ?? response;
+      const list = Array.isArray(data) ? data : [];
+      setNotifications(list);
+      setUnreadCount(list.filter((n) => !n.isRead).length);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 
   const handleMarkAsRead = async (id) => {
     try {
       await notificationAPI.markAsRead(id);
-      fetchNotifications();
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+      setUnreadCount((c) => Math.max(0, c - 1));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -57,7 +62,8 @@ const Header = () => {
   const handleMarkAllAsRead = async () => {
     try {
       await notificationAPI.markAllAsRead();
-      fetchNotifications();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
     } catch (error) {
       console.error('Failed to mark all as read', error);
     }
@@ -136,12 +142,15 @@ const Header = () => {
             variant="ghost"
             size="icon"
             className="relative size-9 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200"
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              if (!showNotifications) fetchNotifications();
+            }}
           >
             <FiBell className="size-4" />
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-[10px] font-medium text-white shadow-lg animate-pulse">
-                {unreadCount > 9 ? '9+' : unreadCount}
+              <span className="absolute -right-0.5 -top-0.5 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg ring-2 ring-white dark:ring-gray-800 px-1">
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </Button>
@@ -165,20 +174,33 @@ const Header = () => {
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length > 0 ? (
-                    notifications.slice(0, 10).map((notification) => (
-                      <div
-                        key={notification.id}
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        className={cn(
-                          'cursor-pointer border-b border-gray-100 px-4 py-3 transition-colors last:border-0 hover:bg-emerald-50 dark:border-gray-700 dark:hover:bg-emerald-900/20 arabic-text',
-                          !notification.read && 'bg-emerald-50 dark:bg-emerald-900/20 border-r-2 border-r-emerald-500'
-                        )}
-                      >
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</p>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-gray-600 dark:text-gray-400">{notification.message}</p>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">{new Date(notification.createdAt).toLocaleString()}</p>
+                    <>
+                      {notifications.slice(0, 10).map((notification) => (
+                        <div
+                          key={notification.id}
+                          onClick={() => {
+                            if (!notification.isRead) handleMarkAsRead(notification.id);
+                          }}
+                          className={cn(
+                            'cursor-pointer border-b border-gray-100 px-4 py-3 transition-colors last:border-0 hover:bg-emerald-50 dark:border-gray-700 dark:hover:bg-emerald-900/20 arabic-text',
+                            !notification.isRead && 'bg-emerald-50/80 dark:bg-emerald-900/20 border-r-2 border-r-emerald-500'
+                          )}
+                        >
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</p>
+                          <p className="mt-0.5 line-clamp-2 text-xs text-gray-600 dark:text-gray-400">{notification.message}</p>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">{notification.createdAt ? new Date(notification.createdAt).toLocaleString() : ''}</p>
+                        </div>
+                      ))}
+                      <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
+                        <button
+                          type="button"
+                          onClick={() => { setShowNotifications(false); navigate('/notifications'); }}
+                          className="w-full text-center text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+                        >
+                          {t('notifications.title')} — {t('header.viewAll') || 'View all'}
+                        </button>
                       </div>
-                    ))
+                    </>
                   ) : (
                     <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">{t('header.noNotifications')}</div>
                   )}

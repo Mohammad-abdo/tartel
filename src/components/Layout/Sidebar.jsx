@@ -26,6 +26,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { canShowSidebarLink, SUPER_ADMIN_ONLY_PATHS } from '../../config/routePermissions';
 import { cn } from '../../lib/utils';
 
 const SIDEBAR_WIDTH_EXPANDED = 256; /* w-64 */
@@ -37,8 +38,9 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
   const isRTL = language === 'ar';
   const location = useLocation();
   const { logout, user } = useAuth();
+  const permissions = user?.permissions ?? [];
 
-  const menuItems = [
+  const allMenuItems = [
     { path: '/dashboard', icon: FiHome, label: t('sidebar.dashboard') },
     { path: '/profile', icon: FiUser, label: t('sidebar.profile') },
     { path: '/users', icon: FiUsers, label: t('sidebar.students') },
@@ -62,6 +64,11 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
     { path: '/activity', icon: FiActivity, label: t('sidebar.activity') },
     { path: '/settings', icon: FiSettings, label: t('sidebar.settings') },
   ];
+
+  const menuItems = allMenuItems.filter((item) => {
+    if (SUPER_ADMIN_ONLY_PATHS.includes(item.path)) return user?.role === 'SUPER_ADMIN';
+    return canShowSidebarLink(permissions, item.path);
+  });
 
   const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
