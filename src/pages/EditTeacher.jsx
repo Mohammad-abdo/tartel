@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'react-toastify';
 import { adminAPI, fileUploadAPI } from '../services/api';
-import { FiArrowLeft, FiSave, FiDollarSign, FiImage, FiVideo, FiUpload, FiUser, FiCheck } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiDollarSign, FiImage, FiVideo, FiUpload, FiUser, FiCalendar, FiClock, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -40,6 +40,17 @@ const EditTeacher = () => {
     introVideoUrl: '',
     isApproved: false,
   });
+  const [schedules, setSchedules] = useState([]);
+
+  const daysOfWeek = [
+    { value: 0, label: 'الأحد' },
+    { value: 1, label: 'الاثنين' },
+    { value: 2, label: 'الثلاثاء' },
+    { value: 3, label: 'الأربعاء' },
+    { value: 4, label: 'الخميس' },
+    { value: 5, label: 'الجمعة' },
+    { value: 6, label: 'السبت' },
+  ];
 
   useEffect(() => {
     fetchTeacher();
@@ -63,6 +74,13 @@ const EditTeacher = () => {
         introVideoUrl: teacher.introVideoUrl || '',
         isApproved: teacher.isApproved ?? false,
       });
+      const list = (teacher.schedules || []).map((s) => ({
+        id: s.id || `s-${s.dayOfWeek}-${s.startTime}-${s.endTime}`,
+        dayOfWeek: s.dayOfWeek,
+        startTime: String(s.startTime || '09:00').slice(0, 5),
+        endTime: String(s.endTime || '17:00').slice(0, 5),
+      }));
+      setSchedules(list);
     } catch (error) {
       toast.error(t('teachers.loadFailed'));
       navigate('/teachers');
@@ -77,6 +95,29 @@ const EditTeacher = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    if (name === 'teacherType' && value === 'COURSE_SHEIKH') setSchedules([]);
+  };
+
+  const addSchedule = () => {
+    setSchedules((prev) => [
+      ...prev,
+      {
+        id: `new-${Date.now()}`,
+        dayOfWeek: 0,
+        startTime: '09:00',
+        endTime: '17:00',
+      },
+    ]);
+  };
+
+  const removeSchedule = (scheduleId) => {
+    setSchedules((prev) => prev.filter((s) => s.id !== scheduleId));
+  };
+
+  const updateSchedule = (scheduleId, field, value) => {
+    setSchedules((prev) =>
+      prev.map((s) => (s.id === scheduleId ? { ...s, [field]: value } : s))
+    );
   };
 
   const handleImageUpload = async (e) => {
@@ -130,12 +171,41 @@ const EditTeacher = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.image?.trim()) {
-      toast.error(t('teachers.photoRequired') || 'Photo is required for the teacher (sheikh).');
+      toast.error(t('teachers.photoRequired') || 'صورة الشيخ مطلوبة.');
       return;
     }
     if (!formData.introVideoUrl?.trim()) {
-      toast.error(t('teachers.introVideoRequired') || 'Intro video is required for the teacher (sheikh).');
+      toast.error(t('teachers.introVideoRequired') || 'فيديو التعريف مطلوب للشيخ.');
       return;
+    }
+    if (formData.teacherType === 'FULL_TEACHER') {
+      if (!formData.hourlyRate || parseFloat(formData.hourlyRate) <= 0) {
+        toast.error(t('teachers.hourlyRateRequired') || 'يجب تحديد سعر الساعة للشيخ الكامل.');
+        return;
+      }
+      for (let i = 0; i < schedules.length; i++) {
+        const s = schedules[i];
+        if (s.startTime >= s.endTime) {
+          toast.error(
+            t('teachers.invalidScheduleTime') || `الموعد رقم ${i + 1}: وقت البداية يجب أن يكون قبل وقت النهاية.`
+          );
+          return;
+        }
+        const sameDay = schedules.filter((x) => Number(x.dayOfWeek) === Number(s.dayOfWeek) && x.id !== s.id);
+        for (const other of sameDay) {
+          if (
+            (s.startTime >= other.startTime && s.startTime < other.endTime) ||
+            (s.endTime > other.startTime && s.endTime <= other.endTime) ||
+            (s.startTime <= other.startTime && s.endTime >= other.endTime)
+          ) {
+            const dayName = daysOfWeek.find((d) => d.value === Number(s.dayOfWeek))?.label;
+            toast.error(
+              t('teachers.scheduleOverlap') || `يوجد تداخل في مواعيد يوم ${dayName}. يرجى مراجعة الأوقات.`
+            );
+            return;
+          }
+        }
+      }
     }
     setLoading(true);
     try {
@@ -146,6 +216,11 @@ const EditTeacher = () => {
         experience: formData.experience ? parseInt(formData.experience, 10) : undefined,
         hourlyRate: isCourseSheikh ? 0 : (formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined),
         specialties: formData.specialties ? formData.specialties.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+        schedules: isCourseSheikh ? [] : schedules.map((s) => ({
+          dayOfWeek: parseInt(s.dayOfWeek, 10),
+          startTime: s.startTime,
+          endTime: s.endTime,
+        })),
       };
       await adminAPI.updateTeacher(id, submitData);
       toast.success(t('teachers.updateSuccess'));
@@ -461,6 +536,118 @@ const EditTeacher = () => {
             </Card>
           </div>
         </div>
+
+        {/* مواعيد العمل - نفس صفحة الإضافة (للمشايخ الكاملين فقط) */}
+        {formData.teacherType === 'FULL_TEACHER' && (
+          <Card className="rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-gray-100 bg-blue-50/50 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500 text-white">
+                  <FiCalendar className="size-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    {t('teachers.workSchedule') || 'مواعيد العمل'}
+                  </CardTitle>
+                  <CardDescription className="text-sm mt-0.5">
+                    {t('teachers.workScheduleDesc') || 'حدد مواعيد العمل الأسبوعية للشيخ. هذه المواعيد ستكون متاحة للطلاب للحجز.'}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {schedules.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <FiClock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {t('teachers.noSchedules') || 'لا توجد مواعيد محددة'}
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    {t('teachers.addWorkSchedule') || 'أضف مواعيد العمل الأسبوعية للشيخ'}
+                  </p>
+                  <Button type="button" onClick={addSchedule} className="bg-blue-600 hover:bg-blue-700">
+                    <FiPlus className="size-4" />
+                    {t('teachers.addSchedule') || 'إضافة موعد عمل'}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {schedules.map((schedule, index) => (
+                    <div
+                      key={schedule.id}
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                    >
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-gray-700">
+                            {t('teachers.day') || 'اليوم'}
+                          </Label>
+                          <select
+                            value={schedule.dayOfWeek}
+                            onChange={(e) => updateSchedule(schedule.id, 'dayOfWeek', e.target.value)}
+                            className={cn(
+                              'w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white',
+                              'focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none',
+                              isRTL && 'text-right'
+                            )}
+                          >
+                            {daysOfWeek.map((day) => (
+                              <option key={day.value} value={day.value}>
+                                {day.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-gray-700">
+                            {t('teachers.startTime') || 'من الساعة'}
+                          </Label>
+                          <Input
+                            type="time"
+                            value={schedule.startTime}
+                            onChange={(e) => updateSchedule(schedule.id, 'startTime', e.target.value)}
+                            className="rounded-xl h-10"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-gray-700">
+                            {t('teachers.endTime') || 'إلى الساعة'}
+                          </Label>
+                          <Input
+                            type="time"
+                            value={schedule.endTime}
+                            onChange={(e) => updateSchedule(schedule.id, 'endTime', e.target.value)}
+                            className="rounded-xl h-10"
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeSchedule(schedule.id)}
+                        className="shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl size-10"
+                        title={t('teachers.deleteSchedule') || 'حذف الموعد'}
+                      >
+                        <FiTrash2 className="size-5" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" onClick={addSchedule} className="rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50">
+                    <FiPlus className="size-4" />
+                    {t('teachers.addAnotherSchedule') || 'إضافة موعد آخر'}
+                  </Button>
+                </div>
+              )}
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-sm text-amber-800">
+                  <strong>{t('common.note') || 'ملاحظة:'}</strong>{' '}
+                  {t('teachers.scheduleNote') || 'يمكن للشيخ تعديل مواعيد العمل لاحقاً من خلال لوحة التحكم الخاصة به.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Sticky actions bar */}
         <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-200">
