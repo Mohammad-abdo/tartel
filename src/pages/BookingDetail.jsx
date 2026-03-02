@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
-import { bookingAPI, adminAPI, sessionAPI } from '../services/api';
+import { bookingAPI, adminAPI, sessionAPI, videoAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import {
   FiArrowLeft,
@@ -23,6 +23,7 @@ import {
   FiBook,
 } from 'react-icons/fi';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 
 function formatDate(d, locale = 'en-US') {
   if (!d) return '—';
@@ -44,6 +45,7 @@ const BookingDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
   const [booking, setBooking] = useState(null);
@@ -56,6 +58,11 @@ const BookingDetail = () => {
   const [submittingMem, setSubmittingMem] = useState(false);
   const [submittingRev, setSubmittingRev] = useState(false);
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [editSlot, setEditSlot] = useState(null);
+  const [editForm, setEditForm] = useState({ scheduledDate: '', startTime: '', endTime: '', status: '' });
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+  // Which session slot the memorization/revision/report forms apply to (each session has its own data)
+  const [selectedSlotForForms, setSelectedSlotForForms] = useState(null);
 
   const fetchBooking = async () => {
     setLoading(true);
@@ -102,12 +109,17 @@ const BookingDetail = () => {
     return labels[status] || status;
   };
 
-  const sessionStatus = booking?.session
+  const primarySlot = booking?.bookingSessions?.find((bs) => bs.session);
+  const primarySession = primarySlot?.session;
+  const slotsWithSession = booking?.bookingSessions?.filter((bs) => bs.session) || [];
+  const formSlot = (selectedSlotForForms?.id && slotsWithSession.find((bs) => bs.id === selectedSlotForForms.id)) || primarySlot || null;
+  const formSession = formSlot?.session;
+  const sessionStatus = formSession
     ? booking.status === 'CANCELLED'
       ? 'CANCELLED'
-      : booking.session.endedAt
+      : formSession.endedAt
         ? 'COMPLETED'
-        : booking.session.startedAt
+        : formSession.startedAt
           ? 'IN_PROGRESS'
           : 'SCHEDULED'
     : booking?.status === 'CANCELLED'
@@ -116,10 +128,10 @@ const BookingDetail = () => {
 
   const handleSaveMemorization = async (e) => {
     e.preventDefault();
-    if (!booking?.session?.id) return;
+    if (!formSession?.id) return;
     setSubmittingMem(true);
     try {
-      await sessionAPI.saveMemorization(booking.session.id, memorizationForm);
+      await sessionAPI.saveMemorization(formSession.id, memorizationForm);
       toast.success(isRTL ? 'تم حفظ الحفظ الجديد' : 'Memorization saved');
       fetchBooking();
       setMemorizationForm({ surahName: '', surahNameAr: '', fromAyah: '', toAyah: '', isFullSurah: false, notes: '' });
@@ -132,10 +144,10 @@ const BookingDetail = () => {
 
   const handleSaveRevision = async (e) => {
     e.preventDefault();
-    if (!booking?.session?.id) return;
+    if (!formSession?.id) return;
     setSubmittingRev(true);
     try {
-      await sessionAPI.saveRevision(booking.session.id, revisionForm);
+      await sessionAPI.saveRevision(formSession.id, revisionForm);
       toast.success(isRTL ? 'تم حفظ المراجعة' : 'Revision saved');
       fetchBooking();
       setRevisionForm({ revisionType: 'CLOSE', rangeType: 'SURAH', fromSurah: '', toSurah: '', fromJuz: '', toJuz: '', notes: '' });
@@ -148,13 +160,13 @@ const BookingDetail = () => {
 
   const handleSaveReport = async (e) => {
     e.preventDefault();
-    if (!booking?.session?.id || !reportForm.content?.trim()) {
+    if (!formSession?.id || !reportForm.content?.trim()) {
       toast.error(isRTL ? 'الوصف مطلوب' : 'Content is required');
       return;
     }
     setSubmittingReport(true);
     try {
-      await sessionAPI.saveReport(booking.session.id, { content: reportForm.content.trim(), rating: reportForm.rating || null });
+      await sessionAPI.saveReport(formSession.id, { content: reportForm.content.trim(), rating: reportForm.rating || null });
       toast.success(isRTL ? 'تم حفظ التقييم' : 'Report saved');
       fetchBooking();
       setReportForm({ content: '', rating: '' });
@@ -351,44 +363,47 @@ const BookingDetail = () => {
                     </ul>
                   </div>
                 )}
-                {booking.pastSessions?.length > 0 && (
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'جلسات منتهية' : 'Completed sessions'}</p>
-                    <ul className="space-y-1.5">
-                      {booking.pastSessions.slice(0, 15).map((b) => (
-                        <li key={b.id} className="flex justify-between rounded bg-emerald-50 px-3 py-2 text-sm dark:bg-emerald-900/20">
-                          <span>{new Date(b.date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })} {b.startTime}</span>
-                          <span>{b.session?.duration != null ? `${b.session.duration} min` : ''}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {(() => {
+                  const pastSlots = booking.pastSessions?.flatMap((b) => (b.bookingSessions || []).filter((bs) => bs.session?.endedAt).map((bs) => ({ ...bs, _b: b }))) || [];
+                  return pastSlots.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'جلسات منتهية' : 'Completed sessions'}</p>
+                      <ul className="space-y-1.5">
+                        {pastSlots.slice(0, 15).map((bs) => (
+                          <li key={bs.id} className="flex justify-between rounded bg-emerald-50 px-3 py-2 text-sm dark:bg-emerald-900/20">
+                            <span>{new Date(bs.scheduledDate).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })} {bs.startTime}</span>
+                            <span>{bs.session?.duration != null ? `${bs.session.duration} min` : ''}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
                 {(!booking.scheduleReservations?.length && !booking.upcomingBookings?.length && !booking.pastSessions?.length) && (
                   <p className="text-gray-500 dark:text-gray-400 text-sm">{isRTL ? 'لا توجد مواعيد أو جلسات مسجلة بعد.' : 'No booked days or sessions yet.'}</p>
                 )}
               </div>
 
               {/* تقارير الجلسات */}
-              {(booking.session?.report || booking.pastSessions?.some((b) => b.session?.report)) && (
+              {(primarySession?.report || booking.pastSessions?.some((b) => (b.bookingSessions || []).some((bs) => bs.session?.report))) && (
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                   <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white">
                     <FiFileText className="text-primary-600" />
                     {isRTL ? 'تقارير الجلسات' : 'Session reports'}
                   </h2>
                   <div className="space-y-4">
-                    {booking.session?.report && (
+                    {primarySession?.report && (
                       <div className="rounded-lg border border-primary-200 bg-primary-50/50 p-4 dark:border-primary-700 dark:bg-primary-900/10">
                         <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{isRTL ? 'جلسة هذا الحجز' : 'This booking session'}</p>
-                        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{booking.session.report.content}</p>
-                        {booking.session.report.rating != null && <p className="mt-2 text-sm font-medium">{isRTL ? 'التقييم' : 'Rating'}: {booking.session.report.rating}/5</p>}
+                        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{primarySession.report.content}</p>
+                        {primarySession.report.rating != null && <p className="mt-2 text-sm font-medium">{isRTL ? 'التقييم' : 'Rating'}: {primarySession.report.rating}/5</p>}
                       </div>
                     )}
-                    {booking.pastSessions?.filter((b) => b.session?.report).map((b) => (
-                      <div key={b.id} className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{new Date(b.date).toLocaleDateString(locale)} {b.startTime}</p>
-                        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{b.session.report.content}</p>
-                        {b.session.report.rating != null && <p className="mt-2 text-sm font-medium">{isRTL ? 'التقييم' : 'Rating'}: {b.session.report.rating}/5</p>}
+                    {booking.pastSessions?.flatMap((b) => (b.bookingSessions || []).filter((bs) => bs.session?.report).map((bs) => ({ bs, b }))).map(({ bs, b }) => (
+                      <div key={bs.id} className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{new Date(bs.scheduledDate).toLocaleDateString(locale)} {bs.startTime}</p>
+                        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{bs.session.report.content}</p>
+                        {bs.session.report.rating != null && <p className="mt-2 text-sm font-medium">{isRTL ? 'التقييم' : 'Rating'}: {bs.session.report.rating}/5</p>}
                       </div>
                     ))}
                   </div>
@@ -396,18 +411,18 @@ const BookingDetail = () => {
               )}
 
               {/* سجل الحفظ والمراجعة */}
-              {(booking.session?.memorizations?.length > 0 || booking.session?.revisions?.length > 0 || booking.pastSessions?.some((b) => (b.session?.memorizations?.length || b.session?.revisions?.length))) && (
+              {(primarySession?.memorizations?.length > 0 || primarySession?.revisions?.length > 0 || booking.pastSessions?.some((b) => (b.bookingSessions || []).some((bs) => (bs.session?.memorizations?.length || bs.session?.revisions?.length)))) && (
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                   <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white">
                     <FiBook className="text-primary-600" />
                     {isRTL ? 'سجل الحفظ والمراجعة' : 'Memorization & revision log'}
                   </h2>
                   <div className="space-y-4">
-                    {booking.session?.memorizations?.length > 0 && (
+                    {primarySession?.memorizations?.length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">{isRTL ? 'حفظ هذه الجلسة' : 'This session – memorization'}</p>
                         <ul className="space-y-1.5">
-                          {booking.session.memorizations.map((m) => (
+                          {primarySession.memorizations.map((m) => (
                             <li key={m.id} className="rounded bg-gray-50 px-3 py-2 text-sm dark:bg-gray-700">
                               {m.surahName}{m.surahNameAr ? ` (${m.surahNameAr})` : ''}
                               {m.isFullSurah ? ` — ${isRTL ? 'سورة كاملة' : 'Full surah'}` : m.fromAyah != null && m.toAyah != null ? ` — ${m.fromAyah}-${m.toAyah}` : ''}
@@ -417,11 +432,11 @@ const BookingDetail = () => {
                         </ul>
                       </div>
                     )}
-                    {booking.session?.revisions?.length > 0 && (
+                    {primarySession?.revisions?.length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">{isRTL ? 'مراجعة هذه الجلسة' : 'This session – revision'}</p>
                         <ul className="space-y-1.5">
-                          {booking.session.revisions.map((r) => (
+                          {primarySession.revisions.map((r) => (
                             <li key={r.id} className="rounded bg-gray-50 px-3 py-2 text-sm dark:bg-gray-700">
                               {r.revisionType} / {r.rangeType}
                               {r.fromSurah && r.toSurah && ` — ${r.fromSurah} → ${r.toSurah}`}
@@ -432,12 +447,12 @@ const BookingDetail = () => {
                         </ul>
                       </div>
                     )}
-                    {booking.pastSessions?.filter((b) => b.session?.memorizations?.length || b.session?.revisions?.length).map((b) => (
-                      <div key={b.id} className="rounded-lg border border-gray-200 dark:border-gray-600 p-3">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">{new Date(b.date).toLocaleDateString(locale)} {b.startTime}</p>
-                        {b.session.memorizations?.length > 0 && (
+                    {booking.pastSessions?.flatMap((b) => (b.bookingSessions || []).filter((bs) => bs.session?.memorizations?.length || bs.session?.revisions?.length).map((bs) => ({ bs, b }))).map(({ bs }) => (
+                      <div key={bs.id} className="rounded-lg border border-gray-200 dark:border-gray-600 p-3">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">{new Date(bs.scheduledDate).toLocaleDateString(locale)} {bs.startTime}</p>
+                        {bs.session?.memorizations?.length > 0 && (
                           <ul className="mb-2 space-y-1 text-sm">
-                            {b.session.memorizations.map((m) => (
+                            {bs.session.memorizations.map((m) => (
                               <li key={m.id}>
                                 {m.surahName}{m.surahNameAr ? ` (${m.surahNameAr})` : ''}
                                 {m.isFullSurah ? ` — ${isRTL ? 'كاملة' : 'full'}` : m.fromAyah != null && m.toAyah != null ? ` ${m.fromAyah}-${m.toAyah}` : ''}
@@ -445,9 +460,9 @@ const BookingDetail = () => {
                             ))}
                           </ul>
                         )}
-                        {b.session.revisions?.length > 0 && (
+                        {bs.session?.revisions?.length > 0 && (
                           <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                            {b.session.revisions.map((r) => (
+                            {bs.session.revisions.map((r) => (
                               <li key={r.id}>{r.revisionType} / {r.rangeType}{r.fromSurah && r.toSurah ? ` ${r.fromSurah}→${r.toSurah}` : ''}</li>
                             ))}
                           </ul>
@@ -478,7 +493,7 @@ const BookingDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{t('bookings.totalAmount')}</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">${(booking.totalPrice || booking.price || 0).toFixed(2)}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{formatCurrency(booking.totalPrice || booking.price || 0)}</p>
                   </div>
                 </div>
                 {booking.notes && (
@@ -494,16 +509,191 @@ const BookingDetail = () => {
           {/* Tab: Session */}
           {activeTab === 'session' && (
             <>
-              {!booking.session ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
-                  <p className="text-gray-500 dark:text-gray-400">{isRTL ? 'لا توجد جلسة مرتبطة بهذا الحجز بعد.' : 'No session linked to this booking yet.'}</p>
+              {/* List of slots with Join per slot */}
+              {booking.bookingSessions?.length > 0 && (
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 mb-6">
+                  <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    <FiVideo />
+                    {isRTL ? 'جلسات / حصص الحجز' : 'Sessions / lessons'}
+                  </h2>
+                  <ul className="space-y-3">
+                    {booking.bookingSessions.map((bs) => (
+                      <li key={bs.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 py-3 px-4 dark:border-gray-600">
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {new Date(bs.scheduledDate).toLocaleDateString(locale)} {bs.startTime}
+                          {bs.session?.roomId && <span className="ml-2 text-sm text-green-600 dark:text-green-400">({isRTL ? 'جلسة حية' : 'Live'})</span>}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={cn('rounded px-2 py-0.5 text-xs font-semibold', getStatusBadge(bs.status))}>{bs.status}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const d = new Date(bs.scheduledDate);
+                              setEditForm({
+                                scheduledDate: d.toISOString().slice(0, 10),
+                                startTime: bs.startTime || '09:00',
+                                endTime: bs.endTime || '11:00',
+                                status: bs.status || 'PENDING',
+                              });
+                              setEditSlot(bs);
+                            }}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                            title={isRTL ? 'تعديل' : 'Edit'}
+                          >
+                            <FiEdit className="inline-block h-4 w-4" />
+                          </button>
+                          {bs.session?.id && (
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/sessions/${bs.session.id}/edit`)}
+                              className="rounded-lg border border-primary-300 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-100 dark:border-primary-700 dark:bg-primary-900/30 dark:text-primary-200 dark:hover:bg-primary-900/50"
+                            >
+                              {isRTL ? 'بيانات الجلسة' : 'Session data'}
+                            </button>
+                          )}
+                          {booking.status === 'CONFIRMED' && bs.status !== 'CANCELLED' && bs.status !== 'COMPLETED' && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  const res = await videoAPI.createSession(bs.id);
+                                  const data = res?.data ?? res;
+                                  if (data?.token && data?.appId) window.open(`https://meet.example.com/room?token=${encodeURIComponent(data.token)}&appId=${data.appId}&channel=${data.roomId}`, '_blank');
+                                  else toast.info(isRTL ? 'تم إنشاء الجلسة' : 'Session created');
+                                } catch (e) {
+                                  toast.error(e.response?.data?.message || (isRTL ? 'فشل الانضمام' : 'Join failed'));
+                                }
+                              }}
+                              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                            >
+                              {isRTL ? 'انضم' : 'Join'}
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {/* Edit session slot modal */}
+                  {editSlot && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEditSlot(null)}>
+                      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{isRTL ? 'تعديل الحصة' : 'Edit session'}</h3>
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            setSubmittingEdit(true);
+                            try {
+                              await bookingAPI.updateBookingSession(id, editSlot.id, {
+                                scheduledDate: editForm.scheduledDate,
+                                startTime: editForm.startTime,
+                                endTime: editForm.endTime,
+                                status: editForm.status,
+                              });
+                              toast.success(isRTL ? 'تم تحديث الحصة' : 'Session updated');
+                              setEditSlot(null);
+                              fetchBooking();
+                            } catch (err) {
+                              toast.error(err.response?.data?.message || (isRTL ? 'فشل التحديث' : 'Update failed'));
+                            } finally {
+                              setSubmittingEdit(false);
+                            }
+                          }}
+                          className="space-y-4"
+                        >
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'التاريخ' : 'Date'}</label>
+                            <input
+                              type="date"
+                              value={editForm.scheduledDate}
+                              onChange={(e) => setEditForm((f) => ({ ...f, scheduledDate: e.target.value }))}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'وقت البداية' : 'Start time'}</label>
+                              <input
+                                type="time"
+                                value={editForm.startTime}
+                                onChange={(e) => setEditForm((f) => ({ ...f, startTime: e.target.value }))}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'وقت النهاية' : 'End time'}</label>
+                              <input
+                                type="time"
+                                value={editForm.endTime}
+                                onChange={(e) => setEditForm((f) => ({ ...f, endTime: e.target.value }))}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'الحالة' : 'Status'}</label>
+                            <select
+                              value={editForm.status}
+                              onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            >
+                              <option value="PENDING">PENDING</option>
+                              <option value="CONFIRMED">CONFIRMED</option>
+                              <option value="COMPLETED">COMPLETED</option>
+                              <option value="CANCELLED">CANCELLED</option>
+                            </select>
+                          </div>
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button type="button" onClick={() => setEditSlot(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">
+                              {isRTL ? 'إلغاء' : 'Cancel'}
+                            </button>
+                            <button type="submit" disabled={submittingEdit} className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
+                              {submittingEdit ? (isRTL ? 'جاري الحفظ…' : 'Saving…') : (isRTL ? 'حفظ' : 'Save')}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
+              )}
+              {!primarySession && (!booking.bookingSessions?.length || booking.bookingSessions.every((bs) => !bs.session)) ? (
+                <div className="rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {booking.status === 'CANCELLED' || booking.status === 'REJECTED'
+                      ? (isRTL ? 'تم إلغاء هذا الحجز. لم تُعقد أي جلسات حية.' : 'This booking was cancelled. No live sessions took place.')
+                      : (isRTL ? 'لا توجد جلسة حية مرتبطة بهذا الحجز بعد. استخدم "انضم" عند بدء الحصة.' : 'No live session linked yet. Use Join when the lesson starts.')}
+                  </p>
+                </div>
+              ) : slotsWithSession.length > 0 && formSession && (
                 <>
+                  {/* Which session the data below belongs to */}
+                  {slotsWithSession.length > 1 && (
+                    <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{isRTL ? 'البيانات لهذه الجلسة' : 'Data for this session'}</label>
+                      <select
+                        value={formSlot?.id ?? ''}
+                        onChange={(e) => {
+                          const slot = slotsWithSession.find((bs) => bs.id === e.target.value);
+                          setSelectedSlotForForms(slot || null);
+                        }}
+                        className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      >
+                        {slotsWithSession.map((bs) => (
+                          <option key={bs.id} value={bs.id}>
+                            {new Date(bs.scheduledDate).toLocaleDateString(locale)} {bs.startTime}
+                            {bs.session?.roomId ? ` (${isRTL ? 'حية' : 'Live'})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white">
                       <FiVideo />
                       {isRTL ? 'حالة الجلسة' : 'Session status'}
+                      {formSlot && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">— {new Date(formSlot.scheduledDate).toLocaleDateString(locale)} {formSlot.startTime}</span>}
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
@@ -512,33 +702,33 @@ const BookingDetail = () => {
                           {sessionStatus === 'COMPLETED' ? (isRTL ? 'مكتملة' : 'Completed') : sessionStatus === 'IN_PROGRESS' ? (isRTL ? 'جارية' : 'In progress') : sessionStatus === 'CANCELLED' ? (isRTL ? 'ملغاة' : 'Cancelled') : (isRTL ? 'مجدولة' : 'Scheduled')}
                         </span>
                       </div>
-                      {booking.session.startedAt && (
+                      {formSession.startedAt && (
                         <div>
                           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{isRTL ? 'وقت البداية' : 'Started'}</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{formatDate(booking.session.startedAt, locale)}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{formatDate(formSession.startedAt, locale)}</p>
                         </div>
                       )}
-                      {booking.session.endedAt && (
+                      {formSession.endedAt && (
                         <div>
                           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{isRTL ? 'وقت النهاية' : 'Ended'}</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{formatDate(booking.session.endedAt, locale)}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{formatDate(formSession.endedAt, locale)}</p>
                         </div>
                       )}
-                      {booking.session.duration != null && (
+                      {formSession.duration != null && (
                         <div>
                           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{isRTL ? 'المدة (دقيقة)' : 'Duration (min)'}</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{booking.session.duration}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{formSession.duration}</p>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* حفظ جديد */}
+                  {/* New memorization – for selected session */}
                   <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{isRTL ? 'حفظ جديد' : 'New memorization'}</h3>
-                    {booking.session.memorizations?.length > 0 && (
+                    {formSession.memorizations?.length > 0 && (
                       <ul className="mb-4 space-y-2 rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
-                        {booking.session.memorizations.map((m) => (
+                        {formSession.memorizations.map((m) => (
                           <li key={m.id} className="text-sm">
                             {m.surahName}{m.surahNameAr ? ` (${m.surahNameAr})` : ''}
                             {m.isFullSurah ? ' — ' + (isRTL ? 'سورة كاملة' : 'Full surah') : m.fromAyah != null && m.toAyah != null ? ` — ${m.fromAyah}-${m.toAyah}` : ''}
@@ -565,12 +755,12 @@ const BookingDetail = () => {
                     </form>
                   </div>
 
-                  {/* مراجعة */}
+                  {/* Revision – for selected session */}
                   <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{isRTL ? 'مراجعة' : 'Revision'}</h3>
-                    {booking.session.revisions?.length > 0 && (
+                    {formSession.revisions?.length > 0 && (
                       <ul className="mb-4 space-y-2 rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
-                        {booking.session.revisions.map((r) => (
+                        {formSession.revisions.map((r) => (
                           <li key={r.id} className="text-sm">
                             {r.revisionType} / {r.rangeType}
                             {r.fromSurah && r.toSurah && ` — ${r.fromSurah} to ${r.toSurah}`}
@@ -618,13 +808,13 @@ const BookingDetail = () => {
                     </form>
                   </div>
 
-                  {/* التقييم */}
+                  {/* Session evaluation – for selected session */}
                   <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{isRTL ? 'تقييم الجلسة' : 'Session evaluation'}</h3>
-                    {booking.session.report && (
+                    {formSession.report && (
                       <div className="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
-                        <p className="text-sm text-gray-700 dark:text-gray-300">{booking.session.report.content}</p>
-                        {booking.session.report.rating != null && <p className="mt-2 text-sm font-medium">{isRTL ? 'التقييم' : 'Rating'}: {booking.session.report.rating}/5</p>}
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{formSession.report.content}</p>
+                        {formSession.report.rating != null && <p className="mt-2 text-sm font-medium">{isRTL ? 'التقييم' : 'Rating'}: {formSession.report.rating}/5</p>}
                       </div>
                     )}
                     <form onSubmit={handleSaveReport} className="space-y-3">
@@ -655,18 +845,21 @@ const BookingDetail = () => {
                 <FiCalendar />
                 {isRTL ? 'الجلسات السابقة مع هذا الطالب' : 'Past sessions with this student'}
               </h2>
-              {!booking.pastSessions?.length ? (
-                <p className="text-gray-500 dark:text-gray-400">{isRTL ? 'لا توجد جلسات سابقة.' : 'No past sessions.'}</p>
-              ) : (
-                <ul className="space-y-3">
-                  {booking.pastSessions.map((b) => (
-                    <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 py-3 px-4 dark:border-gray-600">
-                      <span className="font-medium text-gray-900 dark:text-white">{new Date(b.date).toLocaleDateString(locale)} {b.startTime}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{b.session?.duration != null ? `${b.session.duration} min` : ''}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {(() => {
+                const pastSlots = booking.pastSessions?.flatMap((b) => (b.bookingSessions || []).filter((bs) => bs.session?.endedAt).map((bs) => ({ ...bs }))) || [];
+                return !pastSlots.length ? (
+                  <p className="text-gray-500 dark:text-gray-400">{isRTL ? 'لا توجد جلسات سابقة.' : 'No past sessions.'}</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {pastSlots.map((bs) => (
+                      <li key={bs.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 py-3 px-4 dark:border-gray-600">
+                        <span className="font-medium text-gray-900 dark:text-white">{new Date(bs.scheduledDate).toLocaleDateString(locale)} {bs.startTime}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{bs.session?.duration != null ? `${bs.session.duration} min` : ''}</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -715,7 +908,7 @@ const BookingDetail = () => {
               <div className="border-t border-primary-200 pt-3 dark:border-primary-700">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-gray-900 dark:text-white">{t('bookings.totalAmount')}</span>
-                  <span className="text-xl font-bold text-gray-900 dark:text-white">${(booking.totalPrice || booking.price || 0).toFixed(2)}</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(booking.totalPrice || booking.price || 0)}</span>
                 </div>
               </div>
             </div>
@@ -724,7 +917,7 @@ const BookingDetail = () => {
           {booking.payment && (
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{t('bookings.paymentInfo')}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{t('bookings.amountPaid')}: <strong className="text-gray-900 dark:text-white">${Number(booking.payment.amount).toFixed(2)}</strong></p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('bookings.amountPaid')}: <strong className="text-gray-900 dark:text-white">{formatCurrency(Number(booking.payment.amount))}</strong></p>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t('bookings.paymentStatus')}: <span className={cn('rounded px-2 py-0.5 text-xs font-semibold', getStatusBadge(booking.payment.status))}>{booking.payment.status}</span></p>
             </div>
           )}

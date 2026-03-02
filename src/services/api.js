@@ -111,6 +111,7 @@ export const adminAPI = {
 
   // Payments
   getPayments: (params) => api.get('/admin/payments', { params }),
+  getPaymentById: (id) => api.get(`/admin/payments/${id}`),
   getPaymentStats: () => api.get('/admin/payments/stats'),
 
   // Reports
@@ -150,6 +151,12 @@ export const adminAPI = {
 // Audit / Activity Logs API
 export const auditAPI = {
   getLogs: (params) => api.get('/audit/logs', { params }),
+};
+
+// System settings API (public GET; PATCH requires super admin)
+export const settingsAPI = {
+  getSettings: () => api.get('/settings'),
+  updateSettings: (data) => api.patch('/settings', data),
 };
 
 // Subscriptions API
@@ -253,19 +260,25 @@ export const certificateAPI = {
 
 // Reviews API
 export const reviewAPI = {
-  createReview: (bookingId, data) => api.post(`/reviews/bookings/${bookingId}`, data),
+  getAll: (params) => api.get('/reviews', { params }),
+  getById: (id) => api.get(`/reviews/${id}`),
   getTeacherReviews: (teacherId) => api.get(`/reviews/teachers/${teacherId}`),
+  createReview: (bookingId, data) => api.post(`/reviews/bookings/${bookingId}`, data),
   updateReview: (bookingId, data) => api.put(`/reviews/bookings/${bookingId}`, data),
   deleteReview: (bookingId) => api.delete(`/reviews/bookings/${bookingId}`),
+  updateById: (id, data) => api.put(`/reviews/${id}`, data),
+  deleteById: (id) => api.delete(`/reviews/${id}`),
+  suspend: (id) => api.patch(`/reviews/${id}/suspend`),
+  activate: (id) => api.patch(`/reviews/${id}/activate`),
 };
 
-// Sessions API
+// Sessions API (bookingSessionId = one slot of a booking)
 export const sessionAPI = {
   listMySessions: (params) => api.get('/sessions', { params }),
-  createSession: (bookingId, data) => api.post(`/sessions/bookings/${bookingId}`, data),
-  getSession: (bookingId) => api.get(`/sessions/bookings/${bookingId}`),
-  startSession: (bookingId) => api.post(`/sessions/bookings/${bookingId}/start`),
-  endSession: (bookingId, data) => api.post(`/sessions/bookings/${bookingId}/end`, data),
+  createSession: (bookingSessionId, data) => api.post(`/sessions/booking-sessions/${bookingSessionId}`, data),
+  getSession: (bookingSessionId) => api.get(`/sessions/booking-sessions/${bookingSessionId}`),
+  startSession: (bookingSessionId) => api.post(`/sessions/booking-sessions/${bookingSessionId}/start`),
+  endSession: (bookingSessionId, data) => api.post(`/sessions/booking-sessions/${bookingSessionId}/end`, data),
   getSessionDetails: (sessionId) => api.get(`/sessions/${sessionId}/details`),
   saveMemorization: (sessionId, data) => api.post(`/sessions/${sessionId}/memorization`, data),
   getMemorizations: (sessionId) => api.get(`/sessions/${sessionId}/memorization`),
@@ -298,11 +311,12 @@ export const financeAPI = {
   completePayout: (id) => api.post(`/finance/payouts/${id}/complete`),
 };
 
-// Notification API (User notifications)
+// Notification API (User notifications - inbox for logged-in user)
 export const notificationAPI = {
-  getNotifications: (unreadOnly) => api.get('/notifications', { params: { unreadOnly } }),
-  markAsRead: (id) => api.put(`/notifications/${id}/read`),
-  markAllAsRead: () => api.put('/notifications/read-all'),
+  getNotifications: (params) => api.get('/notifications', { params: params || {} }),
+  markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`),
   sendNotification: (data) => api.post('/notifications/send', data),
   broadcastNotification: (data) => api.post('/notifications/broadcast', data),
 };
@@ -332,6 +346,8 @@ export const bookingAPI = {
   confirmBooking: (id) => api.post(`/bookings/${id}/confirm`),
   cancelBooking: (id) => api.post(`/bookings/${id}/cancel`),
   rejectBooking: (id) => api.post(`/bookings/${id}/reject`),
+  updateBookingSession: (bookingId, bookingSessionId, data) =>
+    api.patch(`/bookings/${bookingId}/sessions/${bookingSessionId}`, data),
 };
 
 // Payment API
@@ -354,13 +370,13 @@ export const fileUploadAPI = {
   uploadImage: (formData) => api.post('/files/upload/image', formData),
 };
 
-// Video API
+// Video API (bookingSessionId = one slot of a booking)
 export const videoAPI = {
-  createSession: (bookingId) => api.post('/video/session/create', { bookingId }),
-  getSessionToken: (bookingId) => api.get(`/video/session/token/${bookingId}`),
+  createSession: (bookingSessionId) => api.post('/video/session/create', { bookingSessionId }),
+  getSessionToken: (bookingSessionId) => api.get(`/video/session/token/${bookingSessionId}`),
   getTestToken: (channelName, uid) => api.get('/video/session/test-token', { params: { channelName, uid } }),
-  endSession: (bookingId) => api.post('/video/session/end', { bookingId }),
-  getSessionHistory: () => api.get('/video/session/history'),
+  endSession: (bookingSessionId) => api.post('/video/session/end', { bookingSessionId }),
+  getSessionHistory: (bookingSessionId) => api.get('/video/session/history', { params: bookingSessionId ? { bookingSessionId } : {} }),
 };
 
 export default api;

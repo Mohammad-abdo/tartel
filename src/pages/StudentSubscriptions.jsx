@@ -5,6 +5,7 @@ import { studentSubscriptionAPI } from '../services/api';
 import { FiPackage, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 import PackageModal from '../components/PackageModal';
 import SubscribeModal from '../components/SubscribeModal';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +15,7 @@ const StudentSubscriptions = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
@@ -245,10 +247,10 @@ const StudentSubscriptions = () => {
                             {pkg.maxTeachers ? `${pkg.maxTeachers} ${t('packages.teachers')}` : t('subscriptions.unlimited')}
                           </td>
                           <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                            {pkg.monthlyPrice ? `$${pkg.monthlyPrice.toFixed(2)}` : '-'}
+                            {pkg.monthlyPrice ? formatCurrency(pkg.monthlyPrice) : '-'}
                           </td>
                           <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                            {pkg.yearlyPrice ? `$${pkg.yearlyPrice.toFixed(2)}` : '-'}
+                            {pkg.yearlyPrice ? formatCurrency(pkg.yearlyPrice) : '-'}
                           </td>
                           <td className="px-6 py-4">
                             <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', pkg.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')}>

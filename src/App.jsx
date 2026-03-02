@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Login from './pages/Login';
@@ -30,13 +31,13 @@ import Profile from './pages/Profile';
 import UserDetail from './pages/UserDetail';
 import TeacherDetail from './pages/TeacherDetail';
 import BookingDetail from './pages/BookingDetail';
+import SessionEdit from './pages/SessionEdit';
 import PaymentDetail from './pages/PaymentDetail';
 import FawryTestPage from './pages/FawryTestPage';
 import SubscriptionCallback from './pages/SubscriptionCallback';
 import AgoraTestHost from './pages/AgoraTestHost';
 import AgoraTestJoin from './pages/AgoraTestJoin';
-
-
+import Unauthorized from './pages/Unauthorized';
 import CourseDetail from './pages/CourseDetail';
 import AddUser from './pages/AddUser';
 import EditUser from './pages/EditUser';
@@ -180,6 +181,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <BookingDetail />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions/:sessionId/edit"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SessionEdit />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -445,6 +456,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
@@ -455,10 +467,12 @@ function App() {
     <Router>
       <LanguageProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <AppRoutes />
-            <ThemedToastContainer />
-          </AuthProvider>
+          <CurrencyProvider>
+            <AuthProvider>
+              <AppRoutes />
+              <ThemedToastContainer />
+            </AuthProvider>
+          </CurrencyProvider>
         </ThemeProvider>
       </LanguageProvider>
     </Router>

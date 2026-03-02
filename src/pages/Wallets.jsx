@@ -23,6 +23,7 @@ import {
 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { useCurrency } from '../context/CurrencyContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import {
@@ -39,6 +40,7 @@ import { cn } from '../lib/utils';
 const Wallets = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('teacher');
@@ -223,7 +225,7 @@ const Wallets = () => {
               إجمالي الأرصدة
             </p>
             <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-              ${stats.totalBalance.toFixed(2)}
+              {formatCurrency(stats.totalBalance)}
             </p>
             <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
               <FiDollarSign className="size-5" />
@@ -237,7 +239,7 @@ const Wallets = () => {
                 الأرصدة المعلقة
               </p>
               <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
-                ${stats.pendingBalance.toFixed(2)}
+                {formatCurrency(stats.pendingBalance)}
               </p>
               <div className="mt-3 flex size-11 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400">
                 <FiClock className="size-5" />
@@ -345,6 +347,7 @@ const Wallets = () => {
                 goToDetail={goToDetail}
                 ownerName={ownerName}
                 ownerEmail={ownerEmail}
+                formatCurrency={formatCurrency}
               />
             ) : (
               <div className="p-6">
@@ -358,6 +361,7 @@ const Wallets = () => {
                       ownerName={ownerName}
                       ownerEmail={ownerEmail}
                       onClick={() => goToDetail(wallet)}
+                      formatCurrency={formatCurrency}
                     />
                   ))}
                 </div>
@@ -395,6 +399,7 @@ const Wallets = () => {
                 goToDetail={goToDetail}
                 ownerName={ownerName}
                 ownerEmail={ownerEmail}
+                formatCurrency={formatCurrency}
               />
             ) : (
               <div className="p-6">
@@ -408,6 +413,7 @@ const Wallets = () => {
                       ownerName={ownerName}
                       ownerEmail={ownerEmail}
                       onClick={() => goToDetail(wallet)}
+                      formatCurrency={formatCurrency}
                     />
                   ))}
                 </div>
@@ -447,7 +453,7 @@ const Wallets = () => {
 };
 
 // مكون كارت المحفظة
-function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick }) {
+function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick, formatCurrency }) {
   return (
     <div
       className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-200 hover:border-purple-200 dark:hover:border-purple-800 hover:shadow-md cursor-pointer"
@@ -505,7 +511,7 @@ function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick }
           <div className="text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الرصيد المتاح</p>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              ${(wallet.balance ?? 0).toFixed(2)}
+              {formatCurrency(wallet.balance ?? 0)}
             </p>
           </div>
 
@@ -527,7 +533,7 @@ function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick }
                   إجمالي الأرباح
                 </p>
                 <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                  ${(wallet.totalEarned ?? 0).toFixed(2)}
+                  {formatCurrency(wallet.totalEarned ?? 0)}
                 </p>
               </div>
             </div>
@@ -539,7 +545,7 @@ function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick }
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">الرصيد المعلق:</span>
                 <span className="font-semibold text-orange-600 dark:text-orange-400">
-                  ${(wallet.pendingBalance ?? 0).toFixed(2)}
+                  {formatCurrency(wallet.pendingBalance ?? 0)}
                 </span>
               </div>
             </div>
@@ -577,6 +583,7 @@ function WalletsTable({
   goToDetail,
   ownerName,
   ownerEmail,
+  formatCurrency,
 }) {
   return (
     <Table>
@@ -638,7 +645,7 @@ function WalletsTable({
               </div>
             </TableCell>
             <TableCell className="px-6 py-4 text-sm font-semibold text-purple-600 dark:text-purple-400 whitespace-nowrap">
-              ${(wallet.balance ?? 0).toFixed(2)}
+              {formatCurrency(wallet.balance ?? 0)}
             </TableCell>
             {activeTab === 'teacher' && (
               <>
@@ -649,10 +656,10 @@ function WalletsTable({
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                  ${(wallet.totalEarned ?? 0).toFixed(2)}
+                  {formatCurrency(wallet.totalEarned ?? 0)}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm font-medium text-orange-600 dark:text-orange-400 whitespace-nowrap">
-                  ${(wallet.pendingBalance ?? 0).toFixed(2)}
+                  {formatCurrency(wallet.pendingBalance ?? 0)}
                 </TableCell>
               </>
             )}
