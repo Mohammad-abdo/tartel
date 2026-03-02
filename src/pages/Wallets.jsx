@@ -347,6 +347,7 @@ const Wallets = () => {
                 goToDetail={goToDetail}
                 ownerName={ownerName}
                 ownerEmail={ownerEmail}
+                formatCurrency={formatCurrency}
               />
             ) : (
               <div className="p-6">
@@ -360,6 +361,7 @@ const Wallets = () => {
                       ownerName={ownerName}
                       ownerEmail={ownerEmail}
                       onClick={() => goToDetail(wallet)}
+                      formatCurrency={formatCurrency}
                     />
                   ))}
                 </div>
@@ -397,6 +399,7 @@ const Wallets = () => {
                 goToDetail={goToDetail}
                 ownerName={ownerName}
                 ownerEmail={ownerEmail}
+                formatCurrency={formatCurrency}
               />
             ) : (
               <div className="p-6">
@@ -410,6 +413,7 @@ const Wallets = () => {
                       ownerName={ownerName}
                       ownerEmail={ownerEmail}
                       onClick={() => goToDetail(wallet)}
+                      formatCurrency={formatCurrency}
                     />
                   ))}
                 </div>
@@ -449,7 +453,7 @@ const Wallets = () => {
 };
 
 // مكون كارت المحفظة
-function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick }) {
+function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick, formatCurrency }) {
   return (
     <div
       className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-200 hover:border-purple-200 dark:hover:border-purple-800 hover:shadow-md cursor-pointer"
@@ -579,6 +583,7 @@ function WalletsTable({
   goToDetail,
   ownerName,
   ownerEmail,
+  formatCurrency,
 }) {
   return (
     <Table>

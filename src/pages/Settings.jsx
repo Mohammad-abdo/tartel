@@ -55,15 +55,17 @@ const Settings = () => {
     const selected = currencies.find((c) => c.code === currencyCode) || currencies[0];
     setSavingCurrency(true);
     try {
-      await updateSettings({
+      const payload = {
         currencyCode: selected.code,
         currencySymbol: selected.symbol,
         currencyNameAr: selected.nameAr,
         currencyNameEn: selected.nameEn,
-      });
+      };
+      await updateSettings(payload);
       toast.success(t('settings.saved'));
-    } catch {
-      toast.error(t('common.error'));
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || t('common.error');
+      toast.error(msg);
     } finally {
       setSavingCurrency(false);
     }

@@ -37,17 +37,9 @@ export const CurrencyProvider = ({ children }) => {
   const formatCurrency = useMemo(() => createFormatCurrency(currency), [currency]);
 
   const updateSettings = async (payload) => {
-    const res = await settingsAPI.updateSettings(payload);
-    const data = res?.data ?? res;
-    const c = data?.currency;
-    if (c && (c.code || c.symbol)) {
-      setCurrency({
-        code: c.code || defaultCurrency.code,
-        symbol: c.symbol ?? defaultCurrency.symbol,
-        nameAr: c.nameAr ?? defaultCurrency.nameAr,
-        nameEn: c.nameEn ?? defaultCurrency.nameEn,
-      });
-    }
+    await settingsAPI.updateSettings(payload);
+    // Always refetch from server so UI is in sync (handles backend response wrapper)
+    await refetch();
   };
 
   const value = useMemo(
