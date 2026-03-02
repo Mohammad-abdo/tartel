@@ -33,20 +33,31 @@ const PaymentDetail = () => {
 
   const fetchPayment = async () => {
     setLoading(true);
+    setPayment(null);
+    try {
+      // URL id is payment id: use admin API first (by payment id)
+      const adminResponse = await adminAPI.getPaymentById(id);
+      const data = adminResponse?.data;
+      if (data && typeof data === 'object' && (data.id || data.amount != null)) {
+        setPayment(data);
+        setLoading(false);
+        return;
+      }
+    } catch (e) {
+      if (e.response?.status !== 404) {
+        console.error('Failed to fetch payment by id:', e);
+      }
+    }
+    // Fallback: maybe id is bookingId (payment by booking)
     try {
       const response = await paymentAPI.getPaymentByBooking(id);
-      setPayment(response.data);
+      const data = response?.data;
+      if (data && typeof data === 'object' && (data.id || data.amount != null)) {
+        setPayment(data);
+      }
     } catch (error) {
       if (error.response?.status !== 404) {
-        console.error('Failed to fetch payment:', error);
-      }
-      try {
-        const adminResponse = await adminAPI.getPaymentById(id);
-        setPayment(adminResponse.data);
-      } catch (e) {
-        if (e.response?.status !== 404) {
-          console.error('Failed to fetch payment by id:', e);
-        }
+        console.error('Failed to fetch payment by booking:', error);
       }
     } finally {
       setLoading(false);
@@ -347,20 +358,20 @@ const PaymentDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <div className="overflow-hidden rounded-2xl border border-primary-200 dark:border-primary-800 bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg p-6 text-white">
-            <h3 className="text-lg font-semibold mb-4">{t('payments.paymentSummary')}</h3>
+          <div className="overflow-hidden rounded-2xl border border-primary-600 dark:border-primary-600 bg-primary-600 dark:bg-primary-700 shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-white">{t('payments.paymentSummary')}</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/20 pb-3">
-                <span className="text-primary-100">{t('payments.amount')}</span>
-                <span className="text-2xl font-bold">{formatCurrency(payment.amount ?? 0)}</span>
+              <div className="flex items-center justify-between border-b border-white/30 pb-3">
+                <span className="text-white/90">{t('payments.amount')}</span>
+                <span className="text-2xl font-bold text-white">{formatCurrency(payment.amount ?? 0)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-100">{t('payments.paymentMethod')}</span>
-                <span className="font-semibold">{getPaymentMethodLabel(payment.paymentMethod)}</span>
+                <span className="text-white/90">{t('payments.paymentMethod')}</span>
+                <span className="font-semibold text-white">{getPaymentMethodLabel(payment.paymentMethod)}</span>
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                <span className="text-primary-100">{t('payments.transactionId')}</span>
-                <span className="text-xs font-mono truncate max-w-[120px]" title={payment.id}>
+              <div className="flex items-center justify-between pt-3 border-t border-white/30">
+                <span className="text-white/90">{t('payments.transactionId')}</span>
+                <span className="text-xs font-mono text-white truncate max-w-[120px]" title={payment.id}>
                   {payment.id?.slice(0, 8)}…
                 </span>
               </div>
