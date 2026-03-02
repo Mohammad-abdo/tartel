@@ -379,18 +379,20 @@ const Teachers = () => {
                           </div>
                         )}
 
+
                         {/* Statistics */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="text-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg">
-                            <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                        <div className="flex justify-center gap-3 w-full max-w-xs">
+                        { teacher.teacherType === 'COURSE_SHEIKH'&& (
+                          <div className="flex-1 text-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg">
+                            <div className=" text-lg font-bold text-emerald-700 dark:text-emerald-300">
                               {teacher._count?.courses || 0}
                             </div>
                             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-alexandria">
                               {isRTL ? 'دورة' : 'Courses'}
                             </div>
-                          </div>
+                          </div>)}
                           
-                          <div className="text-center p-2 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-lg">
+                          <div className="flex-1 text-center p-2 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-lg">
                             <div className="text-lg font-bold text-amber-700 dark:text-amber-300">
                               {teacher.yearsOfExperience || 0}
                             </div>

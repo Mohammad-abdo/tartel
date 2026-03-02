@@ -352,6 +352,66 @@ export const videoAPI = {
   endSession: (bookingId) => api.post('/video/session/end', { bookingId }),
   getSessionHistory: () => api.get('/video/session/history'),
 };
+//Hero slider
 
+export const heroAPI = {
+  // GET /hero/slides - Get active slides (public)
+  getActive: async () => {
+    const response = await api.get('/hero/slides');
+    return response.data;
+  },
+  
+  // GET /hero/slides/all - Get all slides (admin)
+  getAll: async () => {
+    const response = await api.get('/hero/slides/all');
+    return response.data;
+  },
+  
+  // GET /hero/slides/:id - Get single slide by ID (admin)
+  getById: async (id) => {
+    const response = await api.get(`/hero/slides/${id}`);
+    return response.data;
+  },
+  
+  // POST /hero/slides - Create new slide with image (admin)
+  create: async (formData) => {
+    const response = await api.post('/hero/slides', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  
+  // PATCH /hero/slides/:id - Update slide with image (admin)
+  update: async (id, formData) => {
+    const response = await api.patch(`/hero/slides/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  
+  // DELETE /hero/slides/:id - Delete slide (admin)
+  delete: async (id) => {
+    const response = await api.delete(`/hero/slides/${id}`);
+    return response.data;
+  },
+  
+  // POST /hero/slides/reorder - Reorder slides (admin)
+  reorder: async (slides) => {
+    const response = await api.post('/hero/slides/reorder', { slides });
+    return response.data;
+  },
+  
+  // PATCH /hero/slides/:id/toggle - Toggle slide active status (admin)
+  toggleActive: async (id, isActive) => {
+    const response = await api.patch(`/hero/slides/${id}/toggle`, { isActive });
+    return response.data;
+  },
+  
+  // POST /hero/initialize - Initialize default slider (admin)
+  initialize: async () => {
+    const response = await api.post('/hero/initialize');
+    return response.data;
+  }
+};
 export default api;
 

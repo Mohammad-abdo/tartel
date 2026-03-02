@@ -29,7 +29,7 @@ const Subscriptions = () => {
         const response = await subscriptionAPI.getAllPackages(false);
         setPackages(response.data || []);
       } else {
-        const response = await subscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
+        const response = await subscriptionAPI.getAllPackages({ page, limit: 20, status: statusFilter });
         setSubscriptions(response.data.data || []);
         setTotalPages(response.data.totalPages || 1);
       }
