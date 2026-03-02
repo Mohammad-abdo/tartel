@@ -79,13 +79,14 @@ const PaymentDetail = () => {
     return key && t(key) !== key ? t(key) : status || '—';
   };
 
-  const getPaymentMethodLabel = (method) => {
-    if (!method) return '—';
-    const upper = (method || '').toUpperCase();
+  const getPaymentMethodLabel = (method, payment) => {
+    // المنصة تستخدم فوري فقط — أي وسيلة أخرى أو فارغة نعرضها فوري
+    const upper = (method || '').toUpperCase().replace(/\s/g, '');
     if (upper === 'FAWRY') return t('payments.methodFawry');
     if (upper === 'PAYATFAWRY' || upper === 'PAY_AT_FAWRY') return t('payments.methodPayAtFawry');
-    if (upper === 'CARD' || upper === 'STRIPE') return upper === 'STRIPE' ? t('payments.methodStripe') : t('payments.methodCard');
-    return method;
+    if (payment?.fawryRefNumber || payment?.merchantRefNum) return t('payments.methodFawry');
+    if (!method || ['STRIPE', 'CARD', 'MADA', 'APPLE_PAY', 'APPLEPAY'].includes(upper)) return t('payments.methodFawry');
+    return t('payments.methodFawry');
   };
 
   const getPaymentTypeLabel = (type) => {
@@ -186,7 +187,7 @@ const PaymentDetail = () => {
                     {t('payments.paymentMethod')}
                   </p>
                   <p className="text-gray-900 dark:text-white font-medium">
-                    {getPaymentMethodLabel(payment.paymentMethod)}
+                    {getPaymentMethodLabel(payment.paymentMethod, payment)}
                   </p>
                 </div>
                 <div>
@@ -358,20 +359,20 @@ const PaymentDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <div className="overflow-hidden rounded-2xl border border-primary-600 dark:border-primary-600 bg-primary-600 dark:bg-primary-700 shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 text-white">{t('payments.paymentSummary')}</h3>
+          <div className="overflow-hidden rounded-2xl border border-slate-600 bg-slate-800 shadow-lg p-6 dark:bg-slate-800 dark:border-slate-600">
+            <h3 className="text-lg font-semibold mb-4 text-slate-100">{t('payments.paymentSummary')}</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/30 pb-3">
-                <span className="text-white/90">{t('payments.amount')}</span>
+              <div className="flex items-center justify-between border-b border-slate-600 pb-3">
+                <span className="text-slate-300">{t('payments.amount')}</span>
                 <span className="text-2xl font-bold text-white">{formatCurrency(payment.amount ?? 0)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-white/90">{t('payments.paymentMethod')}</span>
-                <span className="font-semibold text-white">{getPaymentMethodLabel(payment.paymentMethod)}</span>
+                <span className="text-slate-300">{t('payments.paymentMethod')}</span>
+                <span className="font-semibold text-white">{getPaymentMethodLabel(payment.paymentMethod, payment)}</span>
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-white/30">
-                <span className="text-white/90">{t('payments.transactionId')}</span>
-                <span className="text-xs font-mono text-white truncate max-w-[120px]" title={payment.id}>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-600">
+                <span className="text-slate-300">{t('payments.transactionId')}</span>
+                <span className="text-xs font-mono text-slate-100 truncate max-w-[120px]" title={payment.id}>
                   {payment.id?.slice(0, 8)}…
                 </span>
               </div>
