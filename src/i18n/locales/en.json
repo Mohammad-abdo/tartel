@@ -309,7 +309,21 @@
         "certificateN": "Certificate {{n}}",
         "teacherType": "Sheikh Type",
         "fullTeacher": "Full Teacher (Bookings & Schedules)",
-        "courseSheikh": "Course Sheikh (Courses, Wallet, No Bookings)"
+        "courseSheikh": "Course Sheikh (Courses, Wallet, No Bookings)",
+        "workSchedule": "Work Schedule",
+        "workScheduleDesc": "Set the sheikh's weekly availability. These slots will be available for students to book.",
+        "scheduleOverlap": "There is an overlap in schedules for this day. Please check the times.",
+        "noSchedules": "No schedules set",
+        "addWorkSchedule": "Add weekly work schedules for the sheikh",
+        "addSchedule": "Add work slot",
+        "addAnotherSchedule": "Add another slot",
+        "day": "Day",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "deleteSchedule": "Remove slot",
+        "scheduleNote": "The sheikh can edit work schedules later from their dashboard.",
+        "hourlyRateRequired": "Hourly rate is required for full sheikhs.",
+        "invalidScheduleTime": "Start time must be before end time."
     },
     "bookings": {
         "title": "Bookings",
