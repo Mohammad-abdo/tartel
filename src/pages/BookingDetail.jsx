@@ -23,6 +23,7 @@ import {
   FiBook,
 } from 'react-icons/fi';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 
 function formatDate(d, locale = 'en-US') {
   if (!d) return '—';
@@ -44,6 +45,7 @@ const BookingDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
   const [booking, setBooking] = useState(null);
@@ -491,7 +493,7 @@ const BookingDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{t('bookings.totalAmount')}</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">${(booking.totalPrice || booking.price || 0).toFixed(2)}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{formatCurrency(booking.totalPrice || booking.price || 0)}</p>
                   </div>
                 </div>
                 {booking.notes && (
@@ -906,7 +908,7 @@ const BookingDetail = () => {
               <div className="border-t border-primary-200 pt-3 dark:border-primary-700">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-gray-900 dark:text-white">{t('bookings.totalAmount')}</span>
-                  <span className="text-xl font-bold text-gray-900 dark:text-white">${(booking.totalPrice || booking.price || 0).toFixed(2)}</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(booking.totalPrice || booking.price || 0)}</span>
                 </div>
               </div>
             </div>
@@ -915,7 +917,7 @@ const BookingDetail = () => {
           {booking.payment && (
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{t('bookings.paymentInfo')}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{t('bookings.amountPaid')}: <strong className="text-gray-900 dark:text-white">${Number(booking.payment.amount).toFixed(2)}</strong></p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('bookings.amountPaid')}: <strong className="text-gray-900 dark:text-white">{formatCurrency(Number(booking.payment.amount))}</strong></p>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t('bookings.paymentStatus')}: <span className={cn('rounded px-2 py-0.5 text-xs font-semibold', getStatusBadge(booking.payment.status))}>{booking.payment.status}</span></p>
             </div>
           )}

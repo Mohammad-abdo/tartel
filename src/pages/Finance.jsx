@@ -9,11 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Skeleton } from '../components/ui/skeleton';
 import { downloadExcel } from '../utils/exportExcel';
 import { cn } from '../lib/utils';
+import { useCurrency } from '../context/CurrencyContext';
 
 const Finance = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
@@ -202,7 +204,7 @@ const Finance = () => {
     return badges[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
   };
 
-  const formatMoney = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  const formatMoney = formatCurrency;
 
   const exportPayoutsToExcel = () => {
     const rows = payouts.map((p) => ({

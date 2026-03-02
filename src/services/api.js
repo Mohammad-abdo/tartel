@@ -152,6 +152,12 @@ export const auditAPI = {
   getLogs: (params) => api.get('/audit/logs', { params }),
 };
 
+// System settings API (public GET; PATCH requires super admin)
+export const settingsAPI = {
+  getSettings: () => api.get('/settings'),
+  updateSettings: (data) => api.patch('/settings', data),
+};
+
 // Subscriptions API
 export const subscriptionAPI = {
   getAllPackages: (activeOnly) => api.get('/subscriptions/packages', { params: { activeOnly } }),

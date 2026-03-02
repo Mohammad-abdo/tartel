@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Login from './pages/Login';
@@ -466,10 +467,12 @@ function App() {
     <Router>
       <LanguageProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <AppRoutes />
-            <ThemedToastContainer />
-          </AuthProvider>
+          <CurrencyProvider>
+            <AuthProvider>
+              <AppRoutes />
+              <ThemedToastContainer />
+            </AuthProvider>
+          </CurrencyProvider>
         </ThemeProvider>
       </LanguageProvider>
     </Router>

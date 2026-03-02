@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { FiSettings, FiBell, FiShield, FiGlobe, FiSave } from 'react-icons/fi';
+import { FiSettings, FiBell, FiShield, FiGlobe, FiSave, FiDollarSign } from 'react-icons/fi';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -22,12 +24,20 @@ const cardVariants = {
 const Settings = () => {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
+  const { user } = useAuth();
+  const { currency, formatCurrency, updateSettings, currencies } = useCurrency();
+  const canEditCurrency = user?.role === 'SUPER_ADMIN';
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
     bookingReminders: true,
   });
   const [saving, setSaving] = useState(false);
+  const [currencyCode, setCurrencyCode] = useState(currency?.code || 'EGP');
+  const [savingCurrency, setSavingCurrency] = useState(false);
+  useEffect(() => {
+    if (currency?.code) setCurrencyCode(currency.code);
+  }, [currency?.code]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -38,6 +48,24 @@ const Settings = () => {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveCurrency = async () => {
+    const selected = currencies.find((c) => c.code === currencyCode) || currencies[0];
+    setSavingCurrency(true);
+    try {
+      await updateSettings({
+        currencyCode: selected.code,
+        currencySymbol: selected.symbol,
+        currencyNameAr: selected.nameAr,
+        currencyNameEn: selected.nameEn,
+      });
+      toast.success(t('settings.saved'));
+    } catch {
+      toast.error(t('common.error'));
+    } finally {
+      setSavingCurrency(false);
     }
   };
 
@@ -117,6 +145,43 @@ const Settings = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {canEditCurrency && (
+        <motion.div variants={cardVariants}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FiDollarSign className="size-5 text-primary-600" />
+                {language === 'ar' ? 'العملة (النظام)' : 'Currency (System)'}
+              </CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                {language === 'ar' ? 'العملة الموحدة لعرض المبالغ في كل النظام. يقتصر التعديل على الأدمن.' : 'Unified currency for all amounts across the system. Only admins can change it.'}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  value={currencyCode}
+                  onChange={(e) => setCurrencyCode(e.target.value)}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white min-w-[180px]"
+                >
+                  {currencies.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} — {language === 'ar' ? c.nameAr : c.nameEn} ({c.symbol})
+                    </option>
+                  ))}
+                </select>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {language === 'ar' ? 'مثال:' : 'Example:'} {formatCurrency(99.5)}
+                </span>
+                <Button onClick={handleSaveCurrency} disabled={savingCurrency}>
+                  {savingCurrency ? t('common.loading') : t('common.save')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       <motion.div variants={cardVariants}>
         <Card>

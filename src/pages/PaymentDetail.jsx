@@ -12,10 +12,12 @@ import {
   FiRefreshCw,
   FiTrendingUp,
 } from 'react-icons/fi';
+import { useCurrency } from '../context/CurrencyContext';
 
 const PaymentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -120,7 +122,7 @@ const PaymentDetail = () => {
                   Amount
                 </label>
                 <p className="text-4xl font-bold text-gray-900">
-                  ${((payment.amount || 0) / 100).toFixed(2)}
+                  {formatCurrency(payment.amount || 0)}
                 </p>
               </div>
               <div>
@@ -192,7 +194,7 @@ const PaymentDetail = () => {
                       {payment.booking.status}
                     </span>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
-                      ${(payment.booking.totalPrice || payment.booking.price || 0).toFixed(2)}
+                      {formatCurrency(payment.booking.totalPrice || payment.booking.price || 0)}
                     </p>
                   </div>
                 </div>
@@ -251,7 +253,7 @@ const PaymentDetail = () => {
               <div className="flex justify-between items-center pb-3 border-b border-white/20">
                 <span className="text-primary-100">Amount</span>
                 <span className="text-2xl font-bold">
-                  ${((payment.amount || 0) / 100).toFixed(2)}
+                  {formatCurrency(payment.amount || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
