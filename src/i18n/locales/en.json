@@ -409,7 +409,14 @@
         "backToPayments": "Back to Payments",
         "paymentNotFound": "Payment not found",
         "userInfo": "User Information",
-        "empty": "No payments found"
+        "empty": "No payments found",
+        "statusPending": "Pending",
+        "statusCompleted": "Completed",
+        "statusFailed": "Failed",
+        "statusRefunded": "Refunded",
+        "typeBooking": "Booking",
+        "typeSubscription": "Subscription",
+        "typeCourse": "Course"
     },
     "courses": {
         "title": "Courses",

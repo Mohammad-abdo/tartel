@@ -410,7 +410,14 @@
     "backToPayments": "العودة للمدفوعات",
     "paymentNotFound": "لم يتم العثور على الدفع",
     "userInfo": "معلومات المستخدم",
-    "empty": "لا توجد مدفوعات"
+    "empty": "لا توجد مدفوعات",
+    "statusPending": "قيد الانتظار",
+    "statusCompleted": "مكتمل",
+    "statusFailed": "فاشل",
+    "statusRefunded": "مسترد",
+    "typeBooking": "حجز",
+    "typeSubscription": "اشتراك",
+    "typeCourse": "دورة"
   },
   "courses": {
     "title": "الدورات",
