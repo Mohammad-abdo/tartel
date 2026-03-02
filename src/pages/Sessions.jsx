@@ -121,7 +121,7 @@ const Sessions = () => {
         const res = await adminAPI.getSessions({
           page,
           limit: 20,
-          ...(bookingIdSearch && { bookingId: bookingIdSearch }),
+          ...(bookingIdSearch && { bookingSessionId: bookingIdSearch }),
           ...(dateFrom && { dateFrom }),
           ...(dateTo && { dateTo }),
           ...(statusFilter && { status: statusFilter }),
@@ -153,11 +153,12 @@ const Sessions = () => {
   };
 
   const handleJoinVideo = async (session) => {
-    const bid = session.bookingId;
+    const bookingSessionId = session.bookingSessionId ?? session.bookingId;
+    if (!bookingSessionId) return;
     setJoinLoading(true);
     setJoinModal(null);
     try {
-      const tokenRes = await videoAPI.getSessionToken(bid);
+      const tokenRes = await videoAPI.getSessionToken(bookingSessionId);
       const data = tokenRes?.data ?? tokenRes;
       const appId = (data.appId || import.meta.env.VITE_AGORA_APP_ID || '').trim();
       const token = data.token ?? data.agoraToken;
@@ -170,7 +171,7 @@ const Sessions = () => {
         return;
       }
       const uid = user?.id ? Math.abs(String(user.id).split('').reduce((a, c) => (a << 5) - a + c.charCodeAt(0), 0)) % 100000 : 1;
-      setJoinModal({ appId, token, channelName, uid, bookingId: bid });
+      setJoinModal({ appId, token, channelName, uid, bookingSessionId });
     } catch (e) {
       setJoinModal({ error: e?.response?.data?.message || e?.message || (isRTL ? 'فشل الحصول على الجلسة' : 'Failed to get session') });
     } finally {
@@ -180,7 +181,7 @@ const Sessions = () => {
 
   const canJoinSession = (session) => {
     if (!user?.id) return false;
-    const b = session.booking;
+    const b = session.bookingSession?.booking ?? session.booking;
     if (!b) return false;
     const teacherUserId = b.teacher?.userId ?? b.teacher?.user?.id;
     return b.studentId === user.id || teacherUserId === user.id;
@@ -264,19 +265,20 @@ const Sessions = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {sessions.map((session) => {
-                    const b = session.booking || {};
+                    const b = session.bookingSession?.booking ?? session.booking ?? {};
                     const teacher = b.teacher?.user || b.teacher;
                     const student = b.student;
+                    const slotDate = session.bookingSession?.scheduledDate ?? b.date;
                     const started = session.startedAt;
                     const ended = session.endedAt;
                     const status = ended ? (isRTL ? 'منتهية' : 'Ended') : started ? (isRTL ? 'جارية' : 'Active') : (isRTL ? 'لم تبدأ' : 'Not started');
                     const canJoin = canJoinSession(session);
                     return (
                       <tr key={session.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{session.bookingId?.slice(0, 8)}…</td>
+                        <td className="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{session.bookingSessionId?.slice(0, 8) ?? session.bookingId?.slice(0, 8) ?? '—'}…</td>
                         <td className="px-4 py-3">{nameOf(teacher, isRTL)}</td>
                         <td className="px-4 py-3">{nameOf(student, isRTL)}</td>
-                        <td className="px-4 py-3">{formatDate(b.date)}</td>
+                        <td className="px-4 py-3">{formatDate(slotDate)}</td>
                         <td className="px-4 py-3 font-mono text-xs">{session.roomId?.slice(0, 12)}…</td>
                         <td className="px-4 py-3">{formatDate(session.startedAt)}</td>
                         <td className="px-4 py-3">{formatDate(session.endedAt)}</td>

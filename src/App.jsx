@@ -30,6 +30,7 @@ import Profile from './pages/Profile';
 import UserDetail from './pages/UserDetail';
 import TeacherDetail from './pages/TeacherDetail';
 import BookingDetail from './pages/BookingDetail';
+import SessionEdit from './pages/SessionEdit';
 import PaymentDetail from './pages/PaymentDetail';
 import FawryTestPage from './pages/FawryTestPage';
 import SubscriptionCallback from './pages/SubscriptionCallback';
@@ -180,6 +181,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <BookingDetail />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sessions/:sessionId/edit"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SessionEdit />
             </DashboardLayout>
           </ProtectedRoute>
         }

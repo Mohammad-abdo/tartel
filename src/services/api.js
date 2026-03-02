@@ -249,13 +249,13 @@ export const reviewAPI = {
   deleteReview: (bookingId) => api.delete(`/reviews/bookings/${bookingId}`),
 };
 
-// Sessions API
+// Sessions API (bookingSessionId = one slot of a booking)
 export const sessionAPI = {
   listMySessions: (params) => api.get('/sessions', { params }),
-  createSession: (bookingId, data) => api.post(`/sessions/bookings/${bookingId}`, data),
-  getSession: (bookingId) => api.get(`/sessions/bookings/${bookingId}`),
-  startSession: (bookingId) => api.post(`/sessions/bookings/${bookingId}/start`),
-  endSession: (bookingId, data) => api.post(`/sessions/bookings/${bookingId}/end`, data),
+  createSession: (bookingSessionId, data) => api.post(`/sessions/booking-sessions/${bookingSessionId}`, data),
+  getSession: (bookingSessionId) => api.get(`/sessions/booking-sessions/${bookingSessionId}`),
+  startSession: (bookingSessionId) => api.post(`/sessions/booking-sessions/${bookingSessionId}/start`),
+  endSession: (bookingSessionId, data) => api.post(`/sessions/booking-sessions/${bookingSessionId}/end`, data),
   getSessionDetails: (sessionId) => api.get(`/sessions/${sessionId}/details`),
   saveMemorization: (sessionId, data) => api.post(`/sessions/${sessionId}/memorization`, data),
   getMemorizations: (sessionId) => api.get(`/sessions/${sessionId}/memorization`),
@@ -322,6 +322,8 @@ export const bookingAPI = {
   confirmBooking: (id) => api.post(`/bookings/${id}/confirm`),
   cancelBooking: (id) => api.post(`/bookings/${id}/cancel`),
   rejectBooking: (id) => api.post(`/bookings/${id}/reject`),
+  updateBookingSession: (bookingId, bookingSessionId, data) =>
+    api.patch(`/bookings/${bookingId}/sessions/${bookingSessionId}`, data),
 };
 
 // Payment API
@@ -344,13 +346,13 @@ export const fileUploadAPI = {
   uploadImage: (formData) => api.post('/files/upload/image', formData),
 };
 
-// Video API
+// Video API (bookingSessionId = one slot of a booking)
 export const videoAPI = {
-  createSession: (bookingId) => api.post('/video/session/create', { bookingId }),
-  getSessionToken: (bookingId) => api.get(`/video/session/token/${bookingId}`),
+  createSession: (bookingSessionId) => api.post('/video/session/create', { bookingSessionId }),
+  getSessionToken: (bookingSessionId) => api.get(`/video/session/token/${bookingSessionId}`),
   getTestToken: (channelName, uid) => api.get('/video/session/test-token', { params: { channelName, uid } }),
-  endSession: (bookingId) => api.post('/video/session/end', { bookingId }),
-  getSessionHistory: () => api.get('/video/session/history'),
+  endSession: (bookingSessionId) => api.post('/video/session/end', { bookingSessionId }),
+  getSessionHistory: (bookingSessionId) => api.get('/video/session/history', { params: bookingSessionId ? { bookingSessionId } : {} }),
 };
 
 export default api;
