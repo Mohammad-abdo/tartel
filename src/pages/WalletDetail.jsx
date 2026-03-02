@@ -203,6 +203,7 @@ const WalletDetail = () => {
   const totalHours = wallet?.totalHours ?? 0;            // ← session-based (from creditFromSession)
   const totalWorkedHours = wallet?.totalWorkedHours ?? 0; // ← booking-duration-based (cross-check)
   const totalEarnedFromBookings = wallet?.totalEarnedFromBookings ?? (totalWorkedHours * hourPrice);
+  const totalEarnedFromSessions = wallet?.totalEarnedFromSessions ?? null; // صافي من معاملات الجلسات فقط
   const txPagination = studentTx.pagination;
 
   if (loading && !wallet) {
@@ -566,28 +567,38 @@ const WalletDetail = () => {
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">سعر الساعة</p>
                 <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatAmount(hourPrice)}</p>
               </div>
-              {/* إجمالي الأرباح */}
+              {/* إجمالي الأرباح من الساعات المعروضة (قبل الرسوم) */}
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-700/30">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي الأرباح (محسوبة)</p>
-                <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatAmount(totalEarnedFromBookings)}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي الأرباح (محسوبة من الساعات)</p>
+                <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatAmount(totalHours * hourPrice)}</p>
+                <p className="mt-1 text-xs text-gray-500">قبل خصم رسوم المنصة</p>
               </div>
               {/* المعادلة */}
               <div className="lg:col-span-2 rounded-xl border border-indigo-200 dark:border-indigo-700 p-4 bg-indigo-50/50 dark:bg-indigo-900/20">
-                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">معادلة الاحتساب</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">معادلة الاحتساب (من الساعات المسجلة)</p>
                 <p className="mt-2 text-sm font-mono text-gray-700 dark:text-gray-300">
                   {Number(totalHours).toFixed(2)} ساعة × {formatAmount(hourPrice)}
                 </p>
-                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">= {formatAmount(totalHours * hourPrice)}</p>
-                <p className="mt-1 text-xs text-gray-500">(صافي بعد رسوم المنصة: {formatAmount(wallet.totalEarned ?? 0)})</p>
+                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">= {formatAmount(totalHours * hourPrice)} <span className="text-xs font-normal text-gray-500">(إجمالي قبل رسوم المنصة)</span></p>
+                {totalEarnedFromSessions != null && (
+                  <p className="mt-2 text-xs text-indigo-600 dark:text-indigo-400">
+                    صافي من الجلسات فقط (من سجل المعاملات): <strong>{formatAmount(totalEarnedFromSessions)}</strong>
+                  </p>
+                )}
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 text-sm">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                الرصيد المرسل: <strong className="text-emerald-600 dark:text-emerald-400">{formatAmount(wallet.totalEarned ?? 0)}</strong>
-              </span>
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                الرصيد المتاح: <strong className="text-purple-600 dark:text-purple-400">{formatAmount(wallet.balance ?? 0)}</strong>
-              </span>
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                إجمالي المرسل من المحفظة يشمل أرباح الجلسات وأي تحويلات يدوية أو إضافات أخرى منذ بداية العمل.
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  الرصيد المرسل (إجمالي الاعتمادات): <strong className="text-emerald-600 dark:text-emerald-400">{formatAmount(wallet.totalEarned ?? 0)}</strong>
+                </span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  الرصيد المتاح: <strong className="text-purple-600 dark:text-purple-400">{formatAmount(wallet.balance ?? 0)}</strong>
+                </span>
+              </div>
             </div>
           </div>
         </div>

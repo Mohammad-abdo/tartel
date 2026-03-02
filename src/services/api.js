@@ -243,10 +243,16 @@ export const certificateAPI = {
 
 // Reviews API
 export const reviewAPI = {
-  createReview: (bookingId, data) => api.post(`/reviews/bookings/${bookingId}`, data),
+  getAll: (params) => api.get('/reviews', { params }),
+  getById: (id) => api.get(`/reviews/${id}`),
   getTeacherReviews: (teacherId) => api.get(`/reviews/teachers/${teacherId}`),
+  createReview: (bookingId, data) => api.post(`/reviews/bookings/${bookingId}`, data),
   updateReview: (bookingId, data) => api.put(`/reviews/bookings/${bookingId}`, data),
   deleteReview: (bookingId) => api.delete(`/reviews/bookings/${bookingId}`),
+  updateById: (id, data) => api.put(`/reviews/${id}`, data),
+  deleteById: (id) => api.delete(`/reviews/${id}`),
+  suspend: (id) => api.patch(`/reviews/${id}/suspend`),
+  activate: (id) => api.patch(`/reviews/${id}/activate`),
 };
 
 // Sessions API
@@ -288,11 +294,12 @@ export const financeAPI = {
   completePayout: (id) => api.post(`/finance/payouts/${id}/complete`),
 };
 
-// Notification API (User notifications)
+// Notification API (User notifications - inbox for logged-in user)
 export const notificationAPI = {
-  getNotifications: (unreadOnly) => api.get('/notifications', { params: { unreadOnly } }),
-  markAsRead: (id) => api.put(`/notifications/${id}/read`),
-  markAllAsRead: () => api.put('/notifications/read-all'),
+  getNotifications: (params) => api.get('/notifications', { params: params || {} }),
+  markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`),
   sendNotification: (data) => api.post('/notifications/send', data),
   broadcastNotification: (data) => api.post('/notifications/broadcast', data),
 };

@@ -38,13 +38,13 @@ export const AuthProvider = ({ children }) => {
     if (!user) return user;
     if (user.name) return user;
     const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
-    return { ...user, name: name || user.email };
+    return { ...user, name: name || user.email, permissions: user.permissions ?? [] };
   };
 
   const login = async (email, password) => {
     try {
       const response = await authAPI.login(email, password);
-      const { accessToken, user: rawUser } = response.data ?? {};
+      const { accessToken, user: rawUser } = response.data ?? response ?? {};
       
       if (!accessToken || !rawUser) {
         return {

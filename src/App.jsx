@@ -35,8 +35,7 @@ import FawryTestPage from './pages/FawryTestPage';
 import SubscriptionCallback from './pages/SubscriptionCallback';
 import AgoraTestHost from './pages/AgoraTestHost';
 import AgoraTestJoin from './pages/AgoraTestJoin';
-
-
+import Unauthorized from './pages/Unauthorized';
 import CourseDetail from './pages/CourseDetail';
 import AddUser from './pages/AddUser';
 import EditUser from './pages/EditUser';
@@ -445,6 +444,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
