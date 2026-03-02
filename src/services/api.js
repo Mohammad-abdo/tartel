@@ -111,6 +111,7 @@ export const adminAPI = {
 
   // Payments
   getPayments: (params) => api.get('/admin/payments', { params }),
+  getPaymentById: (id) => api.get(`/admin/payments/${id}`),
   getPaymentStats: () => api.get('/admin/payments/stats'),
 
   // Reports

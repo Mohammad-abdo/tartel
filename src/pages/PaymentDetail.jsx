@@ -35,13 +35,11 @@ const PaymentDetail = () => {
         console.error('Failed to fetch payment:', error);
       }
       try {
-        const adminResponse = await adminAPI.getPayments({ page: 1, limit: 100 });
-        const payments = adminResponse.data.payments || adminResponse.data.data || [];
-        const found = payments.find((p) => p.id === id);
-        if (found) setPayment(found);
+        const adminResponse = await adminAPI.getPaymentById(id);
+        setPayment(adminResponse.data);
       } catch (e) {
-        if (error.response?.status !== 404) {
-          console.error('Failed to fetch from admin:', e);
+        if (e.response?.status !== 404) {
+          console.error('Failed to fetch payment by id:', e);
         }
       }
     } finally {
