@@ -102,6 +102,7 @@ export const adminAPI = {
 
   // Bookings
   getBookings: (params) => api.get('/admin/bookings', { params }),
+  getBookingTeachersWalletReport: () => api.get('/admin/bookings/teachers-wallet-report'),
   forceCancelBooking: (id) => api.post(`/admin/bookings/${id}/force-cancel`),
   forceConfirmBooking: (id) => api.post(`/admin/bookings/${id}/force-confirm`),
   exportBookings: (status) => api.get('/admin/bookings/export', { params: { status } }),
@@ -255,6 +256,13 @@ export const sessionAPI = {
   getSession: (bookingId) => api.get(`/sessions/bookings/${bookingId}`),
   startSession: (bookingId) => api.post(`/sessions/bookings/${bookingId}/start`),
   endSession: (bookingId, data) => api.post(`/sessions/bookings/${bookingId}/end`, data),
+  getSessionDetails: (sessionId) => api.get(`/sessions/${sessionId}/details`),
+  saveMemorization: (sessionId, data) => api.post(`/sessions/${sessionId}/memorization`, data),
+  getMemorizations: (sessionId) => api.get(`/sessions/${sessionId}/memorization`),
+  saveRevision: (sessionId, data) => api.post(`/sessions/${sessionId}/revision`, data),
+  getRevisions: (sessionId) => api.get(`/sessions/${sessionId}/revisions`),
+  saveReport: (sessionId, data) => api.post(`/sessions/${sessionId}/report`, data),
+  getReport: (sessionId) => api.get(`/sessions/${sessionId}/report`),
 };
 
 // Student Subscriptions API
@@ -309,6 +317,7 @@ export const bookingAPI = {
   createBooking: (data) => api.post('/bookings', data),
   getMyBookings: (status) => api.get('/bookings/my-bookings', { params: { status } }),
   getBookingById: (id) => api.get(`/bookings/${id}`),
+  getBookingDetails: (id) => api.get(`/bookings/${id}/details`),
   getTeacherSubscriptionPackages: (teacherId) => api.get(`/bookings/teacher/${teacherId}/subscription-packages`),
   confirmBooking: (id) => api.post(`/bookings/${id}/confirm`),
   cancelBooking: (id) => api.post(`/bookings/${id}/cancel`),

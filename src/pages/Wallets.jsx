@@ -19,6 +19,7 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiClock,
+  FiBookOpen,
 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -502,15 +503,39 @@ function WalletCard({ wallet, activeTab, isRTL, ownerName, ownerEmail, onClick }
         <div className="grid grid-cols-1 gap-4">
           {/* Main balance */}
           <div className="text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الرصيد الحالي</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الرصيد المتاح</p>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               ${(wallet.balance ?? 0).toFixed(2)}
             </p>
           </div>
-          
+
+          {/* Teacher: totalHours + totalEarned */}
+          {activeTab === 'teacher' && (
+            <div className="border-t border-gray-100 dark:border-gray-700 pt-4 grid grid-cols-2 gap-3">
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1">
+                  <FiBookOpen className="size-3" />
+                  ساعات التدريس
+                </p>
+                <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                  {Number(wallet.totalHours ?? 0).toFixed(2)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1">
+                  <FiTrendingUp className="size-3" />
+                  إجمالي الأرباح
+                </p>
+                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                  ${(wallet.totalEarned ?? 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Pending balance (for teachers only) */}
           {activeTab === 'teacher' && (
-            <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">الرصيد المعلق:</span>
                 <span className="font-semibold text-orange-600 dark:text-orange-400">
@@ -572,13 +597,17 @@ function WalletsTable({
             الرصيد الحالي
           </TableHead>
           {activeTab === 'teacher' && (
-            <TableHead
-              className={cn(
-                'px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 text-start'
-              )}
-            >
-              الرصيد المعلق
-            </TableHead>
+            <>
+              <TableHead className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 text-start')}>
+                ساعات التدريس
+              </TableHead>
+              <TableHead className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 text-start')}>
+                إجمالي الأرباح
+              </TableHead>
+              <TableHead className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 text-start')}>
+                الرصيد المعلق
+              </TableHead>
+            </>
           )}
           <TableHead
             className={cn(
@@ -612,9 +641,20 @@ function WalletsTable({
               ${(wallet.balance ?? 0).toFixed(2)}
             </TableCell>
             {activeTab === 'teacher' && (
-              <TableCell className="px-6 py-4 text-sm font-medium text-orange-600 dark:text-orange-400 whitespace-nowrap">
-                ${(wallet.pendingBalance ?? 0).toFixed(2)}
-              </TableCell>
+              <>
+                <TableCell className="px-6 py-4 text-sm font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                  <span className="flex items-center gap-1">
+                    <FiBookOpen className="size-3" />
+                    {Number(wallet.totalHours ?? 0).toFixed(2)}h
+                  </span>
+                </TableCell>
+                <TableCell className="px-6 py-4 text-sm font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                  ${(wallet.totalEarned ?? 0).toFixed(2)}
+                </TableCell>
+                <TableCell className="px-6 py-4 text-sm font-medium text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                  ${(wallet.pendingBalance ?? 0).toFixed(2)}
+                </TableCell>
+              </>
             )}
             <TableCell className="px-6 py-4 whitespace-nowrap">
               <span

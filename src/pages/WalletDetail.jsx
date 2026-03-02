@@ -24,6 +24,7 @@ import {
   FiCalendar,
   FiEye,
   FiActivity,
+  FiBookOpen,
 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
@@ -78,10 +79,14 @@ const WalletDetail = () => {
     try {
       if (isTeacher) {
         const response = await adminAPI.getTeacherWallet(id);
-        setWallet(response.data || response);
+        const raw = response?.data ?? response;
+        const walletData = raw?.data ?? raw;
+        setWallet(typeof walletData === 'object' && walletData !== null ? walletData : {});
       } else {
         const response = await adminAPI.getStudentWallet(id);
-        setWallet(response.data || response);
+        const raw = response?.data ?? response;
+        const walletData = raw?.data ?? raw;
+        setWallet(typeof walletData === 'object' && walletData !== null ? walletData : {});
       }
     } catch (error) {
       console.error('Failed to fetch wallet:', error);
@@ -193,6 +198,11 @@ const WalletDetail = () => {
     : (wallet?.student && [wallet.student.firstName, wallet.student.lastName].filter(Boolean).join(' ')) || '—';
   const displayEmail = isTeacher ? wallet?.teacher?.user?.email : wallet?.student?.email;
   const transactions = isTeacher ? (wallet?.transactions || []) : studentTx.transactions;
+
+  const hourPrice = wallet?.hourlyRate ?? wallet?.hourPrice ?? wallet?.teacher?.hourlyRate ?? 0;
+  const totalHours = wallet?.totalHours ?? 0;            // ← session-based (from creditFromSession)
+  const totalWorkedHours = wallet?.totalWorkedHours ?? 0; // ← booking-duration-based (cross-check)
+  const totalEarnedFromBookings = wallet?.totalEarnedFromBookings ?? (totalWorkedHours * hourPrice);
   const txPagination = studentTx.pagination;
 
   if (loading && !wallet) {
@@ -370,13 +380,13 @@ const WalletDetail = () => {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* الرصيد الحالي */}
+        {/* الرصيد الحالي (المتبقي) */}
         <div className="overflow-hidden rounded-2xl border border-purple-200 dark:border-purple-800/50 bg-white dark:bg-gray-800 shadow-sm">
           <div className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  الرصيد الحالي
+                  {isTeacher ? 'المتبقي (الرصيد الحالي)' : 'الرصيد الحالي'}
                 </p>
                 <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
                   {formatAmount(wallet.balance)}
@@ -435,13 +445,13 @@ const WalletDetail = () => {
               </div>
             </div>
 
-            {/* إجمالي الأرباح */}
+            {/* الرصيد المرسل / إجمالي الأرباح */}
             <div className="overflow-hidden rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-gray-800 shadow-sm">
               <div className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      إجمالي الأرباح
+                      الرصيد المرسل (إجمالي الأرباح)
                     </p>
                     <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                       {formatAmount(wallet.totalEarned)}
@@ -530,6 +540,58 @@ const WalletDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* عملية الحساب من الحجوزات: عدد الساعات + سعر الساعة + المبلغ المحسوب + الرصيد المرسل + المتبقي + المعاملات */}
+      {isTeacher && (
+        <div className="rounded-2xl border border-indigo-200 dark:border-indigo-800/50 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-indigo-50/50 dark:bg-indigo-900/20">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <FiDollarSign className="text-indigo-600 dark:text-indigo-400" />
+              العملية الحسابية لأرباح الشيخ — ساعات التدريس الفعلية
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              يتم احتساب الأرباح تلقائيًا لحظة انتهاء كل جلسة: عدد الساعات × سعر الساعة
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {/* الساعات من الجلسات الفعلية */}
+              <div className="lg:col-span-1 rounded-xl border-2 border-indigo-300 dark:border-indigo-600 p-4 bg-indigo-50/80 dark:bg-indigo-900/30">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">ساعات التدريس الفعلية</p>
+                <p className="mt-2 text-2xl font-bold text-indigo-700 dark:text-indigo-300">{Number(totalHours).toFixed(2)} ساعة</p>
+                <p className="mt-1 text-xs text-indigo-500 dark:text-indigo-400">من الجلسات المكتملة</p>
+              </div>
+              {/* سعر الساعة */}
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-700/30">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">سعر الساعة</p>
+                <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatAmount(hourPrice)}</p>
+              </div>
+              {/* إجمالي الأرباح */}
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-700/30">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي الأرباح (محسوبة)</p>
+                <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatAmount(totalEarnedFromBookings)}</p>
+              </div>
+              {/* المعادلة */}
+              <div className="lg:col-span-2 rounded-xl border border-indigo-200 dark:border-indigo-700 p-4 bg-indigo-50/50 dark:bg-indigo-900/20">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">معادلة الاحتساب</p>
+                <p className="mt-2 text-sm font-mono text-gray-700 dark:text-gray-300">
+                  {Number(totalHours).toFixed(2)} ساعة × {formatAmount(hourPrice)}
+                </p>
+                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">= {formatAmount(totalHours * hourPrice)}</p>
+                <p className="mt-1 text-xs text-gray-500">(صافي بعد رسوم المنصة: {formatAmount(wallet.totalEarned ?? 0)})</p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 text-sm">
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                الرصيد المرسل: <strong className="text-emerald-600 dark:text-emerald-400">{formatAmount(wallet.totalEarned ?? 0)}</strong>
+              </span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                الرصيد المتاح: <strong className="text-purple-600 dark:text-purple-400">{formatAmount(wallet.balance ?? 0)}</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* طلبات السحب للمشايخ */}
       {isTeacher && (
@@ -627,12 +689,12 @@ const WalletDetail = () => {
         </div>
       )}
 
-      {/* المعاملات المالية */}
+      {/* المعاملات التي حدثت */}
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <FiActivity className="text-purple-600 dark:text-purple-400" />
-            تاريخ المعاملات المالية
+            المعاملات التي حدثت (تاريخ المعاملات المالية)
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             عرض جميع العمليات المالية التي تمت على هذه المحفظة
@@ -675,11 +737,18 @@ const WalletDetail = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={cn(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
-                          (tx.type === 'CREDIT' || tx.type === 'DEPOSIT') 
-                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                            : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                          tx.type === 'SESSION_EARNING'
+                            ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                            : (tx.type === 'CREDIT' || tx.type === 'DEPOSIT')
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         )}>
-                          {(tx.type === 'CREDIT' || tx.type === 'DEPOSIT') ? (
+                          {tx.type === 'SESSION_EARNING' ? (
+                            <>
+                              <FiBookOpen className="size-3" />
+                              أرباح جلسة
+                            </>
+                          ) : (tx.type === 'CREDIT' || tx.type === 'DEPOSIT') ? (
                             <>
                               <FiTrendingUp className="size-3" />
                               إيداع
@@ -695,11 +764,13 @@ const WalletDetail = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={cn(
                           'tabular-nums text-sm font-bold',
-                          (tx.type === 'CREDIT' || tx.type === 'DEPOSIT') 
-                            ? 'text-emerald-600 dark:text-emerald-400' 
-                            : 'text-red-600 dark:text-red-400'
+                          tx.type === 'SESSION_EARNING'
+                            ? 'text-indigo-600 dark:text-indigo-400'
+                            : (tx.type === 'CREDIT' || tx.type === 'DEPOSIT')
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-red-600 dark:text-red-400'
                         )}>
-                          {(tx.type === 'CREDIT' || tx.type === 'DEPOSIT') ? '+' : '-'}{formatAmount(tx.amount)}
+                          {tx.type !== 'WITHDRAWAL' && tx.type !== 'PAYMENT' ? '+' : '-'}{formatAmount(tx.amount)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{tx.description || 'بدون وصف'}</td>

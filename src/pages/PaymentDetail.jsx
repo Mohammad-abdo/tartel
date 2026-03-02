@@ -260,7 +260,7 @@ const PaymentDetail = () => {
               </div>
               <div className="flex justify-between items-center pt-3 border-t border-white/20">
                 <span className="text-primary-100">Payment ID</span>
-                <span className="text-xs font-mono">{payment.id.slice(0, 8)}...</span>
+                <span className="text-xs font-mono">{(payment?.id ?? '').toString().slice(0, 8)}{payment?.id ? '...' : '—'}</span>
               </div>
             </div>
           </div>

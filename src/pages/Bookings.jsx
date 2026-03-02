@@ -21,9 +21,11 @@ const Bookings = () => {
   const [sortByDate, setSortByDate] = useState('newest');
   const [viewMode, setViewMode] = useState('admin');
   const [viewLayout, setViewLayout] = useState('cards'); // 'cards' | 'table'
+  const [schemaError, setSchemaError] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
+    setSchemaError(null);
     try {
       if (viewMode === 'admin') {
         const params = { page, limit: 20, ...(statusFilter && { status: statusFilter }) };
@@ -40,6 +42,15 @@ const Bookings = () => {
       }
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
+      const msg = error.response?.data?.message || error.message;
+      const detail = error.response?.data?.detail;
+      const code = error.response?.data?.code;
+      if (error.response?.status === 503 && (code === 'MIGRATION_NEEDED' || /schema|migration|database/i.test(msg || ''))) {
+        setSchemaError(detail ? `${msg} — ${detail}` : msg);
+        toast.error(detail ? `${msg} — ${detail}` : msg, { autoClose: 10000 });
+      } else if (msg && error.response?.status >= 400) {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -178,6 +189,16 @@ const Bookings = () => {
           </div>
         </div>
       </section>
+
+      {schemaError && (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/30 p-4 font-alexandria" role="alert">
+          <p className="font-semibold text-amber-800 dark:text-amber-200">{isRTL ? 'قاعدة البيانات تحتاج تحديث' : 'Database schema update required'}</p>
+          <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">{schemaError}</p>
+          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+            {isRTL ? 'في مجلد الـ backend نفّذ: npx prisma migrate deploy' : 'In the backend folder run: npx prisma migrate deploy'}
+          </p>
+        </div>
+      )}
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
