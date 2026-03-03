@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
-// const API_BASE_URL = 'http://localhost:3001/api';
+// const API_BASE_URL = 'http://localhost:8002/api';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
 
 // Create axios instance
@@ -438,6 +438,87 @@ export const heroAPI = {
     const response = await api.post('/hero/initialize');
     return response.data;
   }
+};
+//  Subscription Packages API )
+export const subscriptionPackagesAPI = {
+  /**
+   * Get all subscription packages
+   * @param {boolean} activeOnly - Filter only active packages
+   * @returns {Promise} List of packages
+   */
+  getAllPackages: (activeOnly = false) => 
+    api.get('/subscription-packages/packages', { params: { activeOnly } }),
+
+  /**
+   * Get package by ID
+   * @param {string} id - Package ID
+   * @returns {Promise} Package details
+   */
+  getPackageById: (id) => 
+    api.get(`/subscription-packages/packages/${id}`),
+
+  /**
+   * Create a new package (Admin only)
+   * @param {Object} data - Package data
+   * @returns {Promise} Created package
+   */
+  createPackage: (data) => 
+    api.post('/subscription-packages/packages', data),
+
+  /**
+   * Update a package (Admin only)
+   * @param {string} id - Package ID
+   * @param {Object} data - Updated package data
+   * @returns {Promise} Updated package
+   */
+  updatePackage: (id, data) => 
+    api.put(`/subscription-packages/packages/${id}`, data),
+
+  /**
+   * Delete a package (Admin only)
+   * @param {string} id - Package ID
+   * @returns {Promise} Deletion result
+   */
+  deletePackage: (id) => 
+    api.delete(`/subscription-packages/packages/${id}`),
+
+  /**
+   * Get all subscriptions (Admin only)
+   * @param {Object} params - Query params (page, limit, status)
+   * @returns {Promise} Paginated subscriptions
+   */
+  getAllSubscriptions: (params) => 
+    api.get('/subscription-packages/admin/all', { params }),
+
+  /**
+   * Get current user's subscriptions
+   * @returns {Promise} List of user's subscriptions
+   */
+  getMySubscriptions: () => 
+    api.get('/subscription-packages/my-subscriptions'),
+
+  /**
+   * Get current user's active subscription
+   * @returns {Promise} Active subscription or null
+   */
+  getMyActive: () => 
+    api.get('/subscription-packages/my-active'),
+
+  /**
+   * Subscribe to a package
+   * @param {Object} data - Subscription data { packageId, paymentId }
+   * @returns {Promise} Created subscription
+   */
+  subscribe: (data) => 
+    api.post('/subscription-packages/subscribe', data),
+
+  /**
+   * Cancel a subscription
+   * @param {string} id - Subscription ID
+   * @returns {Promise} Cancelled subscription
+   */
+  cancel: (id) => 
+    api.post(`/subscription-packages/cancel/${id}`),
 };
 export default api;
 

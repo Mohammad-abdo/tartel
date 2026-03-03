@@ -9,27 +9,21 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
-
-  //  UPDATED: Removed maxTeachers, added period for fixed packages
   const [formData, setFormData] = useState({
     name: '',
     nameAr: '',
     description: '',
     descriptionAr: '',
-    packageType: 'fixed', //  'fixed', 'monthly', 'weekly', 'yearly'
+    packageType: 'monthly',
     price: '',
-    period: '', // For all package types (fixed packages also have period)
-    periodUnit: 'months', // 'weeks', 'months', or 'years'
+    period: '1',
     sessionsPerMonth: '',
-    maxBookings: '',
-    maxCourses: '',
     isActive: true,
     isPopular: false,
   });
 
   const [loading, setLoading] = useState(false);
 
-  //  UPDATED: useEffect with new structure (removed maxTeachers)
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -37,13 +31,10 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         nameAr: initialData.nameAr || '',
         description: initialData.description || '',
         descriptionAr: initialData.descriptionAr || '',
-        packageType: initialData.packageType || 'fixed',
+        packageType: initialData.packageType || 'monthly',
         price: initialData.price || '',
-        period: initialData.period || '', // 🎯 Now used for all packages
-        periodUnit: initialData.periodUnit || 'months',
-        sessionsPerMonth: initialData.sessionsPerMonth ?? initialData.totalSessions ?? initialData.maxBookings ?? '',
-        maxBookings: initialData.maxBookings || '',
-        maxCourses: initialData.maxCourses || '',
+        period: initialData.period || '1',
+        sessionsPerMonth: initialData.sessionsPerMonth ?? initialData.totalSessions ?? '',
         isActive: initialData.isActive !== undefined ? initialData.isActive : true,
         isPopular: initialData.isPopular || false,
       });
@@ -53,20 +44,65 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         nameAr: '',
         description: '',
         descriptionAr: '',
-        packageType: 'fixed',
+        packageType: 'monthly',
         price: '',
-        period: '', // 🎯 Now used for all packages
-        periodUnit: 'months',
+        period: '1',
         sessionsPerMonth: '',
-        maxBookings: '',
-        maxCourses: '',
         isActive: true,
         isPopular: false,
       });
     }
   }, [initialData, isOpen]);
 
-  
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const getPeriodUnitLabel = (packageType, period) => {
+    const numPeriod = parseInt(period) || 1;
+    
+    switch (packageType) {
+      case 'daily':
+        return numPeriod === 1 ? t('common.day') : t('common.days');
+      case 'weekly':
+        return numPeriod === 1 ? t('common.week') : t('common.weeks');
+      case 'monthly':
+        return numPeriod === 1 ? t('common.month') : t('common.months');
+      case 'yearly':
+        return numPeriod === 1 ? t('common.year') : t('common.years');
+      default:
+        return numPeriod === 1 ? t('common.day') : t('common.days');
+    }
+  };
+
+  const getPeriodPlaceholder = (packageType) => {
+    switch (packageType) {
+      case 'daily':
+        return t('packages.numberOfDays');
+      case 'weekly':
+        return t('packages.numberOfWeeks');
+      case 'monthly':
+        return t('packages.numberOfMonths');
+      case 'yearly':
+        return t('packages.numberOfYears');
+      default:
+        return t('packages.price');
+    }
+  };
+
+  // Check if package type should show sessions per month
+  const shouldShowSessionsPerMonth = () => {
+    return formData.packageType === 'monthly' || formData.packageType === 'yearly';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -78,21 +114,14 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         descriptionAr: formData.descriptionAr,
         packageType: formData.packageType,
         price: parseFloat(formData.price) || 0,
-        period: parseInt(formData.period) || 1, 
-        sessionsPerMonth: formData.sessionsPerMonth ? parseInt(formData.sessionsPerMonth) : null,
-        maxBookings: formData.maxBookings ? parseInt(formData.maxBookings) : null,
-        maxCourses: formData.maxCourses ? parseInt(formData.maxCourses) : null,
+        period: parseInt(formData.period) || 1,
+        // Only include sessionsPerMonth if it's applicable and has a value
+        sessionsPerMonth: shouldShowSessionsPerMonth() && formData.sessionsPerMonth 
+          ? parseInt(formData.sessionsPerMonth) 
+          : null,
         isActive: formData.isActive,
         isPopular: formData.isPopular,
       };
-
-      if (formData.packageType === 'fixed' || formData.packageType === 'weekly' || formData.packageType === 'monthly') {
-        data.periodUnit = formData.periodUnit;
-      }
-      // For yearly, periodUnit is always 'years'
-      else if (formData.packageType === 'yearly') {
-        data.periodUnit = 'years';
-      }
 
       await onSubmit(data);
       onClose();
@@ -103,24 +132,39 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     }
   };
 
+  const handleBackdropClick = (e) => {
+    // Only close if clicking the backdrop itself, not the modal content
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      onClick={handleBackdropClick}
+    >
       <div
-        className={cn('w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 shadow-2xl', isRTL && 'text-right')}
+        className={cn(
+          'w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 shadow-2xl',
+          'transform transition-all duration-300 ease-in-out',
+          'animate-in fade-in zoom-in-95',
+          isRTL && 'text-right'
+        )}
         dir={isRTL ? 'rtl' : 'ltr'}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {initialData ? t('packages.editPackageTitle') : t('packages.createPackageTitle')}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             <FiX className="size-5" />
           </button>
@@ -139,7 +183,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
               />
             </div>
             <div>
@@ -150,7 +194,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 type="text"
                 value={formData.nameAr}
                 onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
               />
             </div>
           </div>
@@ -165,7 +209,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none resize-none"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none resize-none transition-colors"
               />
             </div>
             <div>
@@ -176,12 +220,12 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 rows={3}
                 value={formData.descriptionAr}
                 onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none resize-none"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none resize-none transition-colors"
               />
             </div>
           </div>
 
-          {/*  Package Type Selection */}
+          {/* Package Type and Price */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -189,21 +233,17 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               </label>
               <select
                 value={formData.packageType}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  packageType: e.target.value,
-                  periodUnit: e.target.value === 'yearly' ? 'years' : formData.periodUnit
-                })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
               >
-                <option value="fixed">{t('packages.fixed')}</option>
-                <option value="monthly">{t('packages.monthly')}</option>
+                <option value="daily">{t('packages.daily')}</option>
                 <option value="weekly">{t('packages.weekly')}</option>
+                <option value="monthly">{t('packages.monthly')}</option>
                 <option value="yearly">{t('packages.yearly')}</option>
               </select>
             </div>
 
-            {/* Price Field - Always shown */}
+            {/* Price Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('packages.price')} ($) *
@@ -211,116 +251,87 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 required
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                placeholder={formData.packageType === 'fixed' ? 'One-time price' : `Price per ${formData.packageType}`}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                placeholder={t('packages.price')}
               />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t(`packages.${formData.packageType}`)}
+              </p>
             </div>
           </div>
 
-          {/* Period Field - For ALL package types (including fixed) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.period')} *
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={formData.period}
-                onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                placeholder={`Number of ${formData.periodUnit}`}
-              />
-            </div>
-
-            {/*Period Unit - Show for fixed, weekly, monthly as select (yearly stays fixed) */}
-            {(formData.packageType === 'fixed' || formData.packageType === 'weekly' || formData.packageType === 'monthly') && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('packages.periodUnit')}
-                </label>
-                <select
-                  value={formData.periodUnit}
-                  onChange={(e) => setFormData({ ...formData, periodUnit: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                >
-                  <option value="months">{t('common.months')}</option>
-                  {(formData.packageType === 'weekly' || formData.packageType === 'fixed') && (
-                    <option value="weeks">{t('common.weeks')}</option>
-                  )}
-                  {formData.packageType === 'fixed' && (
-                    <option value="days">{t('common.days')}</option>
-                  )}
-                </select>
+          {/* Period Field - With integrated unit */}
+          <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              {t('packages.duration')} *
+            </label>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={formData.period}
+                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                  placeholder={getPeriodPlaceholder(formData.packageType)}
+                />
               </div>
-            )}
-
-            {/* For yearly, keep it as text */}
-            {formData.packageType === 'yearly' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('packages.periodUnit')}
-                </label>
-                <div className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 px-4 py-2.5 text-gray-700 dark:text-gray-300">
-                  {t('common.years')}
+              
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  'px-4 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg text-orange-700 dark:text-orange-400 font-medium',
+                  'min-w-[100px] text-center'
+                )}>
+                  {getPeriodUnitLabel(formData.packageType, formData.period)}
                 </div>
               </div>
-            )}
+            </div>
+            
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {
+                t(`packages.${formData.packageType}`)
+              }
+            </p>
           </div>
 
-          {/* Limits */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {/* Conditional Sessions Per Month - Only for monthly/yearly packages */}
+          {shouldShowSessionsPerMonth() && (
+            <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 {t('packages.sessionsPerMonth')}
               </label>
+              
               <input
                 type="number"
                 min="1"
                 value={formData.sessionsPerMonth}
                 onChange={(e) => setFormData({ ...formData, sessionsPerMonth: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                placeholder={t('common.unlimited')}
               />
-            </div>
+              
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                              {t('packages.sessionsPerMonth')}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.maxBookings')}
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxBookings}
-                onChange={(e) => setFormData({ ...formData, maxBookings: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-              />
+              </p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.maxCourses')}
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxCourses}
-                onChange={(e) => setFormData({ ...formData, maxCourses: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-              />
-            </div>
-          </div>
+          )}
+
 
           {/* Checkboxes */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isActive}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="size-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                className="size-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 transition-colors"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('users.active')}</span>
             </label>
@@ -329,18 +340,18 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 type="checkbox"
                 checked={formData.isPopular}
                 onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
-                className="size-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                className="size-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 transition-colors"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('packages.isPopular')}</span>
             </label>
           </div>
 
           {/* Actions */}
-          <div className={cn('flex gap-3 pt-4', isRTL ? 'flex-row-reverse' : 'flex-row')}>
+          <div className={cn('flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700', isRTL ? 'flex-row-reverse' : 'flex-row')}>
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800"
+              className="flex-1 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-orange-700 hover:to-orange-800 disabled:opacity-50 transition-all"
             >
               {loading ? t('common.saving') : (initialData ? t('common.save') : t('common.add'))}
             </Button>
@@ -348,7 +359,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               type="button"
               onClick={onClose}
               variant="outline"
-              className="flex-1 rounded-xl border-gray-300 dark:border-gray-600"
+              className="flex-1 rounded-xl border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               {t('common.cancel')}
             </Button>

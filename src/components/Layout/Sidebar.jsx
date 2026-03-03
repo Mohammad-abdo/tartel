@@ -53,7 +53,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
     { path: '/agora-test-join', icon: FiVideo, label: language === 'ar' ? 'تجربة أجورا — طالب' : 'Agora test — Student' },
     { path: '/finance', icon: FiTrendingUp, label: t('sidebar.finance') },
     { path: '/wallets', icon: FiCreditCard, label: t('sidebar.wallets') },
-    { path: '/subscriptions', icon: FiBox, label: t('sidebar.subscriptions') },
+    // { path: '/subscriptions', icon: FiBox, label: t('sidebar.subscriptions') },
     { path: '/student-subscriptions', icon: FiBox, label: t('sidebar.packages') },
     { path: '/courses', icon: FiBook, label: t('sidebar.courses') },
     { path: '/content', icon: FiFile, label: t('sidebar.content') },

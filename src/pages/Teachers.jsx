@@ -265,9 +265,9 @@ const Teachers = () => {
                         {/* Avatar */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="relative">
-                            {teacher.user?.avatar ? (
+                            {teacher.image ? (
                               <img
-                                src={teacher.user.avatar}
+                                src={teacher.image}
                                 alt={fullName}
                                 className="w-20 h-20 rounded-full object-cover shadow-xl ring-4 ring-white/50 backdrop-blur-sm"
                                 onError={(e) => {
@@ -277,7 +277,7 @@ const Teachers = () => {
                               />
                             ) : null}
                             <div 
-                              className={`w-20 h-20 rounded-full bg-white dark:bg-gray-800 shadow-xl ring-4 ring-white/50 flex items-center justify-center ${teacher.user?.avatar ? 'hidden' : 'flex'}`}
+                              className={`w-20 h-20 rounded-full bg-white dark:bg-gray-800 shadow-xl ring-4 ring-white/50 flex items-center justify-center ${teacher.image ? 'hidden' : 'flex'}`}
                             >
                               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-alexandria">
                                 {teacher.user?.firstName?.charAt(0) || teacher.user?.name?.charAt(0) || teacher.user?.email?.charAt(0) || 'ش'}
@@ -493,9 +493,9 @@ const Teachers = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-4">
                               <div className="relative">
-                                {teacher.user?.avatar ? (
+                                {teacher.image ? (
                                   <img
-                                    src={teacher.user.avatar}
+                                    src={teacher.image}
                                     alt={fullName}
                                     className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-700"
                                     onError={(e) => {
