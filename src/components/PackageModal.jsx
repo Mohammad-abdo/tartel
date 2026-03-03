@@ -145,6 +145,7 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={handleBackdropClick}
+      style={{ isolation: 'isolate' }} 
     >
       <div
         className={cn(
