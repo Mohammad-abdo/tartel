@@ -13,6 +13,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    // Single React instance — avoids "Cannot set properties of undefined (setting 'Children')"
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   build: {
     outDir: 'dist',
@@ -20,21 +22,23 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Split vendor libraries for better caching
+          // All React-dependent libs in one chunk so they share a single React instance
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
+            if (
+              id.includes('react') ||
+              id.includes('react-dom') ||
+              id.includes('react-router') ||
+              id.includes('react-icons') ||
+              id.includes('react-toastify') ||
+              id.includes('react-i18next') ||
+              id.includes('recharts') ||
+              id.includes('framer-motion')
+            ) {
               return 'vendor';
             }
-            if (id.includes('react-router-dom')) {
-              return 'router';
-            }
-            if (id.includes('react-icons') || id.includes('react-toastify')) {
-              return 'ui';
-            }
-            if (id.includes('i18next') || id.includes('react-i18next')) {
+            if (id.includes('i18next') && !id.includes('react')) {
               return 'i18n';
             }
-            // Other node_modules
             return 'vendor-libs';
           }
         },
@@ -62,11 +66,14 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react/jsx-runtime',
       'react-router-dom',
       'axios',
       'react-i18next',
       'react-toastify',
       'react-icons/fi',
+      'recharts',
+      'framer-motion',
     ],
   },
 })
