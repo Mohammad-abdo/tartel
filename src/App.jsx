@@ -9,7 +9,7 @@ import { CurrencyProvider } from './context/CurrencyContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 import Users from './pages/Users';
 import Teachers from './pages/Teachers';
 import Bookings from './pages/Bookings';
@@ -81,7 +81,9 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <Dashboard />
+              <Suspense fallback={null}>
+                <Dashboard />
+              </Suspense>
             </DashboardLayout>
           </ProtectedRoute>
         }

@@ -8,7 +8,7 @@ import {
   FiCalendar,
   FiDollarSign,
   FiTrendingUp,
-  FiActivity,
+  FiPieChart,
   FiBook,
   FiCreditCard,
   FiArrowUpRight,
@@ -267,7 +267,7 @@ const Dashboard = () => {
                     <li key={i}>
                       <div className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 px-3 py-2.5">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-                          <FiActivity className="size-4" aria-hidden />
+                          <FiPieChart className="size-4" aria-hidden />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-foreground">{item.text}</p>

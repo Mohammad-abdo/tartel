@@ -23,7 +23,7 @@ import {
   FiInfo,
   FiCalendar,
   FiEye,
-  FiActivity,
+  FiPieChart,
   FiBookOpen,
 } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
@@ -705,7 +705,7 @@ const WalletDetail = () => {
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <FiActivity className="text-purple-600 dark:text-purple-400" />
+            <FiPieChart className="text-purple-600 dark:text-purple-400" />
             المعاملات التي حدثت (تاريخ المعاملات المالية)
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -716,7 +716,7 @@ const WalletDetail = () => {
         {!transactions?.length ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 mb-4">
-              <FiActivity className="size-8 text-purple-600 dark:text-purple-400" />
+              <FiPieChart className="size-8 text-purple-600 dark:text-purple-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               لا توجد معاملات مالية

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { motion } from 'framer-motion';
-import { FiActivity, FiUser, FiCalendar, FiDollarSign, FiFilter } from 'react-icons/fi';
+import { FiPieChart, FiUser, FiCalendar, FiDollarSign, FiFilter } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { auditAPI } from '../services/api';
 import { Card, CardContent } from '../components/ui/card';
@@ -20,7 +20,7 @@ const iconByEntity = {
   User: FiUser,
   Booking: FiCalendar,
   Payment: FiDollarSign,
-  default: FiActivity,
+  default: FiPieChart,
 };
 
 const ActivityPage = () => {
@@ -68,7 +68,7 @@ const ActivityPage = () => {
       <div>
         <p className="text-xs font-semibold tracking-wide text-primary-600 uppercase mb-1">{t('activity.title')}</p>
         <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-          <FiActivity className="text-primary-600 size-7" />
+          <FiPieChart className="text-primary-600 size-7" />
           {t('activity.title')}
         </h1>
         <p className="text-gray-500 mt-1 text-sm">{t('activity.subtitle')}</p>

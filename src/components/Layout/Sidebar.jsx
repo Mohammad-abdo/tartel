@@ -19,7 +19,7 @@ import {
   FiStar,
   FiVideo,
   FiTrendingUp,
-  FiActivity,
+  FiPieChart,
   FiChevronLeft,
   FiChevronRight,
   FiZap,
@@ -66,7 +66,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
     { path: '/notifications', icon: FiBell, label: t('sidebar.notifications') },
     { path: '/rbac', icon: FiShield, label: t('sidebar.rbac') },
     { path: '/reports', icon: FiBarChart2, label: t('sidebar.reports') },
-    { path: '/activity', icon: FiActivity, label: t('sidebar.activity') },
+    { path: '/activity', icon: FiPieChart, label: t('sidebar.activity') },
     { path: '/settings', icon: FiSettings, label: t('sidebar.settings') },
   ];
 
