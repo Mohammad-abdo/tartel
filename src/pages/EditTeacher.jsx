@@ -132,6 +132,7 @@ const EditTeacher = () => {
       const fd = new FormData();
       fd.append('file', file);
       const response = await fileUploadAPI.uploadImage(fd);
+      console.log(response)
       const url = (response.data && (response.data.url ?? (typeof response.data === 'string' ? response.data : response.data.url))) || '';
       setFormData((prev) => ({ ...prev, image: url }));
       toast.success(t('teachers.imageUploadSuccess'));
