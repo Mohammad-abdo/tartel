@@ -12,36 +12,27 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Force single React instance (fixes "setting 'Children'" error)
+      react: path.resolve(__dirname, './node_modules/react'),
+      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+      'react/jsx-runtime': path.resolve(__dirname, './node_modules/react/jsx-runtime'),
     },
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   build: {
     outDir: 'dist',
-    sourcemap: false, // Disable source maps in production
+    sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Split vendor libraries for better caching
+        // Single vendor chunk = single React instance (fixes "setting 'Children'" on Vercel)
+        manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor';
-            }
-            if (id.includes('react-router-dom')) {
-              return 'router';
-            }
-            if (id.includes('react-icons') || id.includes('react-toastify')) {
-              return 'ui';
-            }
-            if (id.includes('i18next') || id.includes('react-i18next')) {
-              return 'i18n';
-            }
-            // Other node_modules
-            return 'vendor-libs';
+            return 'vendor';
           }
         },
       },
     },
-    // Optimize chunk size warnings
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
   },
   server: {
     port: 5173,
@@ -62,11 +53,14 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react/jsx-runtime',
       'react-router-dom',
       'axios',
       'react-i18next',
       'react-toastify',
       'react-icons/fi',
+      'recharts',
+      'framer-motion',
     ],
   },
 })
