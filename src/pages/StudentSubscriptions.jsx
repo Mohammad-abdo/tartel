@@ -7,10 +7,10 @@ import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import PackageModal from '../components/PackageModal';
+import PackageModal from '../components/students-subscription/PackageModal';
 import SubscribeModal from '../components/SubscribeModal';
-import PackagesTab from '../components/PackagesTab';
-import SubscriptionsTab from '../components/SubscriptionsTab';
+import PackagesTab from '../components/students-subscription/PackagesTab';
+import SubscriptionsTab from '../components/students-subscription/SubscriptionsTab';
 
 const StudentSubscriptions = () => {
   const { t } = useTranslation();

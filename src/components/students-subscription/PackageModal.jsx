@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { FiX } from 'react-icons/fi';
-import { Button } from '../components/ui/button';
-import { cn } from '../lib/utils';
+import { Button } from '../ui/button';
+import { cn } from '../../lib/utils';
+import { createPortal } from "react-dom";
 
 const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const { t } = useTranslation();
@@ -140,12 +141,10 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   };
 
   if (!isOpen) return null;
-
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={handleBackdropClick}
-      style={{ isolation: 'isolate' }}
     >
       <div
         className={cn(
@@ -267,53 +266,53 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
           {/* Period Field - With integrated unit */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className=" py-4  ">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              {t('packages.duration')} *
-            </label>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={formData.period}
-                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
-                  placeholder={getPeriodPlaceholder(formData.packageType)}
-                />
-              </div>
+            <div className="py-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                {t('packages.duration')} *
+              </label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={formData.period}
+                    onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                    placeholder={getPeriodPlaceholder(formData.packageType)}
+                  />
+                </div>
 
-              <div className="flex items-center gap-2">
-                <div className={cn(
-                  'px-4 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg text-orange-700 dark:text-orange-400 font-medium',
-                  'min-w-[100px] text-center'
-                )}>
-                  {getPeriodUnitLabel(formData.packageType, formData.period)}
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    'px-4 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg text-orange-700 dark:text-orange-400 font-medium',
+                    'min-w-[100px] text-center'
+                  )}>
+                    {getPeriodUnitLabel(formData.packageType, formData.period)}
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Conditional Sessions Per Month - Only for monthly/yearly packages */}
+            {shouldShowSessionsPerMonth() && (
+              <div className="py-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  {t('packages.sessionsPerMonth')}
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.sessionsPerMonth}
+                  onChange={(e) => setFormData({ ...formData, sessionsPerMonth: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                  placeholder={t('common.unlimited')}
+                />
+              </div>
+            )}
           </div>
-
-          {/* Conditional Sessions Per Month - Only for monthly/yearly packages */}
-          {shouldShowSessionsPerMonth() && (
-            <div className=" py-4  ">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                {t('packages.sessionsPerMonth')}
-              </label>
-
-              <input
-                type="number"
-                min="1"
-                value={formData.sessionsPerMonth}
-                onChange={(e) => setFormData({ ...formData, sessionsPerMonth: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
-                placeholder={t('common.unlimited')}
-              />
-            </div>
-          )}
-
-</div>
+          
           {/* Checkboxes */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
             <label className="flex items-center gap-3 cursor-pointer">
@@ -356,7 +355,8 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

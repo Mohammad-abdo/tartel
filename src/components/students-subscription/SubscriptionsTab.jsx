@@ -1,23 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../context/LanguageContext';
-import { studentSubscriptionAPI } from '../services/api';
+import { useLanguage } from '../../context/LanguageContext';
+import { studentSubscriptionAPI } from '../../services/api';
 import { FiPackage } from 'react-icons/fi';
-import { Button } from './ui/button';
-import { cn } from '../lib/utils';
+import { Button } from '../ui/button';
+import { cn } from '../../lib/utils';
 
-const SubscriptionsTab = ({ 
-  isAdmin, 
-  statusFilter, 
-  page, 
-  onPageChange, 
-  onTotalPagesChange 
+const SubscriptionsTab = ({
+  isAdmin,
+  statusFilter,
+  page,
+  onPageChange,
+  onTotalPagesChange
 }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
-  
+
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,20 +26,21 @@ const SubscriptionsTab = ({
     setLoading(true);
     try {
       if (isAdmin) {
-        const response = await studentSubscriptionAPI.getAllSubscriptions({ 
-          page, 
-          limit: 20, 
-          status: statusFilter 
+        const response = await studentSubscriptionAPI.getAllSubscriptions({
+          page,
+          limit: 20,
+          status: statusFilter
         });
         const payload = response.data || {};
         const list = payload.subscriptions?.data || payload.subscriptions || [];
-        const pages = payload.subscriptions?.pagination?.totalPages || 
-                     payload.pagination?.totalPages || 
-                     payload.totalPages || 
-                     1;
+        const pages = payload.subscriptions?.pagination?.totalPages ||
+          payload.pagination?.totalPages ||
+          payload.totalPages ||
+          1;
         setSubscriptions(Array.isArray(list) ? list : []);
         setTotalPages(pages);
         onTotalPagesChange(pages);
+        console.log(response.data.subscriptions)
       } else {
         const response = await studentSubscriptionAPI.getMySubscriptions();
         setSubscriptions(response.data || []);
@@ -132,7 +133,8 @@ const SubscriptionsTab = ({
             {subscriptions.map((sub) => (
               <tr key={sub.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                  {sub.student?.user?.name || sub.studentId || t('users.notAvailable')}
+                  {`${sub.student?.firstName?sub.student?.firstName:''} ${sub.student?.lastsName?sub.student?.lastsName:''}` || t('users.notAvailable')}
+
                 </td>
                 <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
                   {isRTL ? (sub.package?.nameAr || sub.package?.name) : sub.package?.name || t('users.notAvailable')}
@@ -153,14 +155,14 @@ const SubscriptionsTab = ({
           </tbody>
         </table>
       </div>
-      
+
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onPageChange(Math.max(1, page - 1))} 
-            disabled={page === 1} 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(Math.max(1, page - 1))}
+            disabled={page === 1}
             className="rounded-xl border-gray-300 dark:border-gray-600"
           >
             {t('common.previous')}
@@ -168,11 +170,11 @@ const SubscriptionsTab = ({
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {t('users.pageOf', { page, totalPages })}
           </span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onPageChange(Math.min(totalPages, page + 1))} 
-            disabled={page === totalPages} 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
             className="rounded-xl border-gray-300 dark:border-gray-600"
           >
             {t('common.next')}

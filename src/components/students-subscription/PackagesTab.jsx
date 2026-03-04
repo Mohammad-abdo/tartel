@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../context/LanguageContext';
-import { subscriptionPackagesAPI } from '../services/api';
+import { useLanguage } from '../../context/LanguageContext';
+import { subscriptionPackagesAPI } from '../../services/api';
 import { FiEdit, FiTrash2, FiPackage } from 'react-icons/fi';
-import { Button } from '../components/ui/button';
-import { cn } from '../lib/utils';
-import { useCurrency } from '../context/CurrencyContext';
+import { Button } from '../ui/button';
+import { cn } from '../../lib/utils';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const PackagesTab = ({ 
   isAdmin, 
