@@ -97,14 +97,20 @@ const Settings = () => {
       const formData = new FormData();
       formData.append('file', file);
       const res = await fileUploadAPI.uploadImage(formData);
-      const url = res?.data?.url ?? res?.url;
-      if (url) setSidebarLogoUrl(url);
-      else toast.error(t('common.error'));
+      // Backend may return { url } or wrapped as { data: { url } }; interceptor unwraps once
+      const url = res?.data?.url ?? res?.data?.data?.url ?? res?.url ?? (typeof res?.data === 'string' ? res.data : null);
+      if (url) {
+        setSidebarLogoUrl(url);
+        toast.success(language === 'ar' ? 'تم رفع الشعار' : 'Logo uploaded');
+      } else {
+        toast.error(t('common.error'));
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || t('common.error');
       toast.error(msg);
     } finally {
       setUploadingLogo(false);
+      if (e?.target) e.target.value = '';
     }
   };
   const handleSaveSidebar = async () => {

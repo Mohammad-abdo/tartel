@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { subscriptionPackagesAPI, studentSubscriptionAPI } from '../services/api';
@@ -26,6 +26,10 @@ const StudentSubscriptions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packages, setPackages] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -107,6 +111,24 @@ const StudentSubscriptions = () => {
     setRefreshKey(prev => prev + 1);
     setActiveTab('subscriptions');
     toast.success(t('subscriptions.subscribeSuccess'));
+  };
+
+  const locale = language === 'ar' ? 'ar-EG' : 'en';
+  const getStatusBadge = (status) => {
+    const badges = {
+      ACTIVE: 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
+      INACTIVE: 'bg-gray-100 text-gray-800 ring-1 ring-gray-200 dark:bg-gray-700 dark:text-gray-300',
+      CANCELLED: 'bg-red-50 text-red-800 ring-1 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-800',
+      EXPIRED: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  };
+  const getStatusLabel = (status) => {
+    if (status === 'ACTIVE') return t('users.active');
+    if (status === 'INACTIVE') return t('users.inactive');
+    if (status === 'CANCELLED') return t('subscriptions.cancelled');
+    if (status === 'EXPIRED') return t('subscriptions.expired');
+    return status;
   };
 
   return (

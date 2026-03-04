@@ -56,8 +56,27 @@ export const CurrencyProvider = ({ children }) => {
   const formatCurrency = useMemo(() => createFormatCurrency(currency), [currency]);
 
   const updateSettings = async (payload) => {
-    await settingsAPI.updateSettings(payload);
-    // Always refetch from server so UI is in sync (handles backend response wrapper)
+    const res = await settingsAPI.updateSettings(payload);
+    const data = res?.data ?? res;
+    // Update state from PATCH response so sidebar/currency reflect immediately
+    if (data?.currency && (data.currency.code || data.currency.symbol)) {
+      setCurrency({
+        code: data.currency.code || defaultCurrency.code,
+        symbol: data.currency.symbol ?? defaultCurrency.symbol,
+        nameAr: data.currency.nameAr ?? defaultCurrency.nameAr,
+        nameEn: data.currency.nameEn ?? defaultCurrency.nameEn,
+      });
+    }
+    if (data?.sidebar && typeof data.sidebar === 'object') {
+      setSidebar({
+        logoUrl: data.sidebar.logoUrl ?? defaultSidebar.logoUrl,
+        titleAr: data.sidebar.titleAr ?? defaultSidebar.titleAr,
+        titleEn: data.sidebar.titleEn ?? defaultSidebar.titleEn,
+        subtitleAr: data.sidebar.subtitleAr ?? defaultSidebar.subtitleAr,
+        subtitleEn: data.sidebar.subtitleEn ?? defaultSidebar.subtitleEn,
+      });
+    }
+    // Refetch to ensure full sync (e.g. after backend transform)
     await refetch();
   };
 
