@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../context/LanguageContext';
-import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { FiX } from 'react-icons/fi';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
