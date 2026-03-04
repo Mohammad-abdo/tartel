@@ -147,17 +147,7 @@ const Content = () => {
       {/* Tabs: Content | Site pages */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-1" dir={isRTL ? 'rtl' : 'ltr'}>
-          <button
-            onClick={() => setActiveTab('content')}
-            className={cn(
-              'px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors',
-              activeTab === 'content'
-                ? 'border-primary-600 text-primary-600 bg-primary-50/50 dark:bg-primary-900/20'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800'
-            )}
-          >
-            {t('content.content')}
-          </button>
+
           <button
             onClick={() => setActiveTab('pages')}
             className={cn(

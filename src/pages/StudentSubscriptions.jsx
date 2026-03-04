@@ -325,7 +325,8 @@ const StudentSubscriptions = () => {
                     ))
                     : subscriptions.map((sub) => (
                       <tr key={sub.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>{sub.student?.user?.name || sub.studentId || t('users.notAvailable')}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>                  {`${sub.student?.email?sub.student?.email:''}` || t('users.notAvailable')}
+</td>
                         <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.package?.name || t('users.notAvailable')}</td>
                         <td className="px-6 py-4">
                           <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getStatusBadge(sub.status))}>

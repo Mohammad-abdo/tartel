@@ -133,7 +133,7 @@ const SubscriptionsTab = ({
             {subscriptions.map((sub) => (
               <tr key={sub.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                  {`${sub.student?.firstName?sub.student?.firstName:''} ${sub.student?.lastsName?sub.student?.lastsName:''}` || t('users.notAvailable')}
+                  {`${sub.student?.email?sub.student?.email:''}` || t('users.notAvailable')}
 
                 </td>
                 <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
