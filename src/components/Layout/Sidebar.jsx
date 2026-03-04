@@ -26,6 +26,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { canShowSidebarLink, SUPER_ADMIN_ONLY_PATHS } from '../../config/routePermissions';
 import { cn } from '../../lib/utils';
 
@@ -35,9 +36,13 @@ const SIDEBAR_WIDTH_COLLAPSED = 80; /* w-20 */
 const Sidebar = ({ collapsed, onToggleCollapse }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { sidebar } = useCurrency();
   const isRTL = language === 'ar';
   const location = useLocation();
   const { logout, user } = useAuth();
+  const logoUrl = sidebar?.logoUrl || '/admin-logo.svg';
+  const title = language === 'ar' ? (sidebar?.titleAr || 'ترتيل') : (sidebar?.titleEn || 'Tarteel');
+  const subtitle = language === 'ar' ? (sidebar?.subtitleAr || 'منصة حفظ القرآن') : (sidebar?.subtitleEn || 'Quran memorization platform');
   const permissions = user?.permissions ?? [];
 
   const allMenuItems = [
@@ -89,30 +94,30 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
         )}
       >
         {!collapsed ? (
-          <div className="flex min-w-0 items-center gap-3 px-2">
-            <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden">
+          <div className="flex min-w-0 flex-1 items-center gap-3 px-2 overflow-hidden">
+            <div className="flex shrink-0 items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden">
               <img
-                src="/admin-logo.svg"
-                alt="Tarteel Admin"
+                src={logoUrl}
+                alt={title}
                 className="w-8 h-8 object-contain"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.src = '/admin-logo.svg';
                 }}
               />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-white truncate arabic-text" dir="rtl">ترتيل</span>
-              <span className="text-xs font-medium text-white/80">منصة حفظ القرآن</span>
+            <div className="flex flex-col min-w-0 overflow-hidden">
+              <span className="text-lg font-bold tracking-tight text-white arabic-text truncate" dir="rtl" style={{ textShadow: '0 0 8px rgba(0,0,0,0.3)' }}>{title}</span>
+              <span className="text-xs font-medium text-white/90 truncate" style={{ textShadow: '0 0 6px rgba(0,0,0,0.25)' }}>{subtitle}</span>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden">
+          <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden shrink-0">
             <img
-              src="/admin-logo.svg"
-              alt="Tarteel Admin"
+              src={logoUrl}
+              alt={title}
               className="w-7 h-7 object-contain"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
+                e.currentTarget.src = '/admin-logo.svg';
               }}
             />
           </div>
