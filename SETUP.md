@@ -119,7 +119,7 @@ See `src/services/api.js` for the complete list of available endpoints.
 ## Troubleshooting
 
 **Issue**: API calls failing
-- Check if backend is running on port 3001
+- Check if backend is running on port 8002
 - Verify `.env` file has correct API URL
 - Check browser console for CORS errors
 

@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { FiCheck, FiUser, FiCalendar, FiClock } from 'react-icons/fi';
 import { cn } from '../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { useCurrency } from '../context/CurrencyContext';
 
 const DAYS = [
   { id: 0, key: 'sunday', label: 'Sunday' },
@@ -19,6 +20,7 @@ const DAYS = [
 
 const SubscribeModal = ({ pkg, isOpen, onClose, onSuccess }) => {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
   const [step, setStep] = useState(1);
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -233,6 +235,12 @@ const SubscribeModal = ({ pkg, isOpen, onClose, onSuccess }) => {
               {paymentData.referenceNumber}
             </div>
           </div>
+
+          {paymentData.amount != null && (
+            <div className="text-sm font-medium text-gray-700">
+              {t('packages.price')}: {formatCurrency(paymentData.amount)}
+            </div>
+          )}
 
           <div className="text-sm text-gray-500">
              {t('fawry.expiryDate')}: {new Date(paymentData.expiry).toLocaleString()}
