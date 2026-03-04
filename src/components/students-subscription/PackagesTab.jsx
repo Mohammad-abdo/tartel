@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../context/LanguageContext';
-import { subscriptionPackagesAPI } from '../../services/api';
+import { subscriptionPackagesAPI,studentSubscriptionAPI } from '../../services/api';
 import { FiEdit, FiTrash2, FiPackage } from 'react-icons/fi';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -25,7 +25,7 @@ const PackagesTab = ({
     setLoading(true);
     try {
       // Students see only active packages, admins see all
-      const response = await subscriptionPackagesAPI.getAllPackages(!isAdmin);
+      const response = await studentSubscriptionAPI.getAllPackages(!isAdmin);
       setPackages(response.data || []);
     } catch (error) {
       console.error('Failed to fetch packages:', error);

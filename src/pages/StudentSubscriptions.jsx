@@ -41,7 +41,7 @@ const StudentSubscriptions = () => {
   const handleDeletePackage = async (id) => {
     if (!window.confirm(t('packages.deleteConfirm'))) return;
     try {
-      await subscriptionPackagesAPI.deletePackage(id);
+      await studentSubscriptionAPI.deletePackage(id);
       toast.success(t('packages.deleteSuccess'));
       setRefreshKey(prev => prev + 1);
     } catch (error) {
@@ -53,10 +53,10 @@ const StudentSubscriptions = () => {
   const handleSubmitPackage = async (data) => {
     try {
       if (selectedPackage) {
-        await subscriptionPackagesAPI.updatePackage(selectedPackage.id, data);
+        await studentSubscriptionAPI.updatePackage(selectedPackage.id, data);
         toast.success(t('packages.updateSuccess'));
       } else {
-        await subscriptionPackagesAPI.createPackage(data);
+        await studentSubscriptionAPI.createPackage(data);
         toast.success(t('packages.createSuccess'));
       }
       setRefreshKey(prev => prev + 1);
