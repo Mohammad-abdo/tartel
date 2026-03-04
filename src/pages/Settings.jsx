@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { FiSettings, FiBell, FiShield, FiGlobe, FiSave, FiDollarSign } from 'react-icons/fi';
+import { FiSettings, FiBell, FiShield, FiGlobe, FiSave, FiDollarSign, FiImage } from 'react-icons/fi';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import { fileUploadAPI } from '../services/api';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -25,8 +26,13 @@ const Settings = () => {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const { user } = useAuth();
-  const { currency, formatCurrency, updateSettings, currencies } = useCurrency();
+  const { currency, sidebar, formatCurrency, updateSettings, currencies } = useCurrency();
   const canEditCurrency = user?.role === 'SUPER_ADMIN';
+  const [sidebarLogoUrl, setSidebarLogoUrl] = useState(sidebar?.logoUrl ?? '');
+  const [sidebarTitleAr, setSidebarTitleAr] = useState(sidebar?.titleAr ?? '');
+  const [sidebarTitleEn, setSidebarTitleEn] = useState(sidebar?.titleEn ?? '');
+  const [sidebarSubtitleAr, setSidebarSubtitleAr] = useState(sidebar?.subtitleAr ?? '');
+  const [sidebarSubtitleEn, setSidebarSubtitleEn] = useState(sidebar?.subtitleEn ?? '');
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
@@ -38,6 +44,15 @@ const Settings = () => {
   useEffect(() => {
     if (currency?.code) setCurrencyCode(currency.code);
   }, [currency?.code]);
+  useEffect(() => {
+    if (sidebar) {
+      setSidebarLogoUrl(sidebar.logoUrl ?? '');
+      setSidebarTitleAr(sidebar.titleAr ?? '');
+      setSidebarTitleEn(sidebar.titleEn ?? '');
+      setSidebarSubtitleAr(sidebar.subtitleAr ?? '');
+      setSidebarSubtitleEn(sidebar.subtitleEn ?? '');
+    }
+  }, [sidebar?.logoUrl, sidebar?.titleAr, sidebar?.titleEn, sidebar?.subtitleAr, sidebar?.subtitleEn]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -68,6 +83,54 @@ const Settings = () => {
       toast.error(msg);
     } finally {
       setSavingCurrency(false);
+    }
+  };
+
+  const [savingSidebar, setSavingSidebar] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef(null);
+  const handleLogoUpload = async (e) => {
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fileUploadAPI.uploadImage(formData);
+      // Backend may return { url } or wrapped as { data: { url } }; interceptor unwraps once
+      const url = res?.data?.url ?? res?.data?.data?.url ?? res?.url ?? (typeof res?.data === 'string' ? res.data : null);
+      if (url) {
+        setSidebarLogoUrl(url);
+        toast.success(language === 'ar' ? 'تم رفع الشعار' : 'Logo uploaded');
+      } else {
+        toast.error(t('common.error'));
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || t('common.error');
+      toast.error(msg);
+    } finally {
+      setUploadingLogo(false);
+      if (e?.target) e.target.value = '';
+    }
+  };
+  const handleSaveSidebar = async () => {
+    setSavingSidebar(true);
+    try {
+      await updateSettings({
+        sidebar: {
+          logoUrl: sidebarLogoUrl,
+          titleAr: sidebarTitleAr,
+          titleEn: sidebarTitleEn,
+          subtitleAr: sidebarSubtitleAr,
+          subtitleEn: sidebarSubtitleEn,
+        },
+      });
+      toast.success(t('settings.saved'));
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || t('common.error');
+      toast.error(msg);
+    } finally {
+      setSavingSidebar(false);
     }
   };
 
@@ -147,6 +210,100 @@ const Settings = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {canEditCurrency && (
+        <motion.div variants={cardVariants}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FiImage className="size-5 text-primary-600" />
+                {language === 'ar' ? 'شعار الشريط الجانبي والعنوان' : 'Sidebar logo & title'}
+              </CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                {language === 'ar' ? 'رفع شعار وعنوان يظهران بجانب اللوجو في الشريط الجانبي.' : 'Upload a logo and set the title/subtitle shown next to it in the sidebar.'}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-start gap-4">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {language === 'ar' ? 'الشعار' : 'Logo'}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={logoInputRef}
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingLogo}
+                        onClick={() => logoInputRef.current?.click()}
+                      >
+                        {uploadingLogo ? t('common.loading') : (language === 'ar' ? 'رفع صورة' : 'Upload image')}
+                      </Button>
+                      {sidebarLogoUrl && (
+                        <img src={sidebarLogoUrl} alt="Logo" className="h-10 w-10 object-contain rounded border border-gray-200 dark:border-gray-600" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'}</label>
+                    <input
+                      type="text"
+                      value={sidebarTitleAr}
+                      onChange={(e) => setSidebarTitleAr(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      placeholder="ترتيل"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'ar' ? 'العنوان (إنجليزي)' : 'Title (English)'}</label>
+                    <input
+                      type="text"
+                      value={sidebarTitleEn}
+                      onChange={(e) => setSidebarTitleEn(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      placeholder="Tarteel"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'ar' ? 'العنوان الفرعي (عربي)' : 'Subtitle (Arabic)'}</label>
+                    <input
+                      type="text"
+                      value={sidebarSubtitleAr}
+                      onChange={(e) => setSidebarSubtitleAr(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      placeholder="منصة حفظ القرآن"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'ar' ? 'العنوان الفرعي (إنجليزي)' : 'Subtitle (English)'}</label>
+                    <input
+                      type="text"
+                      value={sidebarSubtitleEn}
+                      onChange={(e) => setSidebarSubtitleEn(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      placeholder="Quran memorization platform"
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleSaveSidebar} disabled={savingSidebar}>
+                  {savingSidebar ? t('common.loading') : t('common.save')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {canEditCurrency && (
         <motion.div variants={cardVariants}>

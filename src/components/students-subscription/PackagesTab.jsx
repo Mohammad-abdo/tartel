@@ -40,27 +40,40 @@ const PackagesTab = ({
 
   // Format period based on package type
   const formatPeriod = (pkg) => {
-    if (!pkg.period) return '-';
+    const period = pkg.period ?? pkg.duration;
+    if (period == null || period === 0) return '-';
+    const type = getDisplayPackageType(pkg);
     
     let unitKey = 'common.days';
-    switch (pkg.packageType) {
+    switch (type) {
       case 'daily':
-        unitKey = pkg.period === 1 ? 'common.day' : 'common.days';
+        unitKey = period === 1 ? 'common.day' : 'common.days';
         break;
       case 'weekly':
-        unitKey = pkg.period === 1 ? 'common.week' : 'common.weeks';
+        unitKey = period === 1 ? 'common.week' : 'common.weeks';
         break;
       case 'monthly':
-        unitKey = pkg.period === 1 ? 'common.month' : 'common.months';
+        unitKey = period === 1 ? 'common.month' : 'common.months';
         break;
       case 'yearly':
-        unitKey = pkg.period === 1 ? 'common.year' : 'common.years';
+        unitKey = period === 1 ? 'common.year' : 'common.years';
         break;
       default:
         unitKey = 'common.days';
     }
     
-    return `${pkg.period} ${t(unitKey)}`;
+    return `${period} ${t(unitKey)}`;
+  };
+
+  // Derive package type for display when API doesn't return packageType (from duration: 1→daily, 7→weekly, 30→monthly, 365→yearly)
+  const getDisplayPackageType = (pkg) => {
+    if (pkg.packageType && ['daily', 'weekly', 'monthly', 'yearly'].includes(pkg.packageType))
+      return pkg.packageType;
+    const d = pkg.duration ?? pkg.period ?? 30;
+    if (d === 1) return 'daily';
+    if (d === 7) return 'weekly';
+    if (d === 365) return 'yearly';
+    return 'monthly';
   };
 
   // Get badge styling based on package type
@@ -158,14 +171,14 @@ const PackagesTab = ({
               
               {/* Package Type Badge */}
               <td className={cn('px-6 py-4 whitespace-nowrap', isRTL && 'text-right')}>
-                <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getPackageTypeBadge(pkg.packageType))}>
-                  {t(`packages.${pkg.packageType}`)}
+                <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getPackageTypeBadge(getDisplayPackageType(pkg)))}>
+                  {t(`packages.${getDisplayPackageType(pkg)}`)}
                 </span>
               </td>
               
               {/* Price */}
               <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                {formatCurrency(pkg)}
+                {formatCurrency(pkg.price ?? pkg.amount ?? 0)}
               </td>
               
               {/* Duration */}
@@ -175,9 +188,9 @@ const PackagesTab = ({
               
               {/* Sessions Per Month */}
               <td className={cn('px-6 py-4 whitespace-nowrap text-sm', isRTL && 'text-right')}>
-                {shouldShowSessionsPerMonth(pkg.packageType) ? (
+                {shouldShowSessionsPerMonth(getDisplayPackageType(pkg)) ? (
                   <span className="text-gray-600 dark:text-gray-300">
-                    {pkg.sessionsPerMonth ?? t('subscriptions.unlimited')}
+                    {pkg.sessionsPerMonth ?? pkg.totalSessions ?? t('subscriptions.unlimited')}
                   </span>
                 ) : (
                   <span className="text-gray-400 dark:text-gray-500 italic">

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { toast } from 'react-toastify';
 import { adminAPI, fileUploadAPI } from '../services/api';
 import { FiArrowLeft, FiSave, FiDollarSign, FiImage, FiVideo, FiUpload, FiUser, FiCalendar, FiClock, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -18,6 +19,7 @@ const EditTeacher = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const { currency, formatCurrency } = useCurrency();
   const imageFileRef = useRef(null);
   const videoFileRef = useRef(null);
 
@@ -338,6 +340,11 @@ const EditTeacher = () => {
                   <Label className="text-gray-700 font-medium flex items-center gap-2">
                     <FiDollarSign className="size-4 text-emerald-600" />
                     {t('teachers.hourlyRate')}
+                    <span className="text-xs text-gray-500">
+                      {language === 'ar'
+                        ? `(بالـ ${currency?.nameAr || 'عملة النظام'} - ${currency?.symbol || ''})`
+                        : `(in ${currency?.nameEn || 'system currency'} - ${currency?.symbol || ''})`}
+                    </span>
                   </Label>
                   <Input
                     type="number"
@@ -349,6 +356,13 @@ const EditTeacher = () => {
                     placeholder="0.00"
                     className={cn('rounded-xl h-11', isRTL && 'text-right')}
                   />
+                  {formData.hourlyRate && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {language === 'ar'
+                        ? `سيتم عرضها كـ ${formatCurrency(formData.hourlyRate)} في الواجهات.`
+                        : `Will be shown as ${formatCurrency(formData.hourlyRate)} in the UI.`}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-700 font-medium">{t('teachers.experience')}</Label>

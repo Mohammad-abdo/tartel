@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { subscriptionPackagesAPI, studentSubscriptionAPI } from '../services/api';
@@ -26,7 +26,41 @@ const StudentSubscriptions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packages, setPackages] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (activeTab === 'packages') {
+        const response = await studentSubscriptionAPI.getAllPackages(!isAdmin); // Students see active only
+        setPackages(response.data || []);
+      } else {
+        if (isAdmin) {
+          const response = await studentSubscriptionAPI.getAllSubscriptions({ page, limit: 20, status: statusFilter });
+          const payload = response.data || {};
+          const list = payload.subscriptions?.data || payload.subscriptions || [];
+          const pages = payload.subscriptions?.pagination?.totalPages || payload.pagination?.totalPages || payload.totalPages || 1;
+          setSubscriptions(Array.isArray(list) ? list : []);
+          setTotalPages(pages);
+        } else {
+          const response = await studentSubscriptionAPI.getMySubscriptions();
+          setSubscriptions(response.data || []);
+          setTotalPages(1);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, page, statusFilter, isAdmin]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreatePackage = () => {
     setSelectedPackage(null);
@@ -77,6 +111,24 @@ const StudentSubscriptions = () => {
     setRefreshKey(prev => prev + 1);
     setActiveTab('subscriptions');
     toast.success(t('subscriptions.subscribeSuccess'));
+  };
+
+  const locale = language === 'ar' ? 'ar-EG' : 'en';
+  const getStatusBadge = (status) => {
+    const badges = {
+      ACTIVE: 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
+      INACTIVE: 'bg-gray-100 text-gray-800 ring-1 ring-gray-200 dark:bg-gray-700 dark:text-gray-300',
+      CANCELLED: 'bg-red-50 text-red-800 ring-1 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-800',
+      EXPIRED: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  };
+  const getStatusLabel = (status) => {
+    if (status === 'ACTIVE') return t('users.active');
+    if (status === 'INACTIVE') return t('users.inactive');
+    if (status === 'CANCELLED') return t('subscriptions.cancelled');
+    if (status === 'EXPIRED') return t('subscriptions.expired');
+    return status;
   };
 
   return (
@@ -167,14 +219,138 @@ const StudentSubscriptions = () => {
             onSubscribe={handleSubscribe}
           />
         ) : (
-          <SubscriptionsTab
-            key={`subscriptions-${refreshKey}-${page}-${statusFilter}`}
-            isAdmin={isAdmin}
-            statusFilter={statusFilter}
-            page={page}
-            onPageChange={setPage}
-            onTotalPagesChange={setTotalPages}
-          />
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full caption-bottom text-sm">
+                <thead className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-700/50">
+                  <tr>
+                    {activeTab === 'packages' ? (
+                      <>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.packageName')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.packageType')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.price')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.duration')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('packages.sessionsPerMonth')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('common.status')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-left' : 'text-right')}>{t('common.actions')}</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('bookings.student')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.packages')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('common.status')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.startDate')}</th>
+                        <th className={cn('px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400', isRTL ? 'text-right' : 'text-left')}>{t('subscriptions.endDate')}</th>
+                      </>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {activeTab === 'packages'
+                    ? packages.map((pkg) => (
+                      <tr key={pkg.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        {/* 📦 Package Name */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                          {isRTL ? (pkg.nameAr || pkg.name) : pkg.name}
+                          {pkg.isPopular && <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">⭐</span>}
+                        </td>
+                        
+                        {/* 🏷️ Package Type Badge */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap', isRTL && 'text-right')}>
+                          <span className={cn(
+                            'px-2.5 py-1 rounded-full text-xs font-semibold',
+                            pkg.packageType === 'fixed' ? 'bg-purple-100 text-purple-800 ring-1 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400' :
+                            pkg.packageType === 'monthly' ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
+                            pkg.packageType === 'weekly' ? 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400' :
+                            'bg-amber-100 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400' // yearly
+                          )}>
+                            {t(`packages.${pkg.packageType || 'fixed'}`)}
+                          </span>
+                        </td>
+                        
+                        {/* Price - مرتبط بعملة الإعدادات */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
+                          {formatCurrency(pkg.price ?? 0)}
+                          {pkg.packageType !== 'fixed' && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                              {`/${pkg.packageType}`}
+                            </span>
+                          )}
+                        </td>
+                        
+                        {/* ⏱️ Duration */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                          {pkg.period ? `${pkg.period} ${t(`common.${pkg.periodUnit || 'days'}`)}` : '-'}
+                        </td>
+                        
+                        {/* 📊 Sessions Per Month */}
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>
+                          {pkg.sessionsPerMonth ?? pkg.totalSessions ?? pkg.maxBookings ?? t('subscriptions.unlimited')}
+                        </td>
+                        
+                        {/* ✅ Status */}
+                        <td className="px-6 py-4">
+                          <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', 
+                            pkg.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' : 
+                            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          )}>
+                            {pkg.isActive ? t('users.active') : t('users.inactive')}
+                          </span>
+                        </td>
+                        
+                        {/* ⚙️ Actions */}
+                        {isAdmin ? (
+                          <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                            <div className={cn('flex items-center gap-2', isRTL ? 'justify-start' : 'justify-end')}>
+                              <Button onClick={() => handleEditPackage(pkg)} variant="ghost" size="icon" className="text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                                <FiEdit className="size-4" />
+                              </Button>
+                              <Button onClick={() => handleDeletePackage(pkg.id)} variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <FiTrash2 className="size-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        ) : (
+                          <td className={cn('px-6 py-4', isRTL ? 'text-left' : 'text-right')}>
+                            <Button
+                              size="sm"
+                              onClick={() => { setSelectedPackage(pkg); setIsSubscribeModalOpen(true); }}
+                              className="bg-orange-600 hover:bg-orange-700 text-white"
+                            >
+                              {t('common.subscribe')}
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                    : subscriptions.map((sub) => (
+                      <tr key={sub.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>{sub.student?.user?.name || sub.studentId || t('users.notAvailable')}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.package?.name || t('users.notAvailable')}</td>
+                        <td className="px-6 py-4">
+                          <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getStatusBadge(sub.status))}>
+                            {getStatusLabel(sub.status)}
+                          </span>
+                        </td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{new Date(sub.startDate).toLocaleDateString(locale)}</td>
+                        <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300', isRTL && 'text-right')}>{sub.endDate ? new Date(sub.endDate).toLocaleDateString(locale) : t('users.notAvailable')}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            {activeTab === 'subscriptions' && totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6">
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-xl border-gray-300 dark:border-gray-600">
+                  {t('common.previous')}
+                </Button>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{t('users.pageOf', { page, totalPages })}</span>
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-xl border-gray-300 dark:border-gray-600">
+                  {t('common.next')}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

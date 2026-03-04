@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { adminAPI } from '../services/api';
 import ImageModal from '../components/ImageModal';
 import VideoModal from '../components/VideoModal';
@@ -31,6 +32,7 @@ const TeacherDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -236,7 +238,7 @@ const TeacherDetail = () => {
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">رصيد المحفظة</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
-                  ${(teacher.wallet.balance || 0).toFixed(2)}
+                  {formatCurrency(teacher.wallet.balance ?? 0)}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
@@ -340,7 +342,7 @@ const TeacherDetail = () => {
                     <FiDollarSign />
                     {t('teachers.hourlyRate')}
                   </label>
-                  <p className="text-gray-900 dark:text-white font-medium">${teacher.hourlyRate.toFixed(2)}/hour</p>
+                  <p className="text-gray-900 dark:text-white font-medium">{formatCurrency(teacher.hourlyRate)} {isRTL ? '/ ساعة' : '/ hour'}</p>
                 </div>
               )}
               {teacher.bio && (
@@ -472,7 +474,7 @@ const TeacherDetail = () => {
                     {t('teachers.balance')}
                   </label>
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    ${(teacher.wallet.balance || 0).toFixed(2)}
+                    {formatCurrency(teacher.wallet.balance ?? 0)}
                   </p>
                 </div>
                 <div>
@@ -521,7 +523,7 @@ const TeacherDetail = () => {
                             transaction.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                           }`}
                         >
-                          {transaction.amount >= 0 ? '+' : ''}${transaction.amount.toFixed(2)}
+                          {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                         </span>
                       </div>
                     ))}
@@ -541,7 +543,7 @@ const TeacherDetail = () => {
                       >
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            ${request.amount.toFixed(2)}
+                            {formatCurrency(request.amount)}
                           </p>
                           <p className="text-xs text-gray-500">
                             {new Date(request.createdAt).toLocaleDateString()} -{' '}
@@ -606,7 +608,7 @@ const TeacherDetail = () => {
                       </span>
                       {booking.payment && (
                         <p className="text-sm font-semibold text-gray-900 mt-1">
-                          ${(booking.payment.amount / 100).toFixed(2)}
+                          {formatCurrency(booking.payment.amount / 100)}
                         </p>
                       )}
                     </div>
@@ -848,7 +850,7 @@ const TeacherDetail = () => {
                 <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-600">
                   <span className="text-sm text-gray-600 dark:text-gray-400">{t('teachers.walletBalance')}</span>
                   <span className="font-bold text-green-600 dark:text-green-400">
-                    ${(teacher.wallet.balance || 0).toFixed(2)}
+                    {formatCurrency(teacher.wallet.balance ?? 0)}
                   </span>
                 </div>
               )}

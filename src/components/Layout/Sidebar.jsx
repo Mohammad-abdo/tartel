@@ -26,6 +26,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { canShowSidebarLink, SUPER_ADMIN_ONLY_PATHS } from '../../config/routePermissions';
 import { cn } from '../../lib/utils';
 
@@ -35,9 +36,13 @@ const SIDEBAR_WIDTH_COLLAPSED = 80; /* w-20 */
 const Sidebar = ({ collapsed, onToggleCollapse }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { sidebar } = useCurrency();
   const isRTL = language === 'ar';
   const location = useLocation();
   const { logout, user } = useAuth();
+  const logoUrl = sidebar?.logoUrl || '/admin-logo.svg';
+  const title = language === 'ar' ? (sidebar?.titleAr || 'ترتيل') : (sidebar?.titleEn || 'Tarteel');
+  const subtitle = language === 'ar' ? (sidebar?.subtitleAr || 'منصة حفظ القرآن') : (sidebar?.subtitleEn || 'Quran memorization platform');
   const permissions = user?.permissions ?? [];
 
   const allMenuItems = [
@@ -81,7 +86,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
       style={{ width: `${width}px` }}
       aria-label={t('sidebar.navigation') || 'Main navigation'}
     >
-      {/* Logo bar — Islamic green gradient */}
+      {/* Logo bar — Islamic green gradient with custom logo */}
       <div
         className={cn(
           'flex h-14 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-emerald-600 to-emerald-700 px-3 islamic-pattern',
@@ -89,18 +94,32 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
         )}
       >
         {!collapsed ? (
-          <div className="flex min-w-0 items-center gap-3 px-2">
-            <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
-              <FiBook className="w-5 h-5 text-white" />
+          <div className="flex min-w-0 flex-1 items-center gap-3 px-2 overflow-hidden">
+            <div className="flex shrink-0 items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden">
+              <img
+                src={logoUrl}
+                alt={title}
+                className="w-8 h-8 object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = '/admin-logo.svg';
+                }}
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-white truncate arabic-text" dir="rtl">ترتيل</span>
-              <span className="text-xs font-medium text-white/80">منصة حفظ القرآن</span>
+            <div className="flex flex-col min-w-0 overflow-hidden">
+              <span className="text-lg font-bold tracking-tight text-white arabic-text truncate" dir="rtl" style={{ textShadow: '0 0 8px rgba(0,0,0,0.3)' }}>{title}</span>
+              <span className="text-xs font-medium text-white/90 truncate" style={{ textShadow: '0 0 6px rgba(0,0,0,0.25)' }}>{subtitle}</span>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
-            <FiBook className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden shrink-0">
+            <img
+              src={logoUrl}
+              alt={title}
+              className="w-7 h-7 object-contain"
+              onError={(e) => {
+                e.currentTarget.src = '/admin-logo.svg';
+              }}
+            />
           </div>
         )}
         <button
@@ -130,7 +149,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
                   className={cn(
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 arabic-text',
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-emerald-100 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-300'
                   )}
                   title={collapsed ? item.label : undefined}

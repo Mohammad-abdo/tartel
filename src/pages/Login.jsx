@@ -103,8 +103,15 @@ const Login = () => {
             <div className="relative z-10">
               {/* الهيدر مع الشعار */}
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-2xl mb-6 shadow-xl">
-                  <FiBook className="w-10 h-10 text-white" />
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-white/90 dark:bg-gray-900/90 rounded-3xl mb-6 shadow-xl border border-emerald-100/60 dark:border-emerald-800/60 overflow-hidden">
+                  <img
+                    src="/admin-logo.svg"
+                    alt="Tarteel Admin"
+                    className="w-24 h-24 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 </div>
                 
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2" dir="rtl">

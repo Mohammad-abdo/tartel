@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { adminAPI, teacherAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { FiSearch, FiCheckCircle, FiXCircle, FiCalendar, FiEdit, FiEye, FiPlus, FiTrash2, FiUsers, FiClock, FiBookOpen, FiAward, FiRefreshCw, FiGrid, FiList, FiMail, FiPhone, FiStar, FiUser } from 'react-icons/fi';
@@ -12,13 +13,14 @@ const Teachers = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const { formatCurrency, currency } = useCurrency();
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState({
-    isApproved: '',
+    isApproved: '', // '' = كافة المشايخ، true = معتمد، false = قيد المراجعة
     search: '',
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
@@ -42,6 +44,7 @@ const Teachers = () => {
         page,
         limit: 20,
         ...(filters.isApproved && { isApproved: filters.isApproved }),
+        ...(filters.search && { search: filters.search }),
       };
       const response = await adminAPI.getTeachers(params);
       // Backend returns: { teachers: [...], pagination: { page, limit, total, totalPages } }
@@ -255,7 +258,12 @@ const Teachers = () => {
                   const fullNameAr = teacher.user?.firstNameAr && teacher.user?.lastNameAr
                     ? `${teacher.user.firstNameAr} ${teacher.user.lastNameAr}`
                     : null;
-                  
+                  const avatarUrl =
+                    teacher.image ||
+                    teacher.user?.avatar ||
+                    teacher.user?.image ||
+                    null;
+
                   return (
                     <div
                       key={teacher.id}
@@ -267,9 +275,9 @@ const Teachers = () => {
                         {/* Avatar */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="relative">
-                            {teacher.image ? (
+                            {avatarUrl && (
                               <img
-                                src={teacher.image}
+                                src={avatarUrl}
                                 alt={fullName}
                                 className="w-20 h-20 rounded-full object-cover shadow-xl ring-4 ring-white/50 backdrop-blur-sm"
                                 onError={(e) => {
@@ -277,9 +285,9 @@ const Teachers = () => {
                                   e.target.nextSibling.style.display = 'flex';
                                 }}
                               />
-                            ) : null}
+                            )}
                             <div 
-                              className={`w-20 h-20 rounded-full bg-white dark:bg-gray-800 shadow-xl ring-4 ring-white/50 flex items-center justify-center ${teacher.image ? 'hidden' : 'flex'}`}
+                              className={`w-20 h-20 rounded-full bg-white dark:bg-gray-800 shadow-xl ring-4 ring-white/50 flex items-center justify-center ${avatarUrl ? 'hidden' : 'flex'}`}
                             >
                               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-alexandria">
                                 {teacher.user?.firstName?.charAt(0) || teacher.user?.name?.charAt(0) || teacher.user?.email?.charAt(0) || 'ش'}
@@ -350,6 +358,47 @@ const Teachers = () => {
                           >
                             <FiEdit className="size-4" />
                           </button>
+                          {!teacher.isApproved ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await teacherAPI.approveTeacher(teacher.id);
+                                    toast.success(isRTL ? 'تم اعتماد الشيخ بنجاح' : 'Teacher approved successfully');
+                                    fetchTeachers();
+                                  } catch (error) {
+                                    toast.error(isRTL ? 'فشل اعتماد الشيخ' : 'Failed to approve teacher');
+                                  }
+                                }}
+                                className="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg hover:scale-110 transition-all duration-200"
+                                title={isRTL ? 'اعتماد الشيخ' : 'Approve teacher'}
+                              >
+                                <FiCheckCircle className="size-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!window.confirm(isRTL ? 'هل أنت متأكد من رفض / حذف هذا الطلب؟' : 'Are you sure you want to reject/delete this teacher request?')) {
+                                    return;
+                                  }
+                                  try {
+                                    await teacherAPI.rejectTeacher(teacher.id);
+                                    toast.success(isRTL ? 'تم رفض وحذف بيانات الشيخ' : 'Teacher request rejected and deleted');
+                                    fetchTeachers();
+                                  } catch (error) {
+                                    toast.error(isRTL ? 'فشل رفض / حذف الشيخ' : 'Failed to reject/delete teacher');
+                                  }
+                                }}
+                                className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-lg hover:scale-110 transition-all duration-200"
+                                title={isRTL ? 'رفض / حذف' : 'Reject / Delete'}
+                              >
+                                <FiXCircle className="size-4" />
+                              </button>
+                            </>
+                          ) : null}
                         </div>
                       </div>
 
@@ -384,22 +433,27 @@ const Teachers = () => {
 
                         {/* Statistics */}
                         <div className="flex justify-center gap-3 w-full max-w-xs">
-                        { teacher.teacherType === 'COURSE_SHEIKH'&& (
-                          <div className="flex-1 text-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg">
-                            <div className=" text-lg font-bold text-emerald-700 dark:text-emerald-300">
-                              {teacher._count?.courses || 0}
+                          {teacher.teacherType === 'COURSE_SHEIKH' && (
+                            <div className="flex-1 text-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg">
+                              <div className=" text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                                {teacher._count?.courses || 0}
+                              </div>
+                              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-alexandria">
+                                {isRTL ? 'دورة' : 'Courses'}
+                              </div>
                             </div>
-                            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-alexandria">
-                              {isRTL ? 'دورة' : 'Courses'}
-                            </div>
-                          </div>)}
-                          
+                          )}
+
                           <div className="flex-1 text-center p-2 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-lg">
                             <div className="text-lg font-bold text-amber-700 dark:text-amber-300">
-                              {teacher.yearsOfExperience || 0}
+                              {teacher.hourlyRate != null
+                                ? formatCurrency(teacher.hourlyRate, { decimals: 2 })
+                                : (isRTL ? 'لم يُحدد' : 'Not set')}
                             </div>
                             <div className="text-xs text-amber-600 dark:text-amber-400 font-alexandria">
-                              {isRTL ? 'سنة خبرة' : 'Years Exp.'}
+                              {isRTL
+                                ? `سعر الساعة (${currency?.symbol || 'عملة النظام'})`
+                                : `Hourly rate (${currency?.symbol || 'system currency'})`}
                             </div>
                           </div>
                         </div>
@@ -485,6 +539,11 @@ const Teachers = () => {
                       const fullNameAr = teacher.user?.firstNameAr && teacher.user?.lastNameAr
                         ? `${teacher.user.firstNameAr} ${teacher.user.lastNameAr}`
                         : null;
+                      const avatarUrl =
+                        teacher.image ||
+                        teacher.user?.avatar ||
+                        teacher.user?.image ||
+                        null;
                         
                       return (
                         <tr 
@@ -495,19 +554,21 @@ const Teachers = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-4">
                               <div className="relative">
-                                {teacher.image ? (
+                                {avatarUrl && (
                                   <img
-                                    src={teacher.image}
+                                    src={avatarUrl}
                                     alt={fullName}
                                     className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-700"
                                     onError={(e) => {
                                       e.target.style.display = 'none';
-                                      e.target.nextSibling.style.display = 'flex';
+                                      if (e.target.nextSibling) {
+                                        e.target.nextSibling.style.display = 'flex';
+                                      }
                                     }}
                                   />
-                                ) : null}
+                                )}
                                 <div 
-                                  className={`w-12 h-12 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-800 dark:to-emerald-900 shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-700 flex items-center justify-center ${teacher.user?.avatar ? 'hidden' : 'flex'}`}
+                                  className={`w-12 h-12 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-800 dark:to-emerald-900 shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-700 flex items-center justify-center ${avatarUrl ? 'hidden' : 'flex'}`}
                                 >
                                   <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300 font-alexandria">
                                     {teacher.user?.firstName?.charAt(0) || teacher.user?.name?.charAt(0) || teacher.user?.email?.charAt(0) || 'ش'}
