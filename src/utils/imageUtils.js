@@ -31,8 +31,8 @@ export const fixImageUrl = (imageUrl) => {
     return imageUrl.replace('http://localhost:8002', apiBaseUrl);
   }
   
-  // If URL contains localhost:3001, replace with production URL  
-  if (imageUrl.includes('localhost:3001')) {
+  // If URL contains localhost:8002, replace with production URL  
+  if (imageUrl.includes('localhost:8002')) {
     return imageUrl.replace('http://localhost:8002', apiBaseUrl);
   }
   
