@@ -81,7 +81,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
       style={{ width: `${width}px` }}
       aria-label={t('sidebar.navigation') || 'Main navigation'}
     >
-      {/* Logo bar — Islamic green gradient */}
+      {/* Logo bar — Islamic green gradient with custom logo */}
       <div
         className={cn(
           'flex h-14 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-emerald-600 to-emerald-700 px-3 islamic-pattern',
@@ -90,8 +90,15 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
       >
         {!collapsed ? (
           <div className="flex min-w-0 items-center gap-3 px-2">
-            <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
-              <FiBook className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden">
+              <img
+                src="/admin-logo.svg"
+                alt="Tarteel Admin"
+                className="w-8 h-8 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight text-white truncate arabic-text" dir="rtl">ترتيل</span>
@@ -99,8 +106,15 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
-            <FiBook className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-lg overflow-hidden">
+            <img
+              src="/admin-logo.svg"
+              alt="Tarteel Admin"
+              className="w-7 h-7 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           </div>
         )}
         <button
@@ -130,7 +144,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
                   className={cn(
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 arabic-text',
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-emerald-100 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-300'
                   )}
                   title={collapsed ? item.label : undefined}
