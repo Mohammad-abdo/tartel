@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { FiX } from 'react-icons/fi';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -9,6 +10,7 @@ import { createPortal } from "react-dom";
 const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { currency } = useCurrency();
   const isRTL = language === 'ar';
   const [formData, setFormData] = useState({
     name: '',
@@ -243,10 +245,10 @@ const PackageModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
               </select>
             </div>
 
-            {/* Price Field */}
+            {/* Price Field - مرتبط بعملة الإعدادات */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('packages.price')} ($) *
+                {t('packages.price')} ({currency?.symbol ?? 'ج.م'}) *
               </label>
               <input
                 type="number"

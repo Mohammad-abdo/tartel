@@ -48,6 +48,8 @@ const Teachers = () => {
       const teachersData = response.data.teachers || response.data.data || [];
       const totalPagesData = response.data.pagination?.totalPages || response.data.totalPages || 1;
       setTeachers(Array.isArray(teachersData) ? teachersData : []);
+      console.log(teachersData);
+      
       setTotalPages(totalPagesData);
     } catch (error) {
       console.error('Failed to fetch teachers:', error);
