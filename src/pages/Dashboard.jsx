@@ -18,6 +18,7 @@ import {
 import IslamicNotifications from '../components/IslamicNotifications';
 import IslamicNotificationsSettings from '../components/IslamicNotificationsSettings';
 import { useIslamicNotifications } from '../hooks/useIslamicNotifications';
+import { useCurrency } from '../context/CurrencyContext';
 import {
   BarChart,
   Bar,
@@ -80,6 +81,7 @@ const StatCard = ({ icon: Icon, title, value, change, href }) => {
 
 const Dashboard = () => {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showNotificationsSettings, setShowNotificationsSettings] = useState(false);
@@ -194,7 +196,7 @@ const Dashboard = () => {
           <StatCard
             icon={FiDollarSign}
             title={t('dashboard.revenue')}
-            value={`$${(stats?.totalRevenue || 0).toLocaleString()}`}
+            value={formatCurrency(stats?.totalRevenue ?? 0)}
             change={23}
           />
         </div>
