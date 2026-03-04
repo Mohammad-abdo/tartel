@@ -23,7 +23,7 @@ const iconByEntity = {
   default: FiActivity,
 };
 
-const Activity = () => {
+const ActivityPage = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
@@ -192,4 +192,4 @@ const Activity = () => {
   );
 };
 
-export default Activity;
+export default ActivityPage;

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -26,7 +27,7 @@ import Sessions from './pages/Sessions';
 import StudentSubscriptions from './pages/StudentSubscriptions';
 import Finance from './pages/Finance';
 import Settings from './pages/Settings';
-import Activity from './pages/Activity';
+const ActivityPage = lazy(() => import('./pages/Activity'));
 import Profile from './pages/Profile';
 import UserDetail from './pages/UserDetail';
 import TeacherDetail from './pages/TeacherDetail';
@@ -421,7 +422,9 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <Activity />
+              <Suspense fallback={null}>
+                <ActivityPage />
+              </Suspense>
             </DashboardLayout>
           </ProtectedRoute>
         }
