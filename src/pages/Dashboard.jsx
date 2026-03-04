@@ -211,8 +211,8 @@ const Dashboard = () => {
             <p className="mt-0.5 text-sm text-emerald-600 dark:text-emerald-400 arabic-text">تتبع نشاط الطلاب والمشايخ - آخر 6 أشهر</p>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[280px] min-h-[200px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
                 <BarChart data={bookingsChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: 'hsl(var(--islamic-green-600))', fontSize: 12 }} axisLine={false} tickLine={false} />
