@@ -35,7 +35,6 @@ const StudentSubscriptions = () => {
     try {
       if (activeTab === 'packages') {
         const response = await studentSubscriptionAPI.getAllPackages(!isAdmin); // Students see active only
-      console.log(response.data)
         setPackages(response.data || []);
       } else {
         if (isAdmin) {
@@ -252,9 +251,9 @@ const StudentSubscriptions = () => {
                           </span>
                         </td>
                         
-                        {/* Price */}
+                        {/* Price - مرتبط بعملة الإعدادات */}
                         <td className={cn('px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white', isRTL && 'text-right')}>
-                          ${pkg.price?.toFixed(2)}
+                          {formatCurrency(pkg.price ?? 0)}
                           {pkg.packageType !== 'fixed' && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
                               {`/${pkg.packageType}`}

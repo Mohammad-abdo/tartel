@@ -48,6 +48,8 @@ const Teachers = () => {
       const teachersData = response.data.teachers || response.data.data || [];
       const totalPagesData = response.data.pagination?.totalPages || response.data.totalPages || 1;
       setTeachers(Array.isArray(teachersData) ? teachersData : []);
+      console.log(teachersData);
+      
       setTotalPages(totalPagesData);
     } catch (error) {
       console.error('Failed to fetch teachers:', error);
@@ -267,7 +269,7 @@ const Teachers = () => {
                           <div className="relative">
                             {teacher.user?.avatar ? (
                               <img
-                                src={teacher.user.avatar}
+                                src={teacher.user.image}
                                 alt={fullName}
                                 className="w-20 h-20 rounded-full object-cover shadow-xl ring-4 ring-white/50 backdrop-blur-sm"
                                 onError={(e) => {
@@ -493,9 +495,9 @@ const Teachers = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-4">
                               <div className="relative">
-                                {teacher.user?.avatar ? (
+                                {teacher.user?.image ? (
                                   <img
-                                    src={teacher.user.avatar}
+                                    src={teacher.user.image}
                                     alt={fullName}
                                     className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-700"
                                     onError={(e) => {
