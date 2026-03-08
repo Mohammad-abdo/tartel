@@ -36,6 +36,9 @@ import SessionEdit from './pages/SessionEdit';
 import PaymentDetail from './pages/PaymentDetail';
 import FawryTestPage from './pages/FawryTestPage';
 import SubscriptionCallback from './pages/SubscriptionCallback';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
+import PaymentPending from './pages/PaymentPending';
 import AgoraTestHost from './pages/AgoraTestHost';
 import AgoraTestJoin from './pages/AgoraTestJoin';
 import Unauthorized from './pages/Unauthorized';
@@ -75,6 +78,31 @@ const AppRoutes = () => {
       <Route
         path="/login"
         element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+      />
+      {/* صفحات مستقلة لحالات الدفع — بدون داشبورد */}
+      <Route
+        path="/payment/success"
+        element={
+          <ProtectedRoute>
+            <PaymentSuccess />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment/failed"
+        element={
+          <ProtectedRoute>
+            <PaymentFailed />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment/pending"
+        element={
+          <ProtectedRoute>
+            <PaymentPending />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/dashboard"
@@ -378,13 +406,12 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      {/* إعادة توجيه المسار القديم لصفحات الدفع المستقلة (بدون داشبورد) */}
       <Route
         path="/student/subscriptions/callback"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <SubscriptionCallback />
-            </DashboardLayout>
+            <SubscriptionCallback />
           </ProtectedRoute>
         }
       />
