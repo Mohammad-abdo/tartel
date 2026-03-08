@@ -15,6 +15,7 @@ const PaymentPending = () => {
 
   const merchantRefNumber = searchParams.get('merchantRefNumber');
   const bookingId = searchParams.get('bookingId');
+  const courseId = searchParams.get('courseId');
 
   const [checking, setChecking] = useState(!!merchantRefNumber);
 
@@ -34,6 +35,7 @@ const PaymentPending = () => {
         if (data.paymentResult === 'SUCCESS' || data.isPaid) {
           const params = new URLSearchParams();
           if (bookingId) params.set('bookingId', bookingId);
+          if (courseId) params.set('courseId', courseId);
           if (data.referenceNumber) params.set('referenceNumber', data.referenceNumber);
           params.set('merchantRefNumber', merchantRefNumber);
           navigate(`/payment/success?${params.toString()}`, { replace: true });
@@ -43,6 +45,7 @@ const PaymentPending = () => {
           const reason = data.message || data.reason || 'FAILED';
           const params = new URLSearchParams({ reason });
           if (bookingId) params.set('bookingId', bookingId);
+          if (courseId) params.set('courseId', courseId);
           navigate(`/payment/failed?${params.toString()}`, { replace: true });
           return true;
         }
@@ -69,10 +72,14 @@ const PaymentPending = () => {
     };
 
     poll();
-  }, [merchantRefNumber, bookingId, navigate]);
+  }, [merchantRefNumber, bookingId, courseId, navigate]);
 
   const handleBack = () => {
-    navigate('/bookings');
+    if (courseId) {
+      navigate(`/courses/${courseId}`);
+    } else {
+      navigate('/bookings');
+    }
   };
 
   return (
@@ -99,7 +106,9 @@ const PaymentPending = () => {
               {t('paymentStatus.pendingDescLong') || 'تم استلام طلب الدفع. قد يستغرق التأكيد بضع دقائق. يمكنك العودة لاحقاً للتحقق من حالة الحجز.'}
             </p>
             <Button onClick={handleBack} variant="outline" className="w-full">
-              {t('paymentStatus.backToBookings') || 'العودة للحجوزات'}
+              {courseId
+                ? (t('paymentStatus.backToCourse') || 'العودة للكورس')
+                : (t('paymentStatus.backToBookings') || 'العودة للحجوزات')}
             </Button>
           </>
         )}

@@ -122,16 +122,26 @@ const CourseDetail = () => {
     try {
       setCheckingPayment(true);
       const response = await paymentAPI.getFawryPaymentStatus(fawryData.merchantRefNum);
-      const fawryStatus = response?.data?.fawryStatus;
-      const localPayment = response?.data?.localPayment;
+      const data = response?.data || response;
+      const fawryStatus = data?.fawryStatus;
+      const localPayment = data?.localPayment;
       const paid =
+        data?.paymentResult === 'SUCCESS' ||
+        data?.isPaid === true ||
         String(fawryStatus?.orderStatus || '').toUpperCase() === 'PAID' ||
         String(localPayment?.status || '').toUpperCase() === 'COMPLETED';
 
       if (paid) {
         await fetchEnrollmentStatus();
         await fetchCourse();
-        toast.success('تم تأكيد الدفع وفتح محتوى الدورة');
+        const params = new URLSearchParams({ courseId: id });
+        const refNum = data?.referenceNumber || data?.fawryStatus?.referenceNumber || data?.localPayment?.fawryRefNumber;
+        if (refNum) params.set('referenceNumber', refNum);
+        if (fawryData.merchantRefNum) params.set('merchantRefNumber', fawryData.merchantRefNum);
+        navigate(`/payment/success?${params.toString()}`, { replace: true });
+      } else if (data?.paymentResult === 'FAILED') {
+        const params = new URLSearchParams({ courseId: id, reason: data?.message || 'FAILED' });
+        navigate(`/payment/failed?${params.toString()}`, { replace: true });
       } else {
         toast.info('الدفع لم يكتمل بعد، حاول مرة أخرى بعد قليل');
       }

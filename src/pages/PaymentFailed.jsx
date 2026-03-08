@@ -14,10 +14,13 @@ const PaymentFailed = () => {
 
   const reason = searchParams.get('reason') || searchParams.get('message');
   const bookingId = searchParams.get('bookingId');
+  const courseId = searchParams.get('courseId');
   const code = searchParams.get('code');
 
   const handleRetry = () => {
-    if (bookingId) {
+    if (courseId) {
+      navigate(`/courses/${courseId}`);
+    } else if (bookingId) {
       navigate(`/bookings/${bookingId}`);
     } else {
       navigate('/bookings');
@@ -25,7 +28,11 @@ const PaymentFailed = () => {
   };
 
   const handleBack = () => {
-    navigate('/bookings');
+    if (courseId) {
+      navigate('/courses');
+    } else {
+      navigate('/bookings');
+    }
   };
 
   return (
@@ -53,13 +60,15 @@ const PaymentFailed = () => {
           </div>
         )}
         <div className="flex flex-col gap-3">
-          {bookingId && (
+          {(courseId || bookingId) && (
             <Button onClick={handleRetry} className="w-full">
               {t('paymentStatus.tryAgain') || 'المحاولة مرة أخرى'}
             </Button>
           )}
           <Button onClick={handleBack} variant="outline" className="w-full">
-            {t('paymentStatus.backToBookings') || 'العودة للحجوزات'}
+            {courseId
+              ? (t('paymentStatus.backToCourses') || 'العودة للكورسات')
+              : (t('paymentStatus.backToBookings') || 'العودة للحجوزات')}
           </Button>
         </div>
       </div>

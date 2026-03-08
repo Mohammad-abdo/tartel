@@ -51,14 +51,18 @@
   "paymentStatus": {
     "successTitle": "تم الدفع بنجاح",
     "successDesc": "تم تأكيد الدفع والحجز الخاص بك بنجاح.",
+    "successDescCourse": "تم الدفع بنجاح. الكورس أصبح متاحاً لك ويمكنك فتحه الآن.",
     "failedTitle": "فشل الدفع",
     "failedDesc": "لم يتم إتمام عملية الدفع.",
     "reason": "السبب",
     "referenceNumber": "رقم المرجع",
     "viewBooking": "عرض الحجز",
+    "openCourse": "فتح الكورس",
     "goToBookings": "العودة للحجوزات",
     "tryAgain": "المحاولة مرة أخرى",
     "backToBookings": "العودة للحجوزات",
+    "backToCourses": "العودة للكورسات",
+    "backToCourse": "العودة للكورس",
     "pendingTitle": "جاري التحقق من الدفع",
     "pendingDesc": "يرجى الانتظار بينما نتحقق من حالة الدفع.",
     "pendingDescLong": "تم استلام طلب الدفع. قد يستغرق التأكيد بضع دقائق. يمكنك العودة لاحقاً للتحقق من حالة الحجز."

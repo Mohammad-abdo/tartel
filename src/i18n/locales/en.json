@@ -52,14 +52,18 @@
     "paymentStatus": {
         "successTitle": "Payment successful",
         "successDesc": "Your payment and booking have been confirmed successfully.",
+        "successDescCourse": "Payment successful. The course is now yours and you can open it.",
         "failedTitle": "Payment failed",
         "failedDesc": "The payment could not be completed.",
         "reason": "Reason",
         "referenceNumber": "Reference number",
         "viewBooking": "View booking",
+        "openCourse": "Open course",
         "goToBookings": "Back to bookings",
         "tryAgain": "Try again",
         "backToBookings": "Back to bookings",
+        "backToCourses": "Back to courses",
+        "backToCourse": "Back to course",
         "pendingTitle": "Verifying payment",
         "pendingDesc": "Please wait while we verify your payment.",
         "pendingDescLong": "Your payment request has been received. Confirmation may take a few minutes. You can check your booking status later."

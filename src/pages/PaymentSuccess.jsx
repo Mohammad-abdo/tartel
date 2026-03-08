@@ -13,15 +13,24 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
 
   const bookingId = searchParams.get('bookingId');
+  const courseId = searchParams.get('courseId');
   const referenceNumber = searchParams.get('referenceNumber');
   const merchantRefNumber = searchParams.get('merchantRefNumber');
 
-  const handleViewBooking = () => {
-    if (bookingId) {
+  const isCoursePayment = !!courseId;
+
+  const handlePrimaryAction = () => {
+    if (courseId) {
+      navigate(`/courses/${courseId}`);
+    } else if (bookingId) {
       navigate(`/bookings/${bookingId}`);
     } else {
       navigate('/bookings');
     }
+  };
+
+  const handleSecondaryAction = () => {
+    navigate('/bookings');
   };
 
   return (
@@ -36,18 +45,29 @@ const PaymentSuccess = () => {
           {t('paymentStatus.successTitle') || 'تم الدفع بنجاح'}
         </h1>
         <p className="text-gray-500 dark:text-gray-400">
-          {t('paymentStatus.successDesc') || 'تم تأكيد الدفع والحجز الخاص بك بنجاح.'}
+          {isCoursePayment
+            ? (t('paymentStatus.successDescCourse') || 'تم الدفع بنجاح. الكورس أصبح متاحاً لك ويمكنك فتحه الآن.')
+            : (t('paymentStatus.successDesc') || 'تم تأكيد الدفع والحجز الخاص بك بنجاح.')}
         </p>
         {(referenceNumber || merchantRefNumber) && (
           <p className="text-sm font-mono text-gray-400 dark:text-gray-500">
             {t('paymentStatus.referenceNumber') || 'رقم المرجع'}: {referenceNumber || merchantRefNumber}
           </p>
         )}
-        <Button onClick={handleViewBooking} className="w-full">
-          {bookingId
-            ? (t('paymentStatus.viewBooking') || 'عرض الحجز')
-            : (t('paymentStatus.goToBookings') || 'العودة للحجوزات')}
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button onClick={handlePrimaryAction} className="w-full">
+            {courseId
+              ? (t('paymentStatus.openCourse') || 'فتح الكورس')
+              : bookingId
+                ? (t('paymentStatus.viewBooking') || 'عرض الحجز')
+                : (t('paymentStatus.goToBookings') || 'العودة للحجوزات')}
+          </Button>
+          {courseId && (
+            <Button onClick={handleSecondaryAction} variant="outline" className="w-full">
+              {t('paymentStatus.goToBookings') || 'العودة للحجوزات'}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
