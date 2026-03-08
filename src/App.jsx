@@ -489,6 +489,10 @@ const AppRoutes = () => {
         }
       />
       <Route path="/unauthorized" element={<Unauthorized />} />
+      {/* Standalone payment result pages — no auth/layout since users arrive from Fawry redirect */}
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/failed" element={<PaymentFailed />} />
+      <Route path="/payment/pending" element={<PaymentPending />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
