@@ -1,92 +1,118 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { studentSubscriptionAPI } from '../services/api';
-import { FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
+import { paymentAPI } from '../services/api';
+import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 
 const SubscriptionCallback = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Params set by our backend GET /fawry/callback redirect
+  const paymentResult = searchParams.get('paymentResult'); // SUCCESS | FAILED | PENDING
+  const merchantRefNumber = searchParams.get('merchantRefNumber');
+  const bookingId = searchParams.get('bookingId');
+  const referenceNumber = searchParams.get('referenceNumber');
+
+  // Legacy: subscription flow
   const subscriptionId = searchParams.get('subscriptionId');
-  const [status, setStatus] = useState('VERIFYING'); // VERIFYING, SUCCESS, FAILED, PENDING
-  const [loading, setLoading] = useState(true);
+
+  const [status, setStatus] = useState(() => {
+    if (paymentResult === 'SUCCESS') return 'SUCCESS';
+    if (paymentResult === 'FAILED') return 'FAILED';
+    return 'VERIFYING';
+  });
+  const [loading, setLoading] = useState(paymentResult !== 'SUCCESS' && paymentResult !== 'FAILED');
 
   useEffect(() => {
-    if (!subscriptionId) {
-      setStatus('FAILED');
+    // If the backend already told us the result, no need to poll
+    if (paymentResult === 'SUCCESS' || paymentResult === 'FAILED') {
       setLoading(false);
       return;
     }
 
-    const checkStatus = async () => {
-      try {
-        // Fetch user's subscriptions to find the one we just paid for
-        const res = await studentSubscriptionAPI.getMySubscriptions();
-        const subscriptions = res.data || [];
-        const sub = subscriptions.find(s => s.id === subscriptionId);
+    // If we have a merchantRefNumber, poll the backend for status
+    if (merchantRefNumber) {
+      let attempts = 0;
+      const maxAttempts = 10;
 
-        if (sub) {
-          if (sub.status === 'ACTIVE') {
+      const checkStatus = async () => {
+        try {
+          const res = await paymentAPI.getFawryPaymentStatus(merchantRefNumber);
+          const data = res.data || res;
+          if (data.paymentResult === 'SUCCESS' || data.isPaid) {
             setStatus('SUCCESS');
-          } else if (sub.status === 'CANCELLED' || sub.status === 'EXPIRED') {
+            setLoading(false);
+            return true;
+          } else if (data.paymentResult === 'FAILED') {
             setStatus('FAILED');
-          } else {
-            // Still PENDING
-            setStatus('PENDING');
+            setLoading(false);
+            return true;
           }
-        } else {
-          setStatus('FAILED');
+        } catch (err) {
+          console.error('Failed to check payment status:', err);
         }
-      } catch (error) {
-        console.error('Failed to verify subscription:', error);
-        setStatus('FAILED');
-      } finally {
-        setLoading(false);
-      }
-    };
+        return false;
+      };
 
-    // Initial check
-    checkStatus();
+      const poll = async () => {
+        const done = await checkStatus();
+        if (done) return;
+        
+        const interval = setInterval(async () => {
+          attempts++;
+          const done = await checkStatus();
+          if (done || attempts >= maxAttempts) {
+            clearInterval(interval);
+            if (!done) {
+              setStatus('PENDING');
+              setLoading(false);
+            }
+          }
+        }, 3000);
 
-    // Poll every 3 seconds for 30 seconds if pending
-    const interval = setInterval(() => {
-        if (status === 'PENDING' || status === 'VERIFYING') {
-            checkStatus();
-        }
-    }, 3000);
+        return () => clearInterval(interval);
+      };
 
-    // Stop polling after 30 seconds
-    const timeout = setTimeout(() => {
-        clearInterval(interval);
-        if (status === 'VERIFYING') setStatus('PENDING'); // Just show pending if timed out
-    }, 30000);
+      poll();
+      return;
+    }
 
-    return () => {
-        clearInterval(interval);
-        clearTimeout(timeout);
-    };
-  }, [subscriptionId, status]);
+    // No params at all – show error
+    if (!subscriptionId && !merchantRefNumber && !paymentResult) {
+      setStatus('FAILED');
+      setLoading(false);
+    }
+  }, [paymentResult, merchantRefNumber, subscriptionId]);
 
   const handleContinue = () => {
-    navigate('/student-subscriptions');
+    if (bookingId) {
+      navigate(`/bookings/${bookingId}`);
+    } else {
+      navigate('/bookings');
+    }
+  };
+
+  const handleBack = () => {
+    navigate('/bookings');
   };
 
   return (
     <div className="flex bg-gray-50 dark:bg-gray-900 min-h-screen items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg max-w-md w-full p-8 text-center space-y-6">
         
-        {loading || status === 'VERIFYING' || status === 'PENDING' ? (
+        {loading || status === 'VERIFYING' ? (
           <>
             <div className="flex justify-center">
               <div className="animate-spin h-16 w-16 border-4 border-orange-500 rounded-full border-t-transparent"></div>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t('subscriptions.processingPayment') || 'Processing Payment...'}
+              {t('subscriptions.processingPayment') || 'جاري التحقق من الدفع...'}
             </h2>
             <p className="text-gray-500 dark:text-gray-400">
-              {t('subscriptions.pleaseWait') || 'Please wait while we verify your payment.'}
+              {t('subscriptions.pleaseWait') || 'يرجى الانتظار بينما نتحقق من حالة الدفع.'}
             </p>
           </>
         ) : status === 'SUCCESS' ? (
@@ -97,13 +123,35 @@ const SubscriptionCallback = () => {
               </div>
             </div>
             <h2 className="text-2xl font-bold text-emerald-600">
-              {t('subscriptions.paymentSuccess') || 'Subscription Activated!'}
+              {t('subscriptions.paymentSuccess') || 'تم الدفع بنجاح!'}
             </h2>
             <p className="text-gray-500 dark:text-gray-400">
-              {t('subscriptions.successDesc') || 'You can now start booking your sessions.'}
+              {t('subscriptions.successDesc') || 'تم تأكيد الحجز الخاص بك.'}
             </p>
+            {referenceNumber && (
+              <p className="text-sm text-gray-400 dark:text-gray-500 font-mono">
+                {t('payments.fawryRef') || 'رقم المرجع'}: {referenceNumber}
+              </p>
+            )}
             <Button onClick={handleContinue} className="w-full">
-              {t('common.continue') || 'Continue'}
+              {t('common.continue') || 'متابعة'}
+            </Button>
+          </>
+        ) : status === 'PENDING' ? (
+          <>
+            <div className="flex justify-center">
+              <div className="h-20 w-20 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
+                <FiCheckCircle className="h-10 w-10" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-yellow-600">
+              {t('subscriptions.paymentPending') || 'الدفع قيد المعالجة'}
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400">
+              {t('subscriptions.pendingDesc') || 'تم استلام طلب الدفع. قد يستغرق التأكيد بضع دقائق.'}
+            </p>
+            <Button onClick={handleBack} variant="outline" className="w-full">
+              {t('common.back') || 'العودة للحجوزات'}
             </Button>
           </>
         ) : (
@@ -114,13 +162,13 @@ const SubscriptionCallback = () => {
               </div>
             </div>
             <h2 className="text-2xl font-bold text-red-600">
-              {t('subscriptions.paymentFailed') || 'Payment Failed or Pending'}
+              {t('subscriptions.paymentFailed') || 'فشل الدفع'}
             </h2>
             <p className="text-gray-500 dark:text-gray-400">
-              {t('subscriptions.failedDesc') || 'We could not verify your payment yet. Please checking your subscriptions status later.'}
+              {t('subscriptions.failedDesc') || 'لم نتمكن من التحقق من الدفع. يرجى المحاولة مرة أخرى.'}
             </p>
-            <Button onClick={handleContinue} variant="outline" className="w-full">
-              {t('common.back') || 'Back to Subscriptions'}
+            <Button onClick={handleBack} variant="outline" className="w-full">
+              {t('common.back') || 'العودة للحجوزات'}
             </Button>
           </>
         )}
