@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { courseAPI, enrollmentAPI, paymentAPI } from '../services/api';
+import { useCurrency } from '../context/CurrencyContext';
 import { toast } from 'react-toastify';
 import ImageModal from '../components/ImageModal';
 import YouTubeThumbnail from '../components/YouTubeThumbnail';
@@ -31,6 +32,7 @@ const CourseDetail = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
@@ -279,7 +281,7 @@ const CourseDetail = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-emerald-700/80 mb-1 arabic-text font-semibold">{t('courses.price')}</p>
-              <p className="text-2xl font-bold text-emerald-900 arabic-text">${(course.price || 0).toFixed(2)}</p>
+              <p className="text-2xl font-bold text-emerald-900 arabic-text">{formatCurrency(course.price || 0)}</p>
               <div className="text-xs text-emerald-600 mt-1">سعر الدورة</div>
             </div>
             <div className="h-12 w-12 rounded-lg bg-emerald-200 flex items-center justify-center shadow-md">
@@ -292,7 +294,7 @@ const CourseDetail = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-amber-700/80 mb-1 arabic-text font-semibold">{t('courses.revenue')}</p>
-              <p className="text-2xl font-bold text-amber-900 arabic-text">${generatedRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-amber-900 arabic-text">{formatCurrency(generatedRevenue)}</p>
               <div className="text-xs text-amber-600 mt-1">الإيرادات المحققة</div>
             </div>
             <div className="h-12 w-12 rounded-lg bg-amber-200 flex items-center justify-center shadow-md">
@@ -382,7 +384,7 @@ const CourseDetail = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-sm text-gray-700">سعر الدورة: ${(course.price || 0).toFixed(2)}</p>
+                      <p className="text-sm text-gray-700">سعر الدورة: {formatCurrency(course.price || 0)}</p>
                       {(course.price || 0) > 0 ? (
                         <button
                           onClick={handleCreateFawryReference}
@@ -663,7 +665,7 @@ const CourseDetail = () => {
                     <FiDollarSign className="text-xs" />
                     {t('courses.price')}
                   </label>
-                  <p className="text-lg font-bold text-emerald-700">${(course.price || 0).toFixed(2)}</p>
+                  <p className="text-lg font-bold text-emerald-700">{formatCurrency(course.price || 0)}</p>
                 </div>
                 {course.duration && (
                   <div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { courseAPI } from '../services/api';
+import { useCurrency } from '../context/CurrencyContext';
 import { toast } from 'react-toastify';
 import {
   FiBook,
@@ -46,6 +47,7 @@ import { cn } from '../lib/utils';
 const Courses = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const isRTL = language === 'ar';
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
@@ -386,6 +388,7 @@ const Courses = () => {
                   course={course}
                   isRTL={isRTL}
                   t={t}
+                  formatCurrency={formatCurrency}
                   getStatusBadgeClasses={getStatusBadgeClasses}
                   teacherName={teacherName}
                   studentsCount={studentsCount}
@@ -473,6 +476,7 @@ function CourseCard({
   onView,
   onEdit,
   onDelete,
+  formatCurrency,
   onToggleFeatured,
 }) {
   const students = studentsCount(course);
@@ -534,7 +538,7 @@ function CourseCard({
         </div>
         <div className={cn('text-end', isRTL && 'text-start')}>
           <p className="font-semibold text-green-600 dark:text-green-400">
-            $ {(course.price ?? 0).toFixed(2)}
+            {formatCurrency(course.price ?? 0)}
           </p>
           {course.duration && (
             <p className="flex items-center justify-end gap-1 text-xs">
@@ -676,7 +680,7 @@ function CoursesTable({
               {teacherName(course)}
             </TableCell>
             <TableCell className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
-              $ {(course.price ?? 0).toFixed(2)}
+              {formatCurrency(course.price ?? 0)}
             </TableCell>
             <TableCell className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {studentsCount(course)}

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { courseAPI, adminAPI, fileUploadAPI } from '../services/api';
+import { useCurrency } from '../context/CurrencyContext';
 import {
   FiArrowLeft,
   FiSave,
@@ -36,6 +37,7 @@ const newLessonRow = () => ({
 
 const EditCourse = () => {
   const { t } = useTranslation();
+  const { currency } = useCurrency();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -531,7 +533,7 @@ const EditCourse = () => {
                 <CardContent>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="price">{t('courses.priceLabel')} *</Label>
+                      <Label htmlFor="price">{t('courses.priceLabel')} ({currency.symbol}) *</Label>
                       <Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} required min={0} step={0.01} placeholder="0.00" />
                     </div>
                     <div className="space-y-1.5">
