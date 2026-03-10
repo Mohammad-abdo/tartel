@@ -30,6 +30,28 @@ const Header = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
 
+  const getNotificationRoute = (n) => {
+    const id = n.relatedId;
+    switch (n.type) {
+      case 'BOOKING_CONFIRMED':
+      case 'BOOKING_CANCELLED':
+      case 'BOOKING_REJECTED':
+      case 'BOOKING_REQUEST':
+      case 'SESSION_REMINDER':
+        return id ? `/bookings/${id}` : '/bookings';
+      case 'TEACHER_APPROVED':
+        return id ? `/teachers/${id}` : '/teachers';
+      case 'COURSE_CREATED':
+        return id ? `/courses/${id}` : '/courses';
+      case 'PAYMENT_RECEIVED':
+        return '/bookings';
+      case 'REVIEW_RECEIVED':
+        return id ? `/teachers/${id}` : '/teachers';
+      default:
+        return '/notifications';
+    }
+  };
+
   useEffect(() => {
     if (user) fetchNotifications();
   }, [user]);
@@ -180,6 +202,9 @@ const Header = () => {
                           key={notification.id}
                           onClick={() => {
                             if (!notification.isRead) handleMarkAsRead(notification.id);
+                            setShowNotifications(false);
+                            const dest = getNotificationRoute(notification);
+                            if (dest) navigate(dest);
                           }}
                           className={cn(
                             'cursor-pointer border-b border-gray-100 px-4 py-3 transition-colors last:border-0 hover:bg-emerald-50 dark:border-gray-700 dark:hover:bg-emerald-900/20 arabic-text',

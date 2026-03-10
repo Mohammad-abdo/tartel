@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -22,10 +23,33 @@ function formatDate(d) {
   }
 }
 
+const getNotificationRoute = (n) => {
+  const id = n.relatedId;
+  switch (n.type) {
+    case 'BOOKING_CONFIRMED':
+    case 'BOOKING_CANCELLED':
+    case 'BOOKING_REJECTED':
+    case 'BOOKING_REQUEST':
+    case 'SESSION_REMINDER':
+      return id ? `/bookings/${id}` : '/bookings';
+    case 'TEACHER_APPROVED':
+      return id ? `/teachers/${id}` : '/teachers';
+    case 'COURSE_CREATED':
+      return id ? `/courses/${id}` : '/courses';
+    case 'PAYMENT_RECEIVED':
+      return '/bookings';
+    case 'REVIEW_RECEIVED':
+      return id ? `/teachers/${id}` : '/teachers';
+    default:
+      return null;
+  }
+};
+
 const Notifications = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isRTL = language === 'ar';
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
@@ -209,37 +233,47 @@ const Notifications = () => {
           </div>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-            {list.map((n) => (
-              <li
-                key={n.id}
-                className={cn(
-                  'px-6 py-4 flex items-start gap-3 transition-colors',
-                  n.isRead ? 'bg-white dark:bg-gray-800' : 'bg-purple-50/30 dark:bg-purple-900/10',
-                  isRTL && 'flex-row-reverse'
-                )}
-              >
-                <div className={cn('flex-1 min-w-0', isRTL && 'text-right')}>
-                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                    <span className="font-semibold text-gray-900 dark:text-white">{n.title}</span>
-                    {!n.isRead && (
-                      <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" title={t('notifications.unread') || 'Unread'} />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{n.message}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDate(n.createdAt)}</p>
-                </div>
-                <div className={cn('flex gap-1 shrink-0', isRTL && 'flex-row-reverse')}>
-                  {!n.isRead && (
-                    <Button variant="ghost" size="sm" onClick={() => handleMarkAsRead(n.id)} disabled={actionLoading} title={t('notifications.markAsRead') || 'Mark as read'}>
-                      <FiCheck className="size-4" />
-                    </Button>
+            {list.map((n) => {
+              const dest = getNotificationRoute(n);
+              return (
+                <li
+                  key={n.id}
+                  onClick={() => {
+                    if (!n.isRead) handleMarkAsRead(n.id);
+                    if (dest) navigate(dest);
+                  }}
+                  className={cn(
+                    'px-6 py-4 flex items-start gap-3 transition-colors cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-900/20',
+                    n.isRead ? 'bg-white dark:bg-gray-800' : 'bg-purple-50/30 dark:bg-purple-900/10',
+                    isRTL && 'flex-row-reverse'
                   )}
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(n.id)} disabled={actionLoading} className="text-red-600 hover:text-red-700" title={t('common.delete')}>
-                    <FiTrash2 className="size-4" />
-                  </Button>
-                </div>
-              </li>
-            ))}
+                >
+                  <div className={cn('flex-1 min-w-0', isRTL && 'text-right')}>
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                      <span className="font-semibold text-gray-900 dark:text-white">{n.title}</span>
+                      {!n.isRead && (
+                        <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" title={t('notifications.unread') || 'Unread'} />
+                      )}
+                      {dest && (
+                        <span className="text-xs text-purple-500 dark:text-purple-400">←</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{n.message}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDate(n.createdAt)}</p>
+                  </div>
+                  <div className={cn('flex gap-1 shrink-0', isRTL && 'flex-row-reverse')}>
+                    {!n.isRead && (
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id); }} disabled={actionLoading} title={t('notifications.markAsRead') || 'Mark as read'}>
+                        <FiCheck className="size-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }} disabled={actionLoading} className="text-red-600 hover:text-red-700" title={t('common.delete')}>
+                      <FiTrash2 className="size-4" />
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
