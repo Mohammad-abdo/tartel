@@ -5,6 +5,7 @@ import { teacherAPI } from '../../services/api';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { toast } from 'react-toastify';
+import { toastConfirm } from '../../utils/toastConfirm';
 
 const DAYS = [
   { id: 0, key: 'sunday', label: 'Sunday' },
@@ -70,18 +71,23 @@ const AvailabilityScheduler = () => {
     }
   };
 
-  const handleDeleteSlot = async (scheduleId) => {
+  const handleDeleteSlot = (scheduleId) => {
     if (!teacher) return;
-    try {
-      if (!window.confirm(t('common.confirmDelete'))) return; 
-      
-      await teacherAPI.deleteSchedule(teacher.id, scheduleId);
-      setSchedules(schedules.filter(s => s.id !== scheduleId));
-      toast.success(t('common.deleted'));
-    } catch (error) {
-      console.error(error);
-      toast.error(t('common.error'));
-    }
+    toastConfirm({
+      title: t('common.confirmDelete') || 'هل أنت متأكد من الحذف؟',
+      confirmLabel: t('common.delete') || 'حذف',
+      cancelLabel: t('common.cancel') || 'إلغاء',
+      onConfirm: async () => {
+        try {
+          await teacherAPI.deleteSchedule(teacher.id, scheduleId);
+          setSchedules(schedules.filter(s => s.id !== scheduleId));
+          toast.success(t('common.deleted'));
+        } catch (error) {
+          console.error(error);
+          toast.error(t('common.error'));
+        }
+      },
+    });
   };
 
   if (loading) return <div>{t('common.loading')}...</div>;

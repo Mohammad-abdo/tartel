@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { toastConfirm } from '../utils/toastConfirm';
 import { adminAPI, fileUploadAPI } from '../services/api';
 import { FiArrowRight, FiSave, FiUser, FiMail, FiPhone, FiLock, FiDollarSign, FiBook, FiUpload, FiImage, FiVideo, FiCalendar, FiClock, FiPlus, FiTrash2 } from 'react-icons/fi';
 
@@ -137,56 +138,7 @@ const AddTeacher = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // التحقق من البيانات الأساسية
-    if (!formData.image?.trim()) {
-      toast.error('صورة الشيخ مطلوبة.');
-      return;
-    }
-    if (!formData.introVideoUrl?.trim()) {
-      toast.error('فيديو التعريف مطلوب للشيخ.');
-      return;
-    }
-    
-    // التحقق من المواعيد للمشايخ الكاملين
-    if (formData.teacherType === 'FULL_TEACHER') {
-      if (!formData.hourlyRate || parseFloat(formData.hourlyRate) <= 0) {
-        toast.error('يجب تحديد سعر الساعة للشيخ الكامل.');
-        return;
-      }
-      
-      if (schedules.length === 0) {
-        const shouldContinue = window.confirm(
-          'لم تقم بإضافة أي مواعيد عمل للشيخ. هل تريد المتابعة بدون مواعيد؟ (يمكن إضافتها لاحقاً)'
-        );
-        if (!shouldContinue) return;
-      }
-      
-      // التحقق من صحة المواعيد
-      for (let i = 0; i < schedules.length; i++) {
-        const schedule = schedules[i];
-        if (schedule.startTime >= schedule.endTime) {
-          toast.error(`الموعد رقم ${i + 1}: وقت البداية يجب أن يكون قبل وقت النهاية.`);
-          return;
-        }
-        
-        // التحقق من تداخل المواعيد في نفس اليوم
-        const sameDaySchedules = schedules.filter(s => s.dayOfWeek === schedule.dayOfWeek && s.id !== schedule.id);
-        for (const otherSchedule of sameDaySchedules) {
-          if (
-            (schedule.startTime >= otherSchedule.startTime && schedule.startTime < otherSchedule.endTime) ||
-            (schedule.endTime > otherSchedule.startTime && schedule.endTime <= otherSchedule.endTime) ||
-            (schedule.startTime <= otherSchedule.startTime && schedule.endTime >= otherSchedule.endTime)
-          ) {
-            const dayName = daysOfWeek.find(d => d.value === parseInt(schedule.dayOfWeek))?.label;
-            toast.error(`يوجد تداخل في مواعيد يوم ${dayName}. يرجى مراجعة الأوقات.`);
-            return;
-          }
-        }
-      }
-    }
+  const doSubmit = async () => {
     const isCourseSheikh = formData.teacherType === 'COURSE_SHEIKH';
     setLoading(true);
     try {
@@ -211,6 +163,61 @@ const AddTeacher = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.image?.trim()) {
+      toast.error('صورة الشيخ مطلوبة.');
+      return;
+    }
+    if (!formData.introVideoUrl?.trim()) {
+      toast.error('فيديو التعريف مطلوب للشيخ.');
+      return;
+    }
+    
+    if (formData.teacherType === 'FULL_TEACHER') {
+      if (!formData.hourlyRate || parseFloat(formData.hourlyRate) <= 0) {
+        toast.error('يجب تحديد سعر الساعة للشيخ الكامل.');
+        return;
+      }
+      
+      if (schedules.length === 0) {
+        toastConfirm({
+          title: 'لم تقم بإضافة أي مواعيد عمل للشيخ',
+          description: 'هل تريد المتابعة بدون مواعيد؟ (يمكن إضافتها لاحقاً)',
+          confirmLabel: 'متابعة',
+          cancelLabel: 'إلغاء',
+          type: 'warn',
+          confirmStyle: { background: '#f59e0b' },
+          onConfirm: doSubmit,
+        });
+        return;
+      }
+      
+      for (let i = 0; i < schedules.length; i++) {
+        const schedule = schedules[i];
+        if (schedule.startTime >= schedule.endTime) {
+          toast.error(`الموعد رقم ${i + 1}: وقت البداية يجب أن يكون قبل وقت النهاية.`);
+          return;
+        }
+        
+        const sameDaySchedules = schedules.filter(s => s.dayOfWeek === schedule.dayOfWeek && s.id !== schedule.id);
+        for (const otherSchedule of sameDaySchedules) {
+          if (
+            (schedule.startTime >= otherSchedule.startTime && schedule.startTime < otherSchedule.endTime) ||
+            (schedule.endTime > otherSchedule.startTime && schedule.endTime <= otherSchedule.endTime) ||
+            (schedule.startTime <= otherSchedule.startTime && schedule.endTime >= otherSchedule.endTime)
+          ) {
+            const dayName = daysOfWeek.find(d => d.value === parseInt(schedule.dayOfWeek))?.label;
+            toast.error(`يوجد تداخل في مواعيد يوم ${dayName}. يرجى مراجعة الأوقات.`);
+            return;
+          }
+        }
+      }
+    }
+    await doSubmit();
   };
 
   return (

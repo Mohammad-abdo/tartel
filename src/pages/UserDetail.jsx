@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { adminAPI } from '../services/api';
 import { toast } from 'react-toastify';
+import { toastConfirm } from '../utils/toastConfirm';
 import {
   FiArrowRight,
   FiMail,
@@ -49,18 +50,25 @@ const UserDetail = () => {
     }
   };
 
-  const handleBan = async () => {
-    if (!window.confirm(t('users.banConfirm') || 'Are you sure you want to ban this user?')) return;
-    setActionLoading(true);
-    try {
-      await adminAPI.banUser(id);
-      toast.success(t('users.userBannedSuccess'));
-      fetchUser();
-    } catch (error) {
-      toast.error(error.response?.data?.message || t('users.updateStatusFailed'));
-    } finally {
-      setActionLoading(false);
-    }
+  const handleBan = () => {
+    toastConfirm({
+      title: t('users.banConfirm') || 'Are you sure you want to ban this user?',
+      description: language === 'ar' ? 'سيتم حظر هذا المستخدم من النظام' : 'The user will be banned from the system',
+      confirmLabel: language === 'ar' ? 'حظر' : 'Ban',
+      cancelLabel: language === 'ar' ? 'إلغاء' : 'Cancel',
+      onConfirm: async () => {
+        setActionLoading(true);
+        try {
+          await adminAPI.banUser(id);
+          toast.success(t('users.userBannedSuccess'));
+          fetchUser();
+        } catch (error) {
+          toast.error(error.response?.data?.message || t('users.updateStatusFailed'));
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   const handleActivate = async () => {

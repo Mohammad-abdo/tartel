@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { adminAPI, teacherAPI } from '../services/api';
 import { toast } from 'react-toastify';
+import { toastConfirm } from '../utils/toastConfirm';
 import { FiSearch, FiCheckCircle, FiXCircle, FiCalendar, FiEdit, FiEye, FiPlus, FiTrash2, FiUsers, FiClock, FiBookOpen, FiAward, FiRefreshCw, FiGrid, FiList, FiMail, FiPhone, FiStar, FiUser } from 'react-icons/fi';
 import { cn } from '../lib/utils';
 
@@ -379,18 +380,23 @@ const Teachers = () => {
                               </button>
                               <button
                                 type="button"
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.stopPropagation();
-                                  if (!window.confirm(isRTL ? 'هل أنت متأكد من رفض / حذف هذا الطلب؟' : 'Are you sure you want to reject/delete this teacher request?')) {
-                                    return;
-                                  }
-                                  try {
-                                    await teacherAPI.rejectTeacher(teacher.id);
-                                    toast.success(isRTL ? 'تم رفض وحذف بيانات الشيخ' : 'Teacher request rejected and deleted');
-                                    fetchTeachers();
-                                  } catch (error) {
-                                    toast.error(isRTL ? 'فشل رفض / حذف الشيخ' : 'Failed to reject/delete teacher');
-                                  }
+                                  toastConfirm({
+                                    title: isRTL ? 'هل أنت متأكد من رفض / حذف هذا الطلب؟' : 'Reject/delete this teacher request?',
+                                    description: isRTL ? 'لا يمكن التراجع عن هذا الإجراء' : 'This action cannot be undone',
+                                    confirmLabel: isRTL ? 'رفض / حذف' : 'Reject',
+                                    cancelLabel: isRTL ? 'إلغاء' : 'Cancel',
+                                    onConfirm: async () => {
+                                      try {
+                                        await teacherAPI.rejectTeacher(teacher.id);
+                                        toast.success(isRTL ? 'تم رفض وحذف بيانات الشيخ' : 'Teacher request rejected and deleted');
+                                        fetchTeachers();
+                                      } catch (error) {
+                                        toast.error(isRTL ? 'فشل رفض / حذف الشيخ' : 'Failed to reject/delete teacher');
+                                      }
+                                    },
+                                  });
                                 }}
                                 className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-lg hover:scale-110 transition-all duration-200"
                                 title={isRTL ? 'رفض / حذف' : 'Reject / Delete'}

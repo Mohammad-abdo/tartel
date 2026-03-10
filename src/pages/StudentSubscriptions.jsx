@@ -6,7 +6,8 @@ import { FiPlus } from 'react-icons/fi';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
+import { toastConfirm } from '../utils/toastConfirm';
 import PackageModal from '../components/students-subscription/PackageModal';
 import SubscribeModal from '../components/SubscribeModal';
 import PackagesTab from '../components/students-subscription/PackagesTab';
@@ -72,16 +73,35 @@ const StudentSubscriptions = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeletePackage = async (id) => {
-    if (!window.confirm(t('packages.deleteConfirm'))) return;
-    try {
-      await studentSubscriptionAPI.deletePackage(id);
-      toast.success(t('packages.deleteSuccess'));
-      setRefreshKey(prev => prev + 1);
-    } catch (error) {
-      console.error('Failed to delete package:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete package');
+  const handleDeletePackage = (pkg) => {
+    const pkgName = isRTL ? (pkg.nameAr || pkg.name) : pkg.name;
+
+    if (pkg.subscriptionsCount > 0) {
+      toast.error(
+        isRTL
+          ? `لا يمكن حذف الباقة "${pkgName}" — يوجد ${pkg.subscriptionsCount} اشتراك نشط مرتبط بها. قم بإلغاء الاشتراكات أولاً أو قم بتعطيل الباقة بدلاً من حذفها.`
+          : `Cannot delete "${pkgName}" — ${pkg.subscriptionsCount} active subscription(s) linked. Cancel subscriptions first or deactivate the package instead.`,
+        { autoClose: 6000 }
+      );
+      return;
     }
+
+    toastConfirm({
+      title: isRTL ? `هل أنت متأكد من حذف الباقة "${pkgName}"؟` : `Delete package "${pkgName}"?`,
+      description: isRTL ? 'لا يمكن التراجع عن هذا الإجراء' : 'This action cannot be undone',
+      confirmLabel: isRTL ? 'حذف' : 'Delete',
+      cancelLabel: isRTL ? 'إلغاء' : 'Cancel',
+      onConfirm: async () => {
+        try {
+          await studentSubscriptionAPI.deletePackage(pkg.id);
+          toast.success(t('packages.deleteSuccess'));
+          setRefreshKey((prev) => prev + 1);
+        } catch (error) {
+          console.error('Failed to delete package:', error);
+          toast.error(error.response?.data?.message || 'Failed to delete package');
+        }
+      },
+    });
   };
 
   const handleSubmitPackage = async (data) => {

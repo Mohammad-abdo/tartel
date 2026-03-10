@@ -223,7 +223,7 @@ const PackagesTab = ({
                       <FiEdit className="size-4" />
                     </Button>
                     <Button 
-                      onClick={() => onDelete(pkg.id)} 
+                      onClick={() => onDelete(pkg)} 
                       variant="ghost" 
                       size="icon" 
                       className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"

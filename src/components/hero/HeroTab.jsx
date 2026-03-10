@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../context/LanguageContext';
 import { heroAPI } from '../../services/api';
+import { toastConfirm } from '../../utils/toastConfirm';
 import { Button } from '../ui/button';
 import HeroSlidesList from './HeroSlidesList';
 import HeroSlideForm from './HeroSlideForm';
@@ -69,18 +70,23 @@ const HeroTab = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm(isRTL ? 'هل أنت متأكد من حذف هذه الشريحة؟' : 'Are you sure you want to delete this slide?')) {
-      return;
-    }
-    setError(null);
-    try {
-      await heroAPI.delete(id);
-      await fetchSlides();
-    } catch (error) {
-      console.error('Failed to delete slide:', error);
-      setError(error.message || 'Failed to delete slide');
-    }
+  const handleDelete = (id) => {
+    toastConfirm({
+      title: isRTL ? 'هل أنت متأكد من حذف هذه الشريحة؟' : 'Delete this slide?',
+      description: isRTL ? 'لا يمكن التراجع عن هذا الإجراء' : 'This action cannot be undone',
+      confirmLabel: isRTL ? 'حذف' : 'Delete',
+      cancelLabel: isRTL ? 'إلغاء' : 'Cancel',
+      onConfirm: async () => {
+        setError(null);
+        try {
+          await heroAPI.delete(id);
+          await fetchSlides();
+        } catch (error) {
+          console.error('Failed to delete slide:', error);
+          setError(error.message || 'Failed to delete slide');
+        }
+      },
+    });
   };
 
   const handleToggleActive = async (id, currentStatus) => {
