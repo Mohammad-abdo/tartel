@@ -366,7 +366,13 @@ export const paymentAPI = {
 export const fileUploadAPI = {
   uploadFile: (formData) => api.post('/files/upload', formData),
   uploadAvatar: (formData) => api.post('/files/upload/avatar', formData),
-  uploadVideo: (formData) => api.post('/files/upload/video', formData),
+  uploadVideo: (formData, onUploadProgress) =>
+    api.post('/files/upload/video', formData, {
+      timeout: 0,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      ...(onUploadProgress ? { onUploadProgress } : {}),
+    }),
   uploadImage: (formData) => api.post('/files/upload/image', formData),
 };
 

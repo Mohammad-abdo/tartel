@@ -21,7 +21,7 @@ function VideoUpload({
   onUpload,
   onRemove,
   accept = 'video/mp4,video/webm,video/quicktime,video/x-msvideo',
-  maxSizeMB = 100,
+  maxSizeMB = 5120,
   disabled = false,
   className,
   id,
@@ -48,7 +48,8 @@ function VideoUpload({
         return { ok: false, message: 'Invalid video format' };
       }
       if (file.size > maxSizeMB * 1024 * 1024) {
-        return { ok: false, message: `File too large (max ${maxSizeMB} MB)` };
+        const label = maxSizeMB >= 1024 ? `${(maxSizeMB / 1024).toFixed(0)} GB` : `${maxSizeMB} MB`;
+        return { ok: false, message: `File too large (max ${label})` };
       }
       return { ok: true };
     },
@@ -59,12 +60,12 @@ function VideoUpload({
     async (file) => {
       setError(null);
       setState(STATES.UPLOADING);
-      setProgress(10);
+      setProgress(0);
       try {
-        // Simulate progress if API doesn't support it
-        const t = setInterval(() => setProgress((p) => Math.min(p + 15, 90)), 200);
-        const result = await onUpload(file);
-        clearInterval(t);
+        const onProgress = (e) => {
+          if (e.total) setProgress(Math.round((e.loaded / e.total) * 95));
+        };
+        const result = await onUpload(file, onProgress);
         setProgress(100);
         setUploadedUrl(result?.url ?? null);
         setState(STATES.PROCESSING);
@@ -167,7 +168,7 @@ function VideoUpload({
               Drag & drop video or click to upload
             </span>
             <span className="text-xs text-muted-foreground">
-              MP4, WebM, up to {maxSizeMB} MB
+              MP4, WebM, up to {maxSizeMB >= 1024 ? `${(maxSizeMB / 1024).toFixed(0)} GB` : `${maxSizeMB} MB`}
             </span>
           </button>
         )}

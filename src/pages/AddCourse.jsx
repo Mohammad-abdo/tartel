@@ -121,10 +121,10 @@ const AddCourse = () => {
     return fullName.includes(search) || email.includes(search);
   });
 
-  const handleVideoUpload = async (file) => {
+  const handleVideoUpload = async (file, onProgress) => {
     const fd = new FormData();
     fd.append('file', file);
-    const response = await fileUploadAPI.uploadVideo(fd);
+    const response = await fileUploadAPI.uploadVideo(fd, onProgress);
     const url = response.data?.url ?? response.data;
     setFormData((prev) => ({ ...prev, introVideoUrl: url }));
     toast.success(t('courses.videoUploadSuccess'));
@@ -179,10 +179,10 @@ const AddCourse = () => {
     );
   };
 
-  const handleLessonVideoUpload = (rowId) => async (file) => {
+  const handleLessonVideoUpload = (rowId) => async (file, onProgress) => {
     const fd = new FormData();
     fd.append('file', file);
-    const response = await fileUploadAPI.uploadVideo(fd);
+    const response = await fileUploadAPI.uploadVideo(fd, onProgress);
     const url = response.data?.url ?? response.data;
     updateLessonRow(rowId, 'videoUrl', url);
     toast.success(t('courses.videoUploadSuccess'));

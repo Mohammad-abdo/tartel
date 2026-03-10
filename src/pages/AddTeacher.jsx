@@ -114,8 +114,8 @@ const AddTeacher = () => {
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) { // 50MB
-      toast.error('حجم الفيديو يجب أن يكون أقل من 50 ميجابايت');
+    if (file.size > 5 * 1024 * 1024 * 1024) { // 5GB
+      toast.error('حجم الفيديو يجب أن يكون أقل من 5 جيجابايت');
       return;
     }
 
