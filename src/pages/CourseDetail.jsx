@@ -164,7 +164,11 @@ const CourseDetail = () => {
   };
 
   const enrolledStudentsCount = course?.enrollments?.length || course?._count?.enrollments || 0;
-  const generatedRevenue = enrolledStudentsCount * (course?.price || 0);
+  const effectiveCoursePrice =
+    course?.discountPrice !== null && course?.discountPrice !== undefined
+      ? course.discountPrice
+      : (course?.price || 0);
+  const generatedRevenue = enrolledStudentsCount * effectiveCoursePrice;
   const canAccessContent = !isStudent || isEnrolled;
 
   if (loading) {
@@ -281,7 +285,10 @@ const CourseDetail = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-emerald-700/80 mb-1 arabic-text font-semibold">{t('courses.price')}</p>
-              <p className="text-2xl font-bold text-emerald-900 arabic-text">{formatCurrency(course.price || 0)}</p>
+              <p className="text-2xl font-bold text-emerald-900 arabic-text">{formatCurrency(effectiveCoursePrice)}</p>
+              {course?.discountPrice !== null && course?.discountPrice !== undefined && (
+                <p className="text-xs text-emerald-700/70 mt-1 line-through">{formatCurrency(course.price || 0)}</p>
+              )}
               <div className="text-xs text-emerald-600 mt-1">سعر الدورة</div>
             </div>
             <div className="h-12 w-12 rounded-lg bg-emerald-200 flex items-center justify-center shadow-md">
@@ -384,8 +391,13 @@ const CourseDetail = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-sm text-gray-700">سعر الدورة: {formatCurrency(course.price || 0)}</p>
-                      {(course.price || 0) > 0 ? (
+                      <p className="text-sm text-gray-700">
+                        سعر الدورة: {formatCurrency(effectiveCoursePrice)}
+                        {course?.discountPrice !== null && course?.discountPrice !== undefined && (
+                          <span className="ms-2 line-through text-gray-500">{formatCurrency(course.price || 0)}</span>
+                        )}
+                      </p>
+                      {(effectiveCoursePrice || 0) > 0 ? (
                         <button
                           onClick={handleCreateFawryReference}
                           disabled={enrollmentLoading}
@@ -665,7 +677,10 @@ const CourseDetail = () => {
                     <FiDollarSign className="text-xs" />
                     {t('courses.price')}
                   </label>
-                  <p className="text-lg font-bold text-emerald-700">{formatCurrency(course.price || 0)}</p>
+                  <p className="text-lg font-bold text-emerald-700">{formatCurrency(effectiveCoursePrice)}</p>
+                  {course?.discountPrice !== null && course?.discountPrice !== undefined && (
+                    <p className="text-xs text-gray-500 line-through">{formatCurrency(course.price || 0)}</p>
+                  )}
                 </div>
                 {course.duration && (
                   <div>

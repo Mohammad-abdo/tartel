@@ -56,6 +56,7 @@ const AddCourse = () => {
     descriptionAr: '',
     teacherIds: [],
     price: '',
+    discountPrice: '',
     duration: '',
     image: '',
     introVideoUrl: '',
@@ -225,6 +226,10 @@ const AddCourse = () => {
         teacherId: formData.teacherIds[0],
         teacherIds: formData.teacherIds,
         price: parseFloat(formData.price) || 0,
+        discountPrice:
+          formData.discountPrice === '' || formData.discountPrice === null
+            ? null
+            : parseFloat(formData.discountPrice),
         duration: formData.duration ? parseFloat(formData.duration) : undefined,
         image: formData.image,
         introVideoUrl: formData.introVideoUrl,
@@ -456,10 +461,23 @@ const AddCourse = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="price">{t('courses.priceLabel')} ({currency.symbol}) *</Label>
                       <Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} required min={0} step={0.01} placeholder="0.00" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="discountPrice">{t('courses.discountPrice') || 'Discount Price'} ({currency.symbol})</Label>
+                      <Input
+                        id="discountPrice"
+                        name="discountPrice"
+                        type="number"
+                        value={formData.discountPrice}
+                        onChange={handleChange}
+                        min={0}
+                        step={0.01}
+                        placeholder="0.00"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="duration">{t('courses.durationHours')}</Label>

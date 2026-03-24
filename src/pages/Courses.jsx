@@ -371,6 +371,7 @@ const Courses = () => {
             courses={courses}
             isRTL={isRTL}
             t={t}
+            formatCurrency={formatCurrency}
             getStatusBadgeClasses={getStatusBadgeClasses}
             teacherName={teacherName}
             studentsCount={studentsCount}
@@ -480,6 +481,10 @@ function CourseCard({
   onToggleFeatured,
 }) {
   const students = studentsCount(course);
+  const hasDiscount =
+    course.discountPrice !== null &&
+    course.discountPrice !== undefined &&
+    Number(course.discountPrice) >= 0;
   return (
     <div
       className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-200 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md cursor-pointer"
@@ -537,9 +542,20 @@ function CourseCard({
           <span className="font-medium text-gray-900 dark:text-white">{teacherName(course)}</span>
         </div>
         <div className={cn('text-end', isRTL && 'text-start')}>
-          <p className="font-semibold text-green-600 dark:text-green-400">
-            {formatCurrency(course.price ?? 0)}
-          </p>
+          {hasDiscount ? (
+            <>
+              <p className="font-semibold text-green-600 dark:text-green-400">
+                {formatCurrency(course.discountPrice ?? 0)}
+              </p>
+              <p className="text-xs text-gray-500 line-through">
+                {formatCurrency(course.price ?? 0)}
+              </p>
+            </>
+          ) : (
+            <p className="font-semibold text-green-600 dark:text-green-400">
+              {formatCurrency(course.price ?? 0)}
+            </p>
+          )}
           {course.duration && (
             <p className="flex items-center justify-end gap-1 text-xs">
               <FiClock className="size-3" />
@@ -617,6 +633,7 @@ function CoursesTable({
   onEdit,
   onDelete,
   onToggleFeatured,
+  formatCurrency,
 }) {
   return (
     <Table>
@@ -680,7 +697,16 @@ function CoursesTable({
               {teacherName(course)}
             </TableCell>
             <TableCell className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
-              {formatCurrency(course.price ?? 0)}
+              {course.discountPrice !== null && course.discountPrice !== undefined ? (
+                <div>
+                  <div>{formatCurrency(course.discountPrice ?? 0)}</div>
+                  <div className="text-xs text-gray-500 line-through">
+                    {formatCurrency(course.price ?? 0)}
+                  </div>
+                </div>
+              ) : (
+                formatCurrency(course.price ?? 0)
+              )}
             </TableCell>
             <TableCell className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {studentsCount(course)}
