@@ -596,6 +596,7 @@ const AddTeacher = () => {
                         src={formData.introVideoUrl}
                         className="w-32 h-20 object-cover rounded-lg border border-gray-200"
                         controls
+                        preload="none"
                         muted
                         onError={() => {
                           console.warn('خطأ في تحميل الفيديو');

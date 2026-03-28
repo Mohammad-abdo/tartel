@@ -210,7 +210,7 @@ function VideoUpload({
                 src={value || uploadedUrl}
                 controls
                 className="h-full max-h-[200px] w-full object-contain"
-                preload="metadata"
+                preload="none"
               />
             </div>
             <div className="mt-3 flex items-center justify-between gap-2">
@@ -251,7 +251,7 @@ function VideoUpload({
                 src={value}
                 controls
                 className="h-full max-h-[200px] w-full object-contain"
-                preload="metadata"
+                preload="none"
               />
             </div>
             <div className="mt-3 flex items-center justify-between gap-2">

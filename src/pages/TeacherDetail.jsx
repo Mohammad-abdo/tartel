@@ -412,6 +412,7 @@ const TeacherDetail = () => {
                         <video
                           className="w-full aspect-video"
                           controls
+                          preload="none"
                           src={teacher.introVideoUrl}
                           poster={teacher.image}
                         >

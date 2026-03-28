@@ -533,6 +533,7 @@ const EditTeacher = () => {
                       <video
                         src={formData.introVideoUrl}
                         controls
+                        preload="none"
                         className="w-full aspect-video object-contain"
                       />
                     ) : (
