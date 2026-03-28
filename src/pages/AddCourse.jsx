@@ -124,14 +124,9 @@ const AddCourse = () => {
     return fullName.includes(search) || email.includes(search);
   });
 
-  const handleVideoUpload = async (file, onProgress) => {
-    const fd = new FormData();
-    fd.append('file', file);
-    const response = await fileUploadAPI.uploadVideo(fd, onProgress);
-    const url = response.data?.url ?? response.data;
+  const handleVideoUploadComplete = (url) => {
     setFormData((prev) => ({ ...prev, introVideoUrl: url }));
     toast.success(t('courses.videoUploadSuccess'));
-    return { url };
   };
 
   const handleThumbnailUpload = async (e) => {
@@ -182,14 +177,9 @@ const AddCourse = () => {
     );
   };
 
-  const handleLessonVideoUpload = (rowId) => async (file, onProgress) => {
-    const fd = new FormData();
-    fd.append('file', file);
-    const response = await fileUploadAPI.uploadVideo(fd, onProgress);
-    const url = response.data?.url ?? response.data;
+  const handleLessonVideoUploadComplete = (rowId) => (url) => {
     updateLessonRow(rowId, 'videoUrl', url);
     toast.success(t('courses.videoUploadSuccess'));
-    return { url };
   };
 
   const handleSubmit = async (e) => {
@@ -518,7 +508,7 @@ const AddCourse = () => {
                   </div>
                   <div className="space-y-1.5">
                     <Label>{t('courses.introVideo')}</Label>
-                    <VideoUpload value={formData.introVideoUrl} onUpload={handleVideoUpload} onRemove={() => setFormData((prev) => ({ ...prev, introVideoUrl: '' }))} aria-label={t('courses.introVideo')} />
+                    <VideoUpload value={formData.introVideoUrl} onUploadComplete={handleVideoUploadComplete} onRemove={() => setFormData((prev) => ({ ...prev, introVideoUrl: '' }))} aria-label={t('courses.introVideo')} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>{t('courses.introVideoThumbnailLabel')}</Label>
@@ -564,7 +554,7 @@ const AddCourse = () => {
                           <Label>{t('courses.introVideo')}</Label>
                           <VideoUpload
                             value={row.videoUrl}
-                            onUpload={handleLessonVideoUpload(row.id)}
+                            onUploadComplete={handleLessonVideoUploadComplete(row.id)}
                             onRemove={() => updateLessonRow(row.id, 'videoUrl', '')}
                             aria-label={`${t('courses.introVideo')} ${index + 1}`}
                           />

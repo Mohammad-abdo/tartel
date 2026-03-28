@@ -376,6 +376,96 @@ export const fileUploadAPI = {
   uploadImage: (formData) => api.post('/files/upload/image', formData),
 };
 
+// ── Chunked Upload API (large videos) ──────────────────────────────────────
+const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB
+const PARALLEL_CHUNKS = 3;
+const MAX_RETRIES = 3;
+
+async function uploadOneChunk(uploadId, chunkIndex, blob, retries = MAX_RETRIES) {
+  const fd = new FormData();
+  fd.append('uploadId', uploadId);
+  fd.append('chunkIndex', String(chunkIndex));
+  fd.append('file', blob, `chunk-${chunkIndex}`);
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await api.post('/upload/chunk', fd, {
+        timeout: 60_000,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+      });
+      return res.data;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
+    }
+  }
+}
+
+/**
+ * Upload a video file using chunked upload with parallel chunks, retry, resume, and progress.
+ * @param {File} file
+ * @param {(progress: {loaded: number, total: number}) => void} onProgress
+ * @returns {Promise<{url: string, filename: string}>}
+ */
+export async function chunkedUploadVideo(file, onProgress) {
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+  // 1. Init session
+  const { data: initData } = await api.post('/upload/init', {
+    filename: file.name,
+    totalChunks,
+  });
+  const { uploadId } = initData;
+
+  // 2. Check which chunks already exist (resume support)
+  let doneSet = new Set();
+  try {
+    const { data: statusData } = await api.get('/upload/status', { params: { uploadId } });
+    if (statusData.uploadedChunks) {
+      doneSet = new Set(statusData.uploadedChunks);
+    }
+  } catch (_) { /* fresh upload */ }
+
+  // 3. Upload chunks in parallel batches with progress
+  let completedBytes = 0;
+  for (const idx of doneSet) {
+    const start = idx * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    completedBytes += end - start;
+  }
+
+  const pending = [];
+  for (let i = 0; i < totalChunks; i++) {
+    if (!doneSet.has(i)) pending.push(i);
+  }
+
+  const report = () => {
+    if (onProgress) onProgress({ loaded: completedBytes, total: file.size });
+  };
+  report();
+
+  // Process in batches of PARALLEL_CHUNKS
+  for (let b = 0; b < pending.length; b += PARALLEL_CHUNKS) {
+    const batch = pending.slice(b, b + PARALLEL_CHUNKS);
+    await Promise.all(
+      batch.map(async (idx) => {
+        const start = idx * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const blob = file.slice(start, end);
+        await uploadOneChunk(uploadId, idx, blob);
+        completedBytes += end - start;
+        report();
+      })
+    );
+  }
+
+  // 4. Merge
+  const { data: mergeData } = await api.post('/upload/merge', { uploadId });
+  if (onProgress) onProgress({ loaded: file.size, total: file.size });
+
+  return { url: mergeData.url, filename: mergeData.filename };
+}
+
 // Video API (bookingSessionId = one slot of a booking)
 export const videoAPI = {
   createSession: (bookingSessionId) => api.post('/video/session/create', { bookingSessionId }),

@@ -2,6 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { FiUpload, FiVideo, FiX, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
+import { chunkedUploadVideo } from '../services/api';
 
 const STATES = {
   IDLE: 'idle',
@@ -12,13 +13,14 @@ const STATES = {
 };
 
 /**
- * Video upload UI: drag & drop, progress, preview, replace/remove.
- * Tarteel-aligned, no layout shift (min-height), clear feedback.
- * API contract: onUpload(file) => Promise<{ url }>, onRemove optional.
+ * Video upload UI: drag & drop, chunked parallel upload with resume, progress, preview.
+ * onUploadComplete(url) is called with the final file URL after a successful upload.
+ * Legacy onUpload(file, onProgress) is still supported but will be ignored when chunked upload runs.
  */
 function VideoUpload({
   value = '',
   onUpload,
+  onUploadComplete,
   onRemove,
   accept = 'video/mp4,video/webm,video/quicktime,video/x-msvideo',
   maxSizeMB = 5120,
@@ -61,11 +63,21 @@ function VideoUpload({
       setError(null);
       setState(STATES.UPLOADING);
       setProgress(0);
+
       try {
+        let result;
+
+        // Use chunked upload for all videos
         const onProgress = (e) => {
           if (e.total) setProgress(Math.round((e.loaded / e.total) * 95));
         };
-        const result = await onUpload(file, onProgress);
+
+        result = await chunkedUploadVideo(file, onProgress);
+
+        if (onUploadComplete) {
+          try { onUploadComplete(result.url); } catch (_) {}
+        }
+
         setProgress(100);
         setUploadedUrl(result?.url ?? null);
         setState(STATES.PROCESSING);
@@ -73,7 +85,7 @@ function VideoUpload({
         return result;
       } catch (err) {
         setState(STATES.FAILED);
-        setError(err.message || 'Upload failed');
+        setError(err?.response?.data?.message || err.message || 'Upload failed');
         throw err;
       }
     },
@@ -82,7 +94,7 @@ function VideoUpload({
 
   const handleFile = useCallback(
     async (file) => {
-      if (!file || !onUpload) return;
+      if (!file) return;
       const v = validate(file);
       if (!v.ok) {
         setError(v.message);
@@ -91,7 +103,7 @@ function VideoUpload({
       }
       await doUpload(file);
     },
-    [onUpload, validate, doUpload]
+    [validate, doUpload]
   );
 
   const handleInputChange = (e) => {
@@ -179,7 +191,7 @@ function VideoUpload({
               <FiVideo className="size-6 animate-pulse" aria-hidden />
             </div>
             <p className="text-sm font-medium text-foreground">
-              {state === STATES.UPLOADING ? 'Uploading…' : 'Processing…'}
+              {state === STATES.UPLOADING ? 'Uploading…' : 'Finalizing…'}
             </p>
             <div className="w-full max-w-xs rounded-full bg-muted h-2 overflow-hidden">
               <div
@@ -187,6 +199,7 @@ function VideoUpload({
                 style={{ width: `${progress}%` }}
               />
             </div>
+            <p className="text-xs text-muted-foreground">{progress}%</p>
           </div>
         )}
 

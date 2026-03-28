@@ -123,19 +123,9 @@ const ManageLessons = () => {
     setLessonRows(lessonRows.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
 
-  const handleLessonVideoUpload = (rowId) => async (file, onProgress) => {
-    const fd = new FormData();
-    fd.append('file', file);
-    try {
-      const response = await fileUploadAPI.uploadVideo(fd, onProgress);
-      const url = response.data?.url ?? response.data;
-      updateLessonRow(rowId, 'videoUrl', url);
-      toast.success('تم رفع الفيديو بنجاح');
-      return { url };
-    } catch (error) {
-      toast.error('فشل في رفع الفيديو');
-      throw error;
-    }
+  const handleLessonVideoUploadComplete = (rowId) => (url) => {
+    updateLessonRow(rowId, 'videoUrl', url);
+    toast.success('تم رفع الفيديو بنجاح');
   };
 
   const handleSubmit = async (e) => {
@@ -282,7 +272,7 @@ const ManageLessons = () => {
                         <Label>فيديو الدرس</Label>
                         <VideoUpload
                           value={row.videoUrl}
-                          onUpload={handleLessonVideoUpload(row.id)}
+                          onUploadComplete={handleLessonVideoUploadComplete(row.id)}
                           onRemove={() => updateLessonRow(row.id, 'videoUrl', '')}
                         />
                       </div>
