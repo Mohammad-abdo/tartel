@@ -165,6 +165,9 @@ const Bookings = () => {
               </div>
             </div>
             <p className="max-w-2xl text-base text-emerald-700 dark:text-emerald-300 font-alexandria">{t('bookings.manageSubtitle') || 'إدارة حجوزات ومواعيد تعلم القرآن الكريم'}</p>
+            <p className="max-w-2xl text-sm text-teal-700/90 dark:text-teal-300/90 font-alexandria border-s-4 border-teal-400 ps-3 mt-2">
+              {t('bookings.sessionBookingsOnlyHint')}
+            </p>
             <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
               <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
               <span className="font-alexandria">{isRTL ? 'واتقوا الله ويعلمكم الله' : 'And fear Allah, and Allah will teach you'}</span>

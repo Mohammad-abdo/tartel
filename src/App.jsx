@@ -50,6 +50,8 @@ import EditTeacher from './pages/EditTeacher';
 import AddCourse from './pages/AddCourse';
 import EditCourse from './pages/EditCourse';
 import ManageLessons from './pages/ManageLessons';
+import CourseEnrollments from './pages/CourseEnrollments';
+import CourseEnrollmentDetail from './pages/CourseEnrollmentDetail';
 import './App.css';
 
 function ThemedToastContainer() {
@@ -212,6 +214,26 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <BookingDetail />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/course-enrollments"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CourseEnrollments />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/course-enrollments/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CourseEnrollmentDetail />
             </DashboardLayout>
           </ProtectedRoute>
         }

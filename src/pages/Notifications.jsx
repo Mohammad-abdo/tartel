@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useAdminInbox } from '../context/AdminInboxContext';
 import { notificationAPI, adminAPI } from '../services/api';
 import { FiBell, FiCheck, FiCheckCircle, FiTrash2, FiSend, FiUsers, FiGlobe } from 'react-icons/fi';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -37,6 +38,7 @@ const getNotificationRoute = (n) => {
     case 'COURSE_CREATED':
       return id ? `/courses/${id}` : '/courses';
     case 'PAYMENT_RECEIVED':
+    case 'PAYMENT_FAILED':
       return '/bookings';
     case 'REVIEW_RECEIVED':
       return id ? `/teachers/${id}` : '/teachers';
@@ -49,6 +51,7 @@ const Notifications = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { refreshUnreadCount } = useAdminInbox();
   const navigate = useNavigate();
   const isRTL = language === 'ar';
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
@@ -101,6 +104,7 @@ const Notifications = () => {
     try {
       await notificationAPI.markAsRead(id);
       setList((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true, readAt: new Date() } : n)));
+      refreshUnreadCount();
       toast.success(t('notifications.markedRead') || 'Marked as read');
     } catch (e) {
       toast.error(e.response?.data?.message || t('common.error'));
@@ -115,6 +119,7 @@ const Notifications = () => {
     try {
       await notificationAPI.markAllAsRead();
       setList((prev) => prev.map((n) => ({ ...n, isRead: true, readAt: new Date() })));
+      refreshUnreadCount();
       toast.success(t('notifications.allMarkedRead') || 'All marked as read');
     } catch (e) {
       toast.error(e.response?.data?.message || t('common.error'));
@@ -129,6 +134,7 @@ const Notifications = () => {
     try {
       await notificationAPI.deleteNotification(id);
       setList((prev) => prev.filter((n) => n.id !== id));
+      refreshUnreadCount();
       toast.success(t('notifications.deleted') || 'Notification deleted');
     } catch (e) {
       toast.error(e.response?.data?.message || t('common.error'));

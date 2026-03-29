@@ -144,6 +144,7 @@ const AddTeacher = () => {
     try {
       const submitData = {
         ...formData,
+        introVideoUrl: formData.introVideoUrl?.trim() || null,
         teacherType: formData.teacherType === 'COURSE_SHEIKH' ? 'COURSE_SHEIKH' : 'FULL_TEACHER',
         experience: formData.experience ? parseInt(formData.experience) : undefined,
         hourlyRate: isCourseSheikh ? 0 : (formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined),
@@ -172,11 +173,6 @@ const AddTeacher = () => {
       toast.error('صورة الشيخ مطلوبة.');
       return;
     }
-    if (!formData.introVideoUrl?.trim()) {
-      toast.error('فيديو التعريف مطلوب للشيخ.');
-      return;
-    }
-    
     if (formData.teacherType === 'FULL_TEACHER') {
       if (!formData.hourlyRate || parseFloat(formData.hourlyRate) <= 0) {
         toast.error('يجب تحديد سعر الساعة للشيخ الكامل.');
@@ -550,12 +546,22 @@ const AddTeacher = () => {
                   <p className="text-xs text-gray-500">الحد الأقصى: 5 ميجابايت - الأنواع المدعومة: JPG, PNG, GIF</p>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">فيديو التعريف *</label>
-                <div className="space-y-3">
-                  {/* Upload Button */}
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg cursor-pointer hover:bg-purple-700 transition-colors">
+              <details className="group rounded-lg border-2 border-emerald-200/70 bg-emerald-50/30 open:bg-white open:shadow-sm">
+                <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-2 hover:bg-emerald-50/80 rounded-lg">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-600 text-white">
+                      <FiVideo className="w-4 h-4" />
+                    </span>
+                    <span>
+                      فيديو تعريفي للشيخ
+                      <span className="block text-xs font-normal text-gray-500">اختياري — اضغط للعرض أو الرفع</span>
+                    </span>
+                  </span>
+                  <span className="text-gray-500 text-lg leading-none group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div className="px-4 pb-4 pt-0 space-y-3 border-t border-emerald-100 mt-2">
+                  <div className="flex items-center gap-3 flex-wrap pt-3">
+                    <label className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg cursor-pointer hover:bg-emerald-700 transition-colors">
                       {videoUploading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -575,26 +581,21 @@ const AddTeacher = () => {
                         disabled={videoUploading}
                       />
                     </label>
-                    <span className="text-xs text-gray-500">أو</span>
-                    <FiVideo className="text-gray-400" />
+                    <span className="text-xs text-gray-500">أو الصق رابطاً</span>
                   </div>
-                  
-                  {/* URL Input */}
                   <input
                     type="url"
                     name="introVideoUrl"
                     value={formData.introVideoUrl}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-                    placeholder="أو أدخل رابط الفيديو (يوتيوب أو مباشر)"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    placeholder="رابط الفيديو (يوتيوب أو ملف مباشر)"
                   />
-                  
-                  {/* Video Preview */}
                   {formData.introVideoUrl && (
-                    <div className="mt-2">
+                    <div className="mt-2 space-y-2">
                       <video
                         src={formData.introVideoUrl}
-                        className="w-32 h-20 object-cover rounded-lg border border-gray-200"
+                        className="w-full max-w-xs h-24 object-cover rounded-lg border border-gray-200"
                         controls
                         preload="none"
                         muted
@@ -602,12 +603,18 @@ const AddTeacher = () => {
                           console.warn('خطأ في تحميل الفيديو');
                         }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, introVideoUrl: '' }))}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        إزالة الفيديو
+                      </button>
                     </div>
                   )}
-                  
-                  <p className="text-xs text-gray-500">الحد الأقصى: 50 ميجابايت - الأنواع المدعومة: MP4, MOV, AVI</p>
+                  <p className="text-xs text-gray-500">الحد الأقصى حسب السيرفر — MP4, MOV, WEBM</p>
                 </div>
-              </div>
+              </details>
             </div>
           </div>
 

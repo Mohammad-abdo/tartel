@@ -81,6 +81,7 @@ const defaultPathLabels = {
   users: 'sidebar.users',
   teachers: 'sidebar.teachers',
   bookings: 'sidebar.bookings',
+  'course-enrollments': 'sidebar.courseEnrollments',
   payments: 'sidebar.payments',
   wallets: 'sidebar.wallets',
   subscriptions: 'sidebar.subscriptions',

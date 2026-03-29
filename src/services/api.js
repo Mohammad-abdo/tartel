@@ -109,6 +109,10 @@ export const adminAPI = {
   toggleBookingFeatured: (id, isFeatured) => api.patch(`/admin/bookings/${id}/featured`, { isFeatured }),
   getFeaturedBookings: (params) => api.get('/admin/bookings/featured', { params }),
 
+  // Course enrollments (admin — separate from session bookings)
+  getCourseEnrollments: (params) => api.get('/admin/course-enrollments', { params }),
+  getCourseEnrollmentById: (id) => api.get(`/admin/course-enrollments/${id}`),
+
   // Payments
   getPayments: (params) => api.get('/admin/payments', { params }),
   getPaymentById: (id) => api.get(`/admin/payments/${id}`),
@@ -314,6 +318,7 @@ export const financeAPI = {
 // Notification API (User notifications - inbox for logged-in user)
 export const notificationAPI = {
   getNotifications: (params) => api.get('/notifications', { params: params || {} }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
   markAsRead: (id) => api.patch(`/notifications/${id}/read`),
   markAllAsRead: () => api.patch('/notifications/read-all'),
   deleteNotification: (id) => api.delete(`/notifications/${id}`),
@@ -457,6 +462,22 @@ export async function chunkedUploadVideo(file, onProgress) {
         report();
       })
     );
+  }
+
+  // 3b. Reconcile with server (handles rare failures / race recovery)
+  const { data: statusAfter } = await api.get('/upload/status', { params: { uploadId } });
+  const onServer = new Set(statusAfter.uploadedChunks || []);
+  const stillMissing = [];
+  for (let i = 0; i < totalChunks; i++) {
+    if (!onServer.has(i)) stillMissing.push(i);
+  }
+  for (const idx of stillMissing) {
+    const start = idx * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const blob = file.slice(start, end);
+    await uploadOneChunk(uploadId, idx, blob);
+    completedBytes += end - start;
+    report();
   }
 
   // 4. Merge

@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationAPI } from '../../services/api';
+import { useAdminInbox } from '../../context/AdminInboxContext';
 import { FiBell, FiSearch, FiUser, FiSettings, FiLogOut, FiChevronDown, FiGlobe, FiSun, FiMoon } from 'react-icons/fi';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -24,8 +25,8 @@ const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isRTL = language === 'ar';
+  const { unreadCount, refreshUnreadCount, adjustUnreadOptimistic } = useAdminInbox();
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
@@ -44,6 +45,7 @@ const Header = () => {
       case 'COURSE_CREATED':
         return id ? `/courses/${id}` : '/courses';
       case 'PAYMENT_RECEIVED':
+      case 'PAYMENT_FAILED':
         return '/bookings';
       case 'REVIEW_RECEIVED':
         return id ? `/teachers/${id}` : '/teachers';
@@ -52,10 +54,6 @@ const Header = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) fetchNotifications();
-  }, [user]);
-
   const fetchNotifications = async () => {
     if (!user) return;
     try {
@@ -63,19 +61,41 @@ const Header = () => {
       const data = response?.data ?? response;
       const list = Array.isArray(data) ? data : [];
       setNotifications(list);
-      setUnreadCount(list.filter((n) => !n.isRead).length);
+      await refreshUnreadCount();
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
       setNotifications([]);
-      setUnreadCount(0);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await notificationAPI.getNotifications({ limit: 20 });
+        const data = response?.data ?? response;
+        const list = Array.isArray(data) ? data : [];
+        if (!cancelled) setNotifications(list);
+        await refreshUnreadCount();
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to fetch notifications:', error);
+          setNotifications([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, refreshUnreadCount]);
 
   const handleMarkAsRead = async (id) => {
     try {
       await notificationAPI.markAsRead(id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-      setUnreadCount((c) => Math.max(0, c - 1));
+      adjustUnreadOptimistic(-1);
+      refreshUnreadCount();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -85,7 +105,7 @@ const Header = () => {
     try {
       await notificationAPI.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      await refreshUnreadCount();
     } catch (error) {
       console.error('Failed to mark all as read', error);
     }

@@ -22,9 +22,10 @@ import {
   FiPieChart,
   FiChevronLeft,
   FiChevronRight,
-  FiZap,
+  FiLayers,
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useAdminInbox } from '../../context/AdminInboxContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { canShowSidebarLink, SUPER_ADMIN_ONLY_PATHS } from '../../config/routePermissions';
@@ -40,6 +41,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
   const isRTL = language === 'ar';
   const location = useLocation();
   const { logout, user } = useAuth();
+  const { unreadCount: inboxUnread } = useAdminInbox();
   const logoUrl = sidebar?.logoUrl || '/admin-logo.svg';
   const title = language === 'ar' ? (sidebar?.titleAr || 'ترتيل') : (sidebar?.titleEn || 'Tarteel');
   const subtitle = language === 'ar' ? (sidebar?.subtitleAr || 'منصة حفظ القرآن') : (sidebar?.subtitleEn || 'Quran memorization platform');
@@ -51,11 +53,9 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
     { path: '/users', icon: FiUsers, label: t('sidebar.students') },
     { path: '/teachers', icon: FiUserCheck, label: t('sidebar.teachers') },
     { path: '/bookings', icon: FiCalendar, label: t('sidebar.bookings') },
+    { path: '/course-enrollments', icon: FiLayers, label: t('sidebar.courseEnrollments') },
     { path: '/sessions', icon: FiVideo, label: t('sidebar.sessions') },
     { path: '/payments', icon: FiDollarSign, label: t('sidebar.payments') },
-    { path: '/fawry-test', icon: FiZap, label: language === 'ar' ? 'تجربة فوري' : 'Fawry test' },
-    { path: '/agora-test-host', icon: FiVideo, label: language === 'ar' ? 'تجربة أجورا — شيخ' : 'Agora test — Sheikh' },
-    { path: '/agora-test-join', icon: FiVideo, label: language === 'ar' ? 'تجربة أجورا — طالب' : 'Agora test — Student' },
     { path: '/finance', icon: FiTrendingUp, label: t('sidebar.finance') },
     { path: '/wallets', icon: FiCreditCard, label: t('sidebar.wallets') },
     // { path: '/subscriptions', icon: FiBox, label: t('sidebar.subscriptions') },
@@ -141,7 +141,9 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
         <ul className="space-y-0.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive =
+              location.pathname === item.path ||
+              (item.path !== '/dashboard' && location.pathname.startsWith(`${item.path}/`));
             return (
               <li key={item.path}>
                 <Link
@@ -154,7 +156,20 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
                   )}
                   title={collapsed ? item.label : undefined}
                 >
-                  <Icon className="size-5 shrink-0" aria-hidden />
+                  <span className="relative inline-flex shrink-0">
+                    <Icon className="size-5 shrink-0" aria-hidden />
+                    {item.path === '/notifications' && inboxUnread > 0 && (
+                      <span
+                        className={cn(
+                          'absolute flex min-h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-0.5 text-[9px] font-bold text-white shadow ring-2 ring-white dark:ring-gray-800',
+                          isRTL ? '-left-1.5 -top-1' : '-right-1.5 -top-1'
+                        )}
+                        aria-label={String(inboxUnread)}
+                      >
+                        {inboxUnread > 99 ? '99+' : inboxUnread}
+                      </span>
+                    )}
+                  </span>
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               </li>

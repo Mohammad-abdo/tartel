@@ -5,12 +5,13 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { toast } from 'react-toastify';
 import { adminAPI, fileUploadAPI } from '../services/api';
-import { FiArrowLeft, FiSave, FiDollarSign, FiImage, FiVideo, FiUpload, FiUser, FiCalendar, FiClock, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiDollarSign, FiImage, FiVideo, FiUpload, FiUser, FiCalendar, FiClock, FiPlus, FiTrash2, FiChevronDown } from 'react-icons/fi';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Skeleton } from '../components/ui/skeleton';
+import { Switch } from '../components/ui/switch';
 import { cn } from '../lib/utils';
 
 const EditTeacher = () => {
@@ -177,10 +178,6 @@ const EditTeacher = () => {
       toast.error(t('teachers.photoRequired') || 'صورة الشيخ مطلوبة.');
       return;
     }
-    if (!formData.introVideoUrl?.trim()) {
-      toast.error(t('teachers.introVideoRequired') || 'فيديو التعريف مطلوب للشيخ.');
-      return;
-    }
     if (formData.teacherType === 'FULL_TEACHER') {
       if (!formData.hourlyRate || parseFloat(formData.hourlyRate) <= 0) {
         toast.error(t('teachers.hourlyRateRequired') || 'يجب تحديد سعر الساعة للشيخ الكامل.');
@@ -215,6 +212,7 @@ const EditTeacher = () => {
       const isCourseSheikh = formData.teacherType === 'COURSE_SHEIKH';
       const submitData = {
         ...formData,
+        introVideoUrl: formData.introVideoUrl?.trim() || null,
         teacherType: formData.teacherType === 'COURSE_SHEIKH' ? 'COURSE_SHEIKH' : 'FULL_TEACHER',
         experience: formData.experience ? parseInt(formData.experience, 10) : undefined,
         hourlyRate: isCourseSheikh ? 0 : (formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined),
@@ -412,21 +410,26 @@ const EditTeacher = () => {
                 />
               </div>
 
-              {/* Approved toggle - modern switch look */}
-              <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3">
-                <Label className="text-gray-700 font-medium cursor-pointer flex-1">
+              {/* Approved — high-contrast switch (visible on light backgrounds) */}
+              <div
+                className={cn(
+                  'flex items-center justify-between gap-4 rounded-xl border-2 px-4 py-3.5 shadow-sm transition-colors',
+                  formData.isApproved
+                    ? 'border-emerald-500/70 bg-gradient-to-l from-emerald-100/90 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/30 dark:border-emerald-600'
+                    : 'border-amber-400/80 bg-amber-50/90 dark:border-amber-600 dark:bg-amber-950/25'
+                )}
+              >
+                <Label htmlFor="teacher-is-approved" className="text-gray-900 dark:text-gray-100 font-semibold cursor-pointer flex-1">
                   {t('teachers.approved')}
                 </Label>
-                <label className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-gray-200 transition-colors focus-within:ring-2 focus-within:ring-primary-500/30 focus-within:ring-offset-2 has-[:checked]:bg-primary-500">
-                  <input
-                    type="checkbox"
-                    name="isApproved"
+                <span dir="ltr" className="inline-flex shrink-0 scale-125 origin-center">
+                  <Switch
+                    id="teacher-is-approved"
                     checked={formData.isApproved}
-                    onChange={handleChange}
-                    className="sr-only"
+                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, isApproved: checked }))}
+                    className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-slate-500 border border-slate-600/30"
                   />
-                  <span className="pointer-events-none inline-block size-5 translate-x-0.5 rounded-full bg-white shadow-sm ring-0 transition-transform has-[:checked]:translate-x-5 [input:checked~&]:translate-x-5" aria-hidden />
-                </label>
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -492,28 +495,39 @@ const EditTeacher = () => {
               </CardContent>
             </Card>
 
-            {/* Video card */}
-            <Card className="rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-              <CardHeader className="border-b border-gray-100 bg-gray-50/50 px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-500 text-white">
+            {/* Intro video — optional, collapsed by default */}
+            <details className="group rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden open:shadow-md open:border-emerald-200/80 transition-shadow">
+              <summary
+                className={cn(
+                  'flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 bg-gray-50/80 hover:bg-emerald-50/60 transition-colors',
+                  isRTL && 'flex-row-reverse text-right'
+                )}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
                     <FiVideo className="size-4" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-900">
-                    {t('teachers.introVideo')} *
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-5 space-y-4">
+                  </span>
+                  <span>
+                    <span className="block text-base font-semibold text-gray-900">
+                      {t('teachers.introVideo')}
+                    </span>
+                    <span className="text-xs text-gray-500 font-normal">
+                      {t('teachers.introVideoOptionalHint') || 'اختياري — اضغط للعرض أو الرفع'}
+                    </span>
+                  </span>
+                </span>
+                <FiChevronDown className="size-5 shrink-0 text-gray-500 transition-transform group-open:rotate-180" />
+              </summary>
+              <CardContent className="p-5 space-y-4 border-t border-gray-100">
                 <input type="file" ref={videoFileRef} accept="video/*" onChange={handleVideoUpload} className="hidden" />
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                   <Input
                     type="url"
                     name="introVideoUrl"
                     value={formData.introVideoUrl}
                     onChange={handleChange}
-                    placeholder="رابط الفيديو"
-                    className={cn('flex-1 rounded-xl h-10 text-sm', isRTL && 'text-right')}
+                    placeholder={t('teachers.introVideoUrlPlaceholder') || 'رابط الفيديو (يوتيوب أو ملف)'}
+                    className={cn('flex-1 min-w-0 rounded-xl h-10 text-sm', isRTL && 'text-right')}
                   />
                   <Button
                     type="button"
@@ -521,7 +535,7 @@ const EditTeacher = () => {
                     size="sm"
                     onClick={() => videoFileRef.current?.click()}
                     disabled={uploadingVideo}
-                    className="shrink-0 rounded-xl h-10 px-4 border-gray-200"
+                    className="shrink-0 rounded-xl h-10 px-4 border-emerald-200 text-emerald-800 hover:bg-emerald-50"
                   >
                     <FiUpload className="size-4" />
                     {uploadingVideo ? t('common.uploading') : t('teachers.uploadIntroVideo')}
@@ -548,8 +562,18 @@ const EditTeacher = () => {
                     )}
                   </div>
                 )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => setFormData((prev) => ({ ...prev, introVideoUrl: '' }))}
+                  disabled={!formData.introVideoUrl}
+                >
+                  {t('teachers.clearIntroVideo') || 'إزالة الفيديو التعريفي'}
+                </Button>
               </CardContent>
-            </Card>
+            </details>
           </div>
         </div>
 

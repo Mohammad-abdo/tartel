@@ -9,6 +9,7 @@ export const routePermissions = {
   '/users': [PERMISSIONS.MANAGE_USERS],
   '/teachers': [PERMISSIONS.MANAGE_USERS],
   '/bookings': [PERMISSIONS.MANAGE_BOOKINGS],
+  '/course-enrollments': [PERMISSIONS.MANAGE_COURSES],
   '/payments': [PERMISSIONS.MANAGE_BOOKINGS, PERMISSIONS.VIEW_REPORTS],
   '/wallets': [PERMISSIONS.MANAGE_BOOKINGS, PERMISSIONS.VIEW_REPORTS],
   '/subscriptions': [PERMISSIONS.MANAGE_BOOKINGS],
@@ -25,9 +26,6 @@ export const routePermissions = {
   '/settings': [],
   '/profile': [],
   '/unauthorized': [],
-  '/fawry-test': [],
-  '/agora-test-host': [],
-  '/agora-test-join': [],
 };
 
 /**
@@ -38,6 +36,7 @@ export const sidebarPermission = {
   '/users': PERMISSIONS.MANAGE_USERS,
   '/teachers': PERMISSIONS.MANAGE_USERS,
   '/bookings': PERMISSIONS.MANAGE_BOOKINGS,
+  '/course-enrollments': PERMISSIONS.MANAGE_COURSES,
   '/payments': PERMISSIONS.VIEW_REPORTS,
   '/wallets': PERMISSIONS.VIEW_REPORTS,
   '/subscriptions': PERMISSIONS.MANAGE_BOOKINGS,
