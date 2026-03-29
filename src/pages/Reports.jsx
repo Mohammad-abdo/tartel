@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { toast } from 'react-toastify';
 import { adminAPI } from '../services/api';
 import {
   FiBarChart2,
@@ -36,6 +37,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { cn } from '../lib/utils';
+import { exportReportPdf } from '../utils/reportPdfExport';
 
 const reportTypes = [
   { id: 'principal', labelKey: 'reports.principal', descKey: 'reports.principalDesc', icon: FiBarChart2 },
@@ -113,9 +115,52 @@ function KpiTile({ label, value, sub, href }) {
 
 const Reports = () => {
   const { t } = useTranslation();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, sidebar } = useCurrency();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const pdfLabels = useMemo(
+    () => ({
+      metric: t('reports.pdfMetric'),
+      value: t('reports.pdfValue'),
+      period: t('reports.pdfPeriod'),
+      totalUsers: t('dashboard.totalUsers'),
+      totalTeachers: t('reports.totalTeachers'),
+      totalStudents: t('reports.totalStudents'),
+      activeTeachers: t('reports.activeTeachers'),
+      pendingTeachers: t('reports.pendingTeachers'),
+      totalBookings: t('reports.totalBookings'),
+      completedBookings: t('reports.completedBookings'),
+      cancelledBookings: t('reports.cancelledBookings'),
+      totalRevenue: t('reports.totalRevenue'),
+      platformRevenue: t('reports.platformRevenue'),
+      teacherPayouts: t('reports.teacherPayouts'),
+      netProfit: t('reports.netProfit'),
+      pendingPayouts: t('reports.pendingPayouts'),
+      profitMargin: t('reports.profitMargin'),
+      avgRevenueBooking: t('reports.averageRevenuePerBooking'),
+      periodNew: t('reports.periodNew'),
+      newUsers: t('reports.newUsers'),
+      newTeachers: t('reports.newTeachers'),
+      newStudents: t('reports.newStudents'),
+      newBookings: t('reports.newBookings'),
+      colTeacher: t('reports.teacher'),
+      colStudent: t('reports.student'),
+      colEmail: t('users.email'),
+      colBookings: t('reports.bookings'),
+      colDate: t('reports.date'),
+      colTotal: t('reports.total'),
+      colCompleted: t('reports.completed'),
+      colCancelled: t('reports.cancelled'),
+      colAmount: t('reports.amount'),
+      revenueByDate: t('reports.revenueByDate'),
+      sessionEnded: t('reports.sessionEnded'),
+      truncated: t('reports.pdfTruncatedNotice'),
+    }),
+    [t]
+  );
 
   const [dateRange, setDateRange] = useState(() => computePreset('thisMonth'));
   const [preset, setPreset] = useState('thisMonth');
@@ -360,12 +405,43 @@ const Reports = () => {
     else if (selectedReport === 'profits') handleExportProfits();
   };
 
+  const runExportPdf = async () => {
+    const rt = reportTypes.find((r) => r.id === selectedReport);
+    const typeLabel = rt ? t(rt.labelKey) : selectedReport;
+    setPdfLoading(true);
+    try {
+      await exportReportPdf({
+        type: selectedReport,
+        dateRange,
+        labels: {
+          ...pdfLabels,
+          reportTitle: `${t('reports.title')} — ${typeLabel}`,
+        },
+        formatCurrency,
+        principalData,
+        trendsData,
+        reportData,
+        sidebar,
+        isRTL,
+        language,
+      });
+      toast.success(t('reports.pdfSuccess'));
+    } catch (e) {
+      console.error(e);
+      toast.error(t('reports.pdfError'));
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   const canExport =
     (selectedReport === 'principal' && principalData?.summary) ||
     (selectedReport === 'trends' && trendsData.length > 0) ||
     (selectedReport === 'sessions' && (reportData?.data?.length ?? 0) > 0) ||
-    (selectedReport === 'teachers' && (reportData?.teachers?.length ?? 0) > 0) ||
-    (selectedReport === 'students' && (reportData?.students?.length ?? 0) > 0) ||
+    (selectedReport === 'teachers' &&
+      ((reportData?.teachers?.length ?? 0) > 0 || (reportData?.topTeachers?.length ?? 0) > 0)) ||
+    (selectedReport === 'students' &&
+      ((reportData?.students?.length ?? 0) > 0 || (reportData?.topStudents?.length ?? 0) > 0)) ||
     (selectedReport === 'profits' && reportData?.summary);
 
   const summary = principalData?.summary;
@@ -625,10 +701,23 @@ const Reports = () => {
                 {t('reports.detailReport')}: {t(reportTypes.find((r) => r.id === selectedReport)?.labelKey)} — {periodStart} → {periodEnd}
               </h3>
               {!detailLoading && canExport && (
-                <Button variant="outline" size="sm" onClick={runExport} className="shrink-0">
-                  <FiDownload className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
-                  {t('reports.export')}
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={runExport} className="shrink-0" type="button">
+                    <FiDownload className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
+                    {t('reports.export')}
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={runExportPdf}
+                    disabled={pdfLoading}
+                    className="shrink-0 bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md hover:from-emerald-700 hover:to-teal-800"
+                    type="button"
+                  >
+                    <FiFileText className={cn('size-4', isRTL ? 'ml-2' : 'mr-2')} />
+                    {pdfLoading ? t('reports.pdfGenerating') : t('reports.exportPdf')}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
