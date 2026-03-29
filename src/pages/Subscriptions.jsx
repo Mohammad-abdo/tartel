@@ -31,9 +31,14 @@ const Subscriptions = () => {
         const response = await subscriptionAPI.getAllPackages(false);
         setPackages(response.data || []);
       } else {
-        const response = await subscriptionAPI.getAllPackages({ page, limit: 20, status: statusFilter });
-        setSubscriptions(response.data.data || []);
-        setTotalPages(response.data.totalPages || 1);
+        const response = await subscriptionAPI.getAllSubscriptions({
+          page,
+          limit: 20,
+          ...(statusFilter ? { status: statusFilter } : {}),
+        });
+        const body = response.data ?? response;
+        setSubscriptions(body.subscriptions || body.data || []);
+        setTotalPages(body.pagination?.totalPages || body.totalPages || 1);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);

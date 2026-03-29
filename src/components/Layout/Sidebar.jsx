@@ -105,8 +105,8 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
               />
             </div>
             <div className="flex flex-col min-w-0 overflow-hidden">
-              <span className="text-lg font-bold tracking-tight text-white arabic-text truncate" dir="rtl" style={{ textShadow: '0 0 8px rgba(0,0,0,0.3)' }}>{title}</span>
-              <span className="text-xs font-medium text-white/90 truncate" style={{ textShadow: '0 0 6px rgba(0,0,0,0.25)' }}>{subtitle}</span>
+              <span className="text-lg font-bold tracking-tight text-primary-foreground arabic-text truncate" dir="rtl" style={{ textShadow: '0 0 8px rgba(0,0,0,0.3)' }}>{title}</span>
+              <span className="text-xs font-medium text-primary-foreground/90 truncate" style={{ textShadow: '0 0 6px rgba(0,0,0,0.25)' }}>{subtitle}</span>
             </div>
           </div>
         ) : (

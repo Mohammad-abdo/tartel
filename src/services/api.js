@@ -163,14 +163,14 @@ export const settingsAPI = {
   updateSettings: (data) => api.patch('/settings', data),
 };
 
-// Subscriptions API
+// Subscriptions API (aliases same backend as studentSubscriptionAPI — legacy path was /subscriptions/* which is not mounted)
 export const subscriptionAPI = {
-  getAllPackages: (activeOnly) => api.get('/subscriptions/packages', { params: { activeOnly } }),
-  getPackageById: (id) => api.get(`/subscriptions/packages/${id}`),
-  createPackage: (data) => api.post('/subscriptions/packages', data),
-  updatePackage: (id, data) => api.put(`/subscriptions/packages/${id}`, data),
-  deletePackage: (id) => api.delete(`/subscriptions/packages/${id}`),
-  getAllSubscriptions: (params) => api.get('/subscriptions/admin/all', { params }),
+  getAllPackages: (activeOnly) => api.get('/student-subscriptions/packages', { params: { activeOnly } }),
+  getPackageById: (id) => api.get(`/student-subscriptions/packages/${id}`),
+  createPackage: (data) => api.post('/student-subscriptions/packages', data),
+  updatePackage: (id, data) => api.put(`/student-subscriptions/packages/${id}`, data),
+  deletePackage: (id) => api.delete(`/student-subscriptions/packages/${id}`),
+  getAllSubscriptions: (params) => api.get('/student-subscriptions/admin/all', { params }),
 };
 
 // Courses API
