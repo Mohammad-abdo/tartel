@@ -9,7 +9,6 @@ import {
   FiDollarSign,
   FiBarChart2,
   FiSettings,
-  FiLogOut,
   FiCreditCard,
   FiBox,
   FiBell,
@@ -40,7 +39,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
   const { sidebar } = useCurrency();
   const isRTL = language === 'ar';
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const { unreadCount: inboxUnread } = useAdminInbox();
   const logoUrl = sidebar?.logoUrl || '/admin-logo.svg';
   const title = language === 'ar' ? (sidebar?.titleAr || 'ترتيل') : (sidebar?.titleEn || 'Tarteel');
@@ -177,28 +176,6 @@ const Sidebar = ({ collapsed, onToggleCollapse }) => {
           })}
         </ul>
       </nav>
-
-      {/* User & Logout */}
-      <div className="shrink-0 space-y-2 border-t border-gray-200 dark:border-gray-700 p-3">
-        {!collapsed && (
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-700 bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/30 dark:to-amber-900/30 px-3 py-2.5">
-            <p className="truncate text-sm font-medium text-emerald-900 dark:text-emerald-100 arabic-text">{user?.name || user?.email}</p>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 arabic-text">{t('sidebar.administrator')}</p>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={logout}
-          className={cn(
-            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 arabic-text',
-            collapsed && 'justify-center'
-          )}
-          title={collapsed ? t('sidebar.logout') : undefined}
-        >
-          <FiLogOut className="size-5 shrink-0" aria-hidden />
-          {!collapsed && <span>{t('sidebar.logout')}</span>}
-        </button>
-      </div>
     </aside>
   );
 };
