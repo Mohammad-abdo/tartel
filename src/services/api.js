@@ -41,7 +41,7 @@ api.interceptors.response.use(
 
     // Fix image URLs in response data
     if (response.data) {
-      const imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl', 'videoUrl', 'thumbnailUrl', 'logoUrl', 'url'];
+      const imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl', 'videoUrl', 'thumbnailUrl', 'logoUrl', 'url', 'video_url', 'thumbnail_url', 'intro_video_url', 'intro_video_thumbnail'];
 
       if (Array.isArray(response.data)) {
         // Fix image URLs in array of objects

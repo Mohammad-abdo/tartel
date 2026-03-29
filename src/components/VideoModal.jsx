@@ -1,13 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiX, FiPlay, FiPause, FiVolume2, FiVolumeX, FiMaximize, FiMinimize } from 'react-icons/fi';
+import { fixImageUrl } from '../utils/imageUtils';
 
-const VideoModal = ({ videoUrl, title, onClose }) => {
+const VideoModal = ({ videoUrl: rawVideoUrl, title, onClose }) => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
+
+  const videoUrl = fixImageUrl(rawVideoUrl);
 
   useEffect(() => {
     // Prevent body scroll when modal is open
@@ -147,15 +151,37 @@ const VideoModal = ({ videoUrl, title, onClose }) => {
 
         {/* Video Container */}
         <div className="relative w-full max-w-6xl" onClick={(e) => e.stopPropagation()}>
+          {videoError ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-gray-900 rounded-lg text-white min-h-[200px]">
+              <p className="text-lg mb-2">{t('videoModal.error', 'حدث خطأ في تحميل الفيديو')}</p>
+              <button
+                onClick={() => {
+                  setVideoError(false);
+                  if (videoRef.current) {
+                    videoRef.current.load();
+                  }
+                }}
+                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                {t('videoModal.retry', 'إعادة المحاولة')}
+              </button>
+            </div>
+          ) : (
           <video
             ref={videoRef}
             src={videoUrl}
             controls
+            playsInline
+            webkit-playsinline="true"
+            preload="metadata"
+            crossOrigin="anonymous"
             className="w-full h-auto rounded-lg shadow-2xl"
             autoPlay
+            onError={() => setVideoError(true)}
           >
             {t('videoModal.browserNotSupported')}
           </video>
+          )}
 
           {/* Video Controls Overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4 rounded-b-lg">

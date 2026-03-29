@@ -526,7 +526,15 @@ const CourseDetail = () => {
                             allowFullScreen
                           />
                         ) : (
-                          <video className="w-full" controls preload="none" poster={course.introVideoThumbnail || course.image}>
+                          <video
+                            className="w-full"
+                            controls
+                            playsInline
+                            webkit-playsinline="true"
+                            preload="metadata"
+                            crossOrigin="anonymous"
+                            poster={course.introVideoThumbnail || course.image}
+                          >
                             <source src={course.introVideoUrl} type="video/mp4" />
                             {t('videoModal.browserNotSupported')}
                           </video>
@@ -604,7 +612,10 @@ const CourseDetail = () => {
                                             <video
                                               className="w-full h-full"
                                               controls
-                                              preload="none"
+                                              playsInline
+                                              webkit-playsinline="true"
+                                              preload="metadata"
+                                              crossOrigin="anonymous"
                                               poster={video.thumbnailUrl || undefined}
                                               src={video.videoUrl}
                                             >

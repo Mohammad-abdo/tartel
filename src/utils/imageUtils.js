@@ -1,18 +1,28 @@
 /**
- * Utility functions for handling image URLs
+ * Utility functions for handling image and video URLs.
+ * Ensures all media URLs use HTTPS and point to the correct API host.
  */
 
-// Get API base URL from environment
+const URL_FIELDS = [
+  'image', 'avatar', 'photo', 'thumbnail',
+  'introVideoThumbnail', 'introVideoUrl',
+  'videoUrl', 'thumbnailUrl', 'logoUrl', 'url',
+  'video_url', 'thumbnail_url', 'intro_video_url', 'intro_video_thumbnail',
+];
+
+const NESTED_ARRAY_FIELDS = ['videos', 'lessons', 'sheikhs', 'courses', 'data'];
+
 const getApiBaseUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
-  // Remove '/api' suffix to get base URL
-  return apiUrl.replace('/api', '');
+  let base = apiUrl.replace(/\/api\/?$/, '');
+  if (base.startsWith('http://')) {
+    base = base.replace('http://', 'https://');
+  }
+  return base;
 };
 
 /**
- * Fix image URL by replacing localhost URLs with production URLs
- * @param {string} imageUrl - Original image URL from backend
- * @returns {string} - Fixed image URL
+ * Fix a single URL: ensure HTTPS, replace localhost, prepend base for relative paths.
  */
 export const fixImageUrl = (imageUrl) => {
   if (!imageUrl || typeof imageUrl !== 'string') {
@@ -20,73 +30,59 @@ export const fixImageUrl = (imageUrl) => {
   }
 
   const apiBaseUrl = getApiBaseUrl();
-  
-  // If URL already contains the correct API URL, return as is
+
   if (imageUrl.startsWith(apiBaseUrl)) {
     return imageUrl;
   }
-  
-  // If URL contains localhost:8002, replace with production URL
-  if (imageUrl.includes('localhost:8002')) {
-    return imageUrl.replace('http://localhost:8002', apiBaseUrl);
+
+  if (imageUrl.includes('localhost:8002') || imageUrl.includes('localhost:8000') || imageUrl.includes('localhost:5000')) {
+    const fixed = imageUrl.replace(/https?:\/\/localhost:\d+/, apiBaseUrl);
+    return fixed;
   }
-  
-  // If URL contains localhost:8002, replace with production URL  
-  if (imageUrl.includes('localhost:8002')) {
-    return imageUrl.replace('http://localhost:8002', apiBaseUrl);
-  }
-  
-  // If URL starts with /uploads, prepend the API base URL
+
   if (imageUrl.startsWith('/uploads')) {
     return `${apiBaseUrl}${imageUrl}`;
   }
-  
-  // Return original URL if no modifications needed
+
+  if (imageUrl.startsWith('http://') && !imageUrl.includes('youtube') && !imageUrl.includes('youtu.be')) {
+    return imageUrl.replace('http://', 'https://');
+  }
+
   return imageUrl;
 };
 
 /**
- * Fix multiple image URLs in an object
- * @param {Object} obj - Object containing image URLs
- * @param {string[]} imageFields - Array of field names that contain image URLs
- * @returns {Object} - Object with fixed image URLs
+ * Fix media URLs in an object, including nested arrays.
  */
-export const fixImageUrls = (obj, imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl', 'videoUrl', 'thumbnailUrl']) => {
+export const fixImageUrls = (obj, imageFields = URL_FIELDS) => {
   if (!obj || typeof obj !== 'object') {
     return obj;
   }
-  
+
   const fixed = { ...obj };
-  
+
   imageFields.forEach(field => {
-    if (fixed[field]) {
+    if (fixed[field] && typeof fixed[field] === 'string') {
       fixed[field] = fixImageUrl(fixed[field]);
     }
   });
 
-  // Handle nested objects like videos array in lessons
-  if (fixed.videos && Array.isArray(fixed.videos)) {
-    fixed.videos = fixImageUrlsInArray(fixed.videos, imageFields);
-  }
+  NESTED_ARRAY_FIELDS.forEach(field => {
+    if (fixed[field] && Array.isArray(fixed[field])) {
+      fixed[field] = fixImageUrlsInArray(fixed[field], imageFields);
+    }
+  });
 
-  // Handle nested lessons array
-  if (fixed.lessons && Array.isArray(fixed.lessons)) {
-    fixed.lessons = fixImageUrlsInArray(fixed.lessons, imageFields);
-  }
-  
   return fixed;
 };
 
 /**
- * Fix image URLs in an array of objects
- * @param {Array} array - Array of objects containing image URLs
- * @param {string[]} imageFields - Array of field names that contain image URLs
- * @returns {Array} - Array with fixed image URLs
+ * Fix media URLs in an array of objects.
  */
-export const fixImageUrlsInArray = (array, imageFields = ['image', 'avatar', 'photo', 'thumbnail', 'introVideoThumbnail', 'introVideoUrl']) => {
+export const fixImageUrlsInArray = (array, imageFields = URL_FIELDS) => {
   if (!Array.isArray(array)) {
     return array;
   }
-  
+
   return array.map(item => fixImageUrls(item, imageFields));
 };
