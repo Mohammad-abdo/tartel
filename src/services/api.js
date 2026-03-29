@@ -382,8 +382,8 @@ export const fileUploadAPI = {
 };
 
 // ── Chunked Upload API (large videos) ──────────────────────────────────────
-const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB
-const PARALLEL_CHUNKS = 3;
+const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MB (server multer allows up to 8 MB per chunk)
+const PARALLEL_CHUNKS = 6;
 const MAX_RETRIES = 3;
 
 async function uploadOneChunk(uploadId, chunkIndex, blob, retries = MAX_RETRIES) {

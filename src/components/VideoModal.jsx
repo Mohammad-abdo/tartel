@@ -174,7 +174,6 @@ const VideoModal = ({ videoUrl: rawVideoUrl, title, onClose }) => {
             playsInline
             webkit-playsinline="true"
             preload="metadata"
-            crossOrigin="anonymous"
             className="w-full h-auto rounded-lg shadow-2xl"
             autoPlay
             onError={() => setVideoError(true)}

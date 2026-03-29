@@ -532,7 +532,6 @@ const CourseDetail = () => {
                             playsInline
                             webkit-playsinline="true"
                             preload="metadata"
-                            crossOrigin="anonymous"
                             poster={course.introVideoThumbnail || course.image}
                           >
                             <source src={course.introVideoUrl} type="video/mp4" />
@@ -615,7 +614,6 @@ const CourseDetail = () => {
                                               playsInline
                                               webkit-playsinline="true"
                                               preload="metadata"
-                                              crossOrigin="anonymous"
                                               poster={video.thumbnailUrl || undefined}
                                               src={video.videoUrl}
                                             >
