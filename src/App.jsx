@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { isHashRouterEnabled } from './config/apiBase';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -521,8 +522,9 @@ const AppRoutes = () => {
 };
 
 function App() {
+  const RouterImpl = isHashRouterEnabled() ? HashRouter : BrowserRouter;
   return (
-    <Router>
+    <RouterImpl>
       <LanguageProvider>
         <ThemeProvider>
           <CurrencyProvider>
@@ -533,11 +535,8 @@ function App() {
           </CurrencyProvider>
         </ThemeProvider>
       </LanguageProvider>
-    </Router>
+    </RouterImpl>
   );
 }
 
 export default App;
-
-//
-//اتق  الله   fdsfdsf

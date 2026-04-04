@@ -7,6 +7,17 @@
  */
 export const DEFAULT_API_BASE_URL = 'https://back.rattelapp.com/api';
 
+/** True when using HashRouter (Apache static host without SPA rewrite). */
+export function isHashRouterEnabled() {
+  const v = import.meta.env.VITE_USE_HASH_ROUTER;
+  return v === 'true' || v === '1';
+}
+
+/** Full path for hard redirects (axios 401) — must match router mode. */
+export function getLoginRedirectHref() {
+  return isHashRouterEnabled() ? '/#/login' : '/login';
+}
+
 function isUnsafeHttpOnHttpsPage(apiUrl) {
   if (typeof window === 'undefined' || window.location?.protocol !== 'https:') return false;
   if (!apiUrl || !apiUrl.startsWith('http://')) return false;

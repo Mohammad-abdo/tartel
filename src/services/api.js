@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getViteApiBaseUrl, sanitizeAxiosRequestForHttpsPage } from '../config/apiBase';
+import { getViteApiBaseUrl, sanitizeAxiosRequestForHttpsPage, getLoginRedirectHref } from '../config/apiBase';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
 const API_BASE_URL = getViteApiBaseUrl();
@@ -68,7 +68,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = getLoginRedirectHref();
     }
     return Promise.reject(error);
   }
