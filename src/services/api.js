@@ -1,8 +1,8 @@
 import axios from 'axios';
+import { getViteApiBaseUrl } from '../config/apiBase';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
-// const API_BASE_URL = 'http://localhost:8002/api';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://back.rattelapp.com/api';
+const API_BASE_URL = getViteApiBaseUrl();
 
 // Create axios instance
 const api = axios.create({
