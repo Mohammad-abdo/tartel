@@ -163,8 +163,8 @@ const FawryTest = () => {
               </p>
               <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
                 {isRTL
-                  ? 'الـ API المنشور لا يتضمن مسارات فوري. أعد نشر مشروع الـ Backend (shik-api) على السيرفر الذي يشغّل shike.developteam.site ثم حدّث هذه الصفحة.'
-                  : 'The deployed API does not include Fawry routes. Redeploy the Backend (shik-api) on the server that hosts shike.developteam.site, then refresh this page.'}
+                  ? 'الـ API المنشور لا يتضمن مسارات فوري. أعد نشر مشروع الـ Backend (shik-api) على السيرفر الذي يشغّل back.rattelapp.com ثم حدّث هذه الصفحة.'
+                  : 'The deployed API does not include Fawry routes. Redeploy the Backend (shik-api) on the server that hosts back.rattelapp.com, then refresh this page.'}
               </p>
             </div>
           </div>
