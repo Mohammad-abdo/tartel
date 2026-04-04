@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getViteApiBaseUrl } from '../config/apiBase';
+import { getViteApiBaseUrl, sanitizeAxiosRequestForHttpsPage } from '../config/apiBase';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
 const API_BASE_URL = getViteApiBaseUrl();
@@ -12,9 +12,10 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: add auth token; for FormData omit Content-Type so axios sets multipart boundary
+// Request interceptor: fix mixed content (https page + http API) on every request
 api.interceptors.request.use(
   (config) => {
+    sanitizeAxiosRequestForHttpsPage(config);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -29,3 +29,39 @@ export function getApiOriginFromEnv() {
   }
   return base;
 }
+
+const LOCAL_HTTP = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i;
+
+/** True if this string is non-localhost HTTP (causes mixed content on https sites). */
+export function isNonLocalHttpUrl(s) {
+  return Boolean(s && typeof s === 'string' && s.startsWith('http://') && !LOCAL_HTTP.test(s));
+}
+
+/**
+ * Mutates axios request config so the final URL is never http:// on an https:// page.
+ * Second line of defense if baseURL was baked wrong at build time.
+ */
+export function sanitizeAxiosRequestForHttpsPage(config) {
+  if (typeof window === 'undefined' || window.location?.protocol !== 'https:') return config;
+  const safeBase = DEFAULT_API_BASE_URL.replace(/\/$/, '');
+
+  if (isNonLocalHttpUrl(config.baseURL)) {
+    config.baseURL = safeBase;
+  }
+
+  const url = config.url;
+  if (typeof url === 'string' && url.startsWith('http') && isNonLocalHttpUrl(url)) {
+    try {
+      const u = new URL(url);
+      config.baseURL = safeBase;
+      let path = u.pathname + (u.search || '');
+      path = path.replace(/^\/api(\/|$)/, '/');
+      if (!path.startsWith('/')) path = `/${path}`;
+      config.url = path;
+    } catch {
+      config.baseURL = safeBase;
+    }
+  }
+
+  return config;
+}
