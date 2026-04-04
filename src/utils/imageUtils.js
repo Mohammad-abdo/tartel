@@ -86,4 +86,3 @@ export const fixImageUrlsInArray = (array, imageFields = URL_FIELDS) => {
 
   return array.map(item => fixImageUrls(item, imageFields));
 };
-};
