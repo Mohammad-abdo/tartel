@@ -2,7 +2,7 @@ import axios from 'axios';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
 // const API_BASE_URL = 'http://localhost:8002/api';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://back.rattelapp.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -429,7 +429,7 @@ export async function chunkedUploadVideo(file, onProgress) {
     if (statusData.uploadedChunks) {
       doneSet = new Set(statusData.uploadedChunks);
     }
-  } catch (_) { /* fresh upload */ }
+  } catch { /* fresh upload */ }
 
   // 3. Upload chunks in parallel batches with progress
   let completedBytes = 0;
