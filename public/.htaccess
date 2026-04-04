@@ -1,5 +1,9 @@
-# SPA fallback for Apache: serve index.html for client routes (/login, etc.).
-# Requires: mod_rewrite, AllowOverride FileInfo or All for this directory.
+# ── React/Vite SPA: /login, /dashboard, etc. must serve index.html ──
+# Requires: sudo a2enmod rewrite && sudo systemctl reload apache2
+# Directory must allow .htaccess: AllowOverride All (or FileInfo)
+# Deploy tip: rsync -a includes dotfiles; plain FTP may skip .htaccess — verify it exists on server.
+
+Options -Indexes -MultiViews
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -8,3 +12,8 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# Apache 2.4.16+ alternative if rewrite still fails (uncomment one block only):
+# <IfModule mod_dir.c>
+#   FallbackResource /index.html
+# </IfModule>
