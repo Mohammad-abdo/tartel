@@ -17,3 +17,20 @@ Options -Indexes -MultiViews
 # <IfModule mod_dir.c>
 #   FallbackResource /index.html
 # </IfModule>
+<VirtualHost *:80>
+
+ ServerName rattelapp.com
+  DocumentRoot /var/www/rattelapp.com/dist 
+
+  ErrorLog ${APACHE_LOG_DIR}/rattelapp_error.log 
+  CustomLog ${APACHE_LOG_DIR}/rattelapp_access.log combined 
+
+  RewriteEngine On RewriteCond %{SERVER_NAME} =rattelapp.com 
+  RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent] 
+
+  </VirtualHost>
+   <IfModule mod_rewrite.c>
+ RewriteEngine On RewriteBase / RewriteRule ^index\.html$ - [L] 
+ RewriteCond %{REQUEST_FILENAME} !-f RewriteCond %{REQUEST_FILENAME} !-d 
+ RewriteRule . /index.html [L] 
+ </IfModule>

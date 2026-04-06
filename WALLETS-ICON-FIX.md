@@ -94,3 +94,82 @@ import { FiCreditCard } from 'react-icons/fi';
 ---
 
 **🎉 تم إصلاح المشكلة بنجاح وصفحة المحافظ تعمل الآن بلا أخطاء!**
+
+
+=====================================================================
+=====================================================================
+هذا الخطأ **ليس من الكود** — إنه **مشكلة شبكة على السيرفر**: السيرفر لا يستطيع الاتصال بـ Fawry staging server.
+
+## التشخيص
+
+- **الخطأ:** `ConnectTimeoutError` / `UND_ERR_CONNECT_TIMEOUT`
+- **العنوان:** `https://atfawry.fawrystaging.com/fawrypay-api/api/payments/init`
+- **المعنى:** السيرفر (`204.168.214.200`) حاول الاتصال بـ Fawry ولم يستطع خلال الـ timeout — لم يصل حتى إلى TCP handshake.
+
+## الأسباب المحتملة
+
+1. **الـ VPS يحجب الاتصالات الخارجية عبر HTTPS (port 443)** — جدار ناري (firewall) على السيرفر أو لدى مزود الاستضافة (Hetzner).
+2. **Fawry Staging بالتحديد محجوب** — بعض مزوّدي الاستضافة الأوروبيين يحجبون نطاقات معيّنة أو يحتاجون إلى whitelist.
+3. **DNS لا يحلّ `atfawry.fawrystaging.com`** على السيرفر.
+
+## ماذا تفعل على السيرفر
+
+### 1) تحقق من DNS
+
+```bash
+nslookup atfawry.fawrystaging.com
+# أو
+dig atfawry.fawrystaging.com +short
+```
+
+إذا لم يُرجع IP → مشكلة DNS. جرّب:
+```bash
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+```
+
+### 2) تحقق من الاتصال
+
+```bash
+curl -v --connect-timeout 10 https://atfawry.fawrystaging.com/fawrypay-api/api/payments/init
+```
+
+إذا ظهر **Connection timed out** → المنفذ 443 محجوب.
+
+```bash
+# اختبار منفذ TCP مباشرة
+nc -zv atfawry.fawrystaging.com 443 -w 5
+```
+
+### 3) تحقق من جدار الناري
+
+```bash
+# هل iptables يحجب الاتصالات الخارجية؟
+sudo iptables -L OUTPUT -n --line-numbers
+
+# هل ufw يحجب؟
+sudo ufw status
+```
+
+إذا كان هناك حجب:
+```bash
+sudo ufw allow out 443/tcp
+# أو
+sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+```
+
+### 4) إذا كان الحجب من مزود الاستضافة (Hetzner)
+
+- ادخل على لوحة تحكم Hetzner → Firewalls → تأكد أن **outbound HTTPS (443)** مسموح.
+- بعض الخوادم الجديدة على Hetzner تحتاج فتح القواعد يدوياً.
+
+### 5) بديل: استخدم Fawry Production بدل Staging
+
+إذا كنت جاهزاً للإنتاج، جرّب تغيير الـ URL إلى:
+```
+https://www.atfawry.com/fawrypay-api/api/payments/init
+```
+(مع merchant code وsecurity key للإنتاج وليس الاختبار)
+
+---
+
+**خلاصة:** الكود صحيح والطلب يُبنى بشكل سليم — المشكلة أن **شبكة السيرفر لا تصل إلى Fawry**. شغّل أوامر التشخيص أعلاه وأعطني النتائج لنحدّد الحل الدقيق.
