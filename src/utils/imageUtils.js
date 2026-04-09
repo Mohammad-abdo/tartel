@@ -3,8 +3,6 @@
  * Ensures all media URLs use HTTPS and point to the correct API host.
  */
 
-import { getApiOriginFromEnv } from '../config/apiBase';
-
 const URL_FIELDS = [
   'image', 'avatar', 'photo', 'thumbnail',
   'introVideoThumbnail', 'introVideoUrl',
@@ -14,7 +12,14 @@ const URL_FIELDS = [
 
 const NESTED_ARRAY_FIELDS = ['videos', 'lessons', 'sheikhs', 'courses', 'data'];
 
-const getApiBaseUrl = () => getApiOriginFromEnv();
+const getApiBaseUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
+  let base = apiUrl.replace(/\/api\/?$/, '');
+  if (base.startsWith('http://')) {
+    base = base.replace('http://', 'https://');
+  }
+  return base;
+};
 
 /**
  * Fix a single URL: ensure HTTPS, replace localhost, prepend base for relative paths.

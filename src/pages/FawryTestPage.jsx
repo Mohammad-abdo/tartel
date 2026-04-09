@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { getViteApiBaseUrl } from '../config/apiBase';
 
 const FawryTestPage = () => {
   const [activeTab, setActiveTab] = useState('reference'); // 'reference', 'card', 'wallet'
@@ -14,7 +13,9 @@ const FawryTestPage = () => {
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusResult, setStatusResult] = useState(null);
 
-  const apiUrl = getViteApiBaseUrl();
+  // Ensure apiUrl doesn't have trailing slash
+  const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8002/api';
+  const apiUrl = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
   const token = localStorage.getItem('token');
 
   const normalizeApiPayload = (payload) => payload?.data || payload;

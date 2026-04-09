@@ -1,16 +1,13 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { isHashRouterEnabled } from './config/apiBase';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { CurrencyProvider } from './context/CurrencyContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Login from './pages/Login';
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Teachers from './pages/Teachers';
 import Bookings from './pages/Bookings';
@@ -28,21 +25,18 @@ import Sessions from './pages/Sessions';
 import StudentSubscriptions from './pages/StudentSubscriptions';
 import Finance from './pages/Finance';
 import Settings from './pages/Settings';
-const ActivityPage = lazy(() => import('./pages/Activity'));
+import Activity from './pages/Activity';
 import Profile from './pages/Profile';
 import UserDetail from './pages/UserDetail';
 import TeacherDetail from './pages/TeacherDetail';
 import BookingDetail from './pages/BookingDetail';
-import SessionEdit from './pages/SessionEdit';
 import PaymentDetail from './pages/PaymentDetail';
 import FawryTestPage from './pages/FawryTestPage';
 import SubscriptionCallback from './pages/SubscriptionCallback';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailed from './pages/PaymentFailed';
-import PaymentPending from './pages/PaymentPending';
 import AgoraTestHost from './pages/AgoraTestHost';
 import AgoraTestJoin from './pages/AgoraTestJoin';
-import Unauthorized from './pages/Unauthorized';
+
+
 import CourseDetail from './pages/CourseDetail';
 import AddUser from './pages/AddUser';
 import EditUser from './pages/EditUser';
@@ -51,8 +45,6 @@ import EditTeacher from './pages/EditTeacher';
 import AddCourse from './pages/AddCourse';
 import EditCourse from './pages/EditCourse';
 import ManageLessons from './pages/ManageLessons';
-import CourseEnrollments from './pages/CourseEnrollments';
-import CourseEnrollmentDetail from './pages/CourseEnrollmentDetail';
 import './App.css';
 
 function ThemedToastContainer() {
@@ -72,7 +64,7 @@ function ThemedToastContainer() {
     />
   );
 }
-//newhdgfdjsلافضل الاختيار
+//newhdgfdjs
 const AppRoutes = () => {
   const { user } = useAuth();
 
@@ -82,39 +74,12 @@ const AppRoutes = () => {
         path="/login"
         element={user ? <Navigate to="/dashboard" replace /> : <Login />}
       />
-      {/* صفحات مستقلة لحالات الدفع — بدون داشبورد */}
-      <Route
-        path="/payment/success"
-        element={
-          <ProtectedRoute>
-            <PaymentSuccess />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment/failed"
-        element={
-          <ProtectedRoute>
-            <PaymentFailed />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment/pending"
-        element={
-          <ProtectedRoute>
-            <PaymentPending />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <Suspense fallback={null}>
-                <Dashboard />
-              </Suspense>
+              <Dashboard />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -215,36 +180,6 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <BookingDetail />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/course-enrollments"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <CourseEnrollments />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/course-enrollments/:id"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <CourseEnrollmentDetail />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/sessions/:sessionId/edit"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <SessionEdit />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -429,12 +364,13 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      {/* إعادة توجيه المسار القديم لصفحات الدفع المستقلة (بدون داشبورد) */}
       <Route
         path="/student/subscriptions/callback"
         element={
           <ProtectedRoute>
-            <SubscriptionCallback />
+            <DashboardLayout>
+              <SubscriptionCallback />
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -474,9 +410,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <Suspense fallback={null}>
-                <ActivityPage />
-              </Suspense>
+              <Activity />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -511,32 +445,26 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/unauthorized" element={<Unauthorized />} />
-      {/* Standalone payment result pages — no auth/layout since users arrive from Fawry redirect */}
-      <Route path="/payment/success" element={<PaymentSuccess />} />
-      <Route path="/payment/failed" element={<PaymentFailed />} />
-      <Route path="/payment/pending" element={<PaymentPending />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 };
 
 function App() {
-  const RouterImpl = isHashRouterEnabled() ? HashRouter : BrowserRouter;
   return (
-    <RouterImpl>
+    <Router>
       <LanguageProvider>
         <ThemeProvider>
-          <CurrencyProvider>
-            <AuthProvider>
-              <AppRoutes />
-              <ThemedToastContainer />
-            </AuthProvider>
-          </CurrencyProvider>
+          <AuthProvider>
+            <AppRoutes />
+            <ThemedToastContainer />
+          </AuthProvider>
         </ThemeProvider>
       </LanguageProvider>
-    </RouterImpl>
+    </Router>
   );
 }
 
 export default App;
+//
+//اتق  الله   fdsfdsf

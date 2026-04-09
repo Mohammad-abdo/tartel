@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { getViteApiBaseUrl, sanitizeAxiosRequestForHttpsPage, getLoginRedirectHref } from '../config/apiBase';
 import { fixImageUrls, fixImageUrlsInArray } from '../utils/imageUtils';
 
-const API_BASE_URL = getViteApiBaseUrl();
+// const API_BASE_URL = 'http://localhost:8002/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://back.rattelapp.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -12,10 +12,9 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: fix mixed content (https page + http API) on every request
+// Request interceptor: add auth token; for FormData omit Content-Type so axios sets multipart boundary
 api.interceptors.request.use(
   (config) => {
-    sanitizeAxiosRequestForHttpsPage(config);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -68,7 +67,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = getLoginRedirectHref();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -517,19 +516,15 @@ export const heroAPI = {
     return response.data;
   },
   
-  // POST /hero/slides - Create new slide with image (admin)
+  // POST /hero/slides - Create new slide (multipart FormData; field name for file: image)
   create: async (formData) => {
-    const response = await api.post('/hero/slides', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post('/hero/slides', formData);
     return response.data;
   },
-  
-  // PATCH /hero/slides/:id - Update slide with image (admin)
+
+  // PATCH /hero/slides/:id - Update slide (FormData or JSON for toggles only)
   update: async (id, formData) => {
-    const response = await api.patch(`/hero/slides/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.patch(`/hero/slides/${id}`, formData);
     return response.data;
   },
   

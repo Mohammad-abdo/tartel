@@ -30,9 +30,32 @@ const HeroSlideForm = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const fd = new FormData();
+    fd.append('title', formData.title);
+    fd.append('titleAr', formData.titleAr);
+    fd.append('description', formData.description);
+    fd.append('descriptionAr', formData.descriptionAr);
+    fd.append('order', String(formData.order ?? 0));
+    fd.append('isActive', formData.isActive ? 'true' : 'false');
+
+    const img = formData.image;
+    try {
+      if (img && String(img).startsWith('data:')) {
+        const blob = await (await fetch(img)).blob();
+        const type = blob.type || 'image/jpeg';
+        const ext = type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : type.includes('gif') ? 'gif' : 'jpg';
+        fd.append('image', blob, `slide.${ext}`);
+      } else if (img) {
+        fd.append('image', String(img));
+      }
+    } catch (err) {
+      console.error('Failed to prepare image for upload:', err);
+      return;
+    }
+
+    onSubmit(fd);
   };
 
   return (
